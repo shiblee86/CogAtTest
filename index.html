@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safia's CogAT Practice Test ✨</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --pink: #e91e8c;
+    --pink-light: #f9c6e3;
+    --gold: #f5c518;
+    --gold-light: #fff8d6;
+    --purple: #2d1b69;
+    --purple-mid: #5b3fa0;
+    --purple-light: #ede8ff;
+    --white: #ffffff;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --bg: #f8f0ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--purple);
+  }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+  /* ── WELCOME SCREEN ── */
+  #welcome {
+    background: linear-gradient(160deg, var(--purple) 0%, var(--purple-mid) 60%, #7c3aed 100%);
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .star-field {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  .star {
+    position: absolute; background: white; border-radius: 50%;
+    animation: twinkle 2s infinite alternate;
+  }
+
+  @keyframes twinkle { from { opacity: 0.2; } to { opacity: 1; } }
+
+  .welcome-content { position: relative; z-index: 1; max-width: 480px; }
+
+  .title-badge {
+    background: var(--gold);
+    color: var(--purple);
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .welcome-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(36px, 8vw, 58px);
+    color: white;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .welcome-title span { color: var(--gold); }
+
+  .welcome-subtitle {
+    color: var(--pink-light);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 32px;
+  }
+
+  .trophy { font-size: 80px; margin-bottom: 16px; animation: bounce 1.5s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+  .info-cards {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 32px;
+  }
+
+  .info-card {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 12px 18px;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .info-card .num { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--gold); display: block; }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--pink), #c2185b);
+    color: white;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    padding: 16px 48px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(233,30,140,0.5);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 1px;
+  }
+
+  .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(233,30,140,0.6); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── QUIZ SCREEN ── */
+  #quiz {
+    padding: 0;
+    background: var(--bg);
+    align-items: stretch;
+  }
+
+  .quiz-header {
+    background: linear-gradient(90deg, var(--purple) 0%, var(--purple-mid) 100%);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+
+  .quiz-logo {
+    font-family: 'Fredoka One', cursive;
+    color: var(--gold);
+    font-size: 20px;
+  }
+
+  .progress-wrap { flex: 1; margin: 0 16px; }
+  .progress-label { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; margin-bottom: 4px; letter-spacing: 1px; }
+  .progress-bar { height: 8px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); border-radius: 10px; transition: width 0.4s ease; }
+
+  .score-badge {
+    background: var(--gold);
+    color: var(--purple);
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .quiz-body {
+    flex: 1;
+    padding: 24px 20px 100px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .question-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--purple-light);
+    color: var(--purple-mid);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  .question-tag .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--purple-mid);
+  }
+
+  .question-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(20px, 5vw, 28px);
+    color: var(--purple);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .question-instruction {
+    color: #6b5b95;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* Visual question area */
+  .question-visual {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid var(--purple-light);
+    box-shadow: 0 4px 16px rgba(45,27,105,0.06);
+  }
+
+  /* Matrix grid (2x2) */
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: 180px;
+    margin: 0 auto;
+  }
+
+  .matrix-cell {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 86px;
+    height: 86px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background: #fafafa;
+  }
+
+  .matrix-cell.question-mark {
+    background: var(--gold-light);
+    border-color: var(--gold);
+    font-size: 36px;
+    font-family: 'Fredoka One', cursive;
+    color: var(--gold);
+  }
+
+  /* Canvas-based questions */
+  .question-canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+
+  /* Number puzzle display */
+  .equation-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .eq-box {
+    border: 3px solid var(--purple-mid);
+    border-radius: 10px;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    color: var(--purple);
+    background: white;
+  }
+
+  .eq-box.unknown { background: var(--gold-light); border-color: var(--gold); color: var(--gold); }
+  .eq-op { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--purple-mid); }
+
+  /* Abacus display */
+  .abacus-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .abacus-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .abacus-bead {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #f5a623, #e8890a);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .abacus-rod {
+    width: 3px;
+    background: #888;
+    flex: 1;
+    border-radius: 3px;
+    min-height: 10px;
+  }
+  .abacus-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    color: var(--purple);
+    margin-top: 4px;
+  }
+  .abacus-wrapper {
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 12px 16px;
+    background: #fafafa;
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .abacus-section { text-align: center; }
+  .abacus-title { font-size: 12px; font-weight: 800; color: var(--purple-mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+
+  /* ANSWER CHOICES */
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .choice-btn {
+    background: white;
+    border: 3px solid #e0d8f0;
+    border-radius: 16px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--purple);
+    position: relative;
+    min-height: 80px;
+    justify-content: center;
+  }
+
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--purple-mid);
+    background: var(--purple-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(91,63,160,0.15);
+  }
+
+  .choice-btn .choice-label {
+    position: absolute;
+    top: 6px; left: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    color: #999;
+  }
+
+  .choice-btn .choice-emoji { font-size: 32px; }
+  .choice-btn .choice-text { font-size: 16px; font-family: 'Fredoka One', cursive; color: var(--purple-mid); }
+
+  .choice-btn.correct {
+    border-color: var(--correct);
+    background: #f0fdf4;
+    animation: correctPop 0.3s ease;
+  }
+
+  .choice-btn.wrong {
+    border-color: var(--wrong);
+    background: #fef2f2;
+  }
+
+  .choice-btn.reveal-correct {
+    border-color: var(--correct);
+    background: #f0fdf4;
+  }
+
+  @keyframes correctPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  /* FEEDBACK BANNER */
+  .feedback-banner {
+    display: none;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .feedback-banner.show { display: block; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .feedback-banner.correct-fb { background: #f0fdf4; border: 2px solid var(--correct); color: #166534; }
+  .feedback-banner.wrong-fb { background: #fef2f2; border: 2px solid var(--wrong); color: #991b1b; }
+
+  .feedback-icon { font-size: 22px; margin-right: 6px; }
+  .feedback-explanation { margin-top: 8px; font-weight: 600; font-size: 13px; color: #555; }
+
+  /* NEXT BUTTON */
+  .btn-next {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--purple-mid), var(--purple));
+    color: white;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    padding: 14px 52px;
+    border-radius: 50px;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 6px 24px rgba(45,27,105,0.4);
+    z-index: 20;
+    animation: slideUp 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .btn-next:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 10px 30px rgba(45,27,105,0.5); }
+
+  /* ── RESULTS SCREEN ── */
+  #results {
+    background: linear-gradient(160deg, var(--purple) 0%, var(--purple-mid) 100%);
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .results-content { max-width: 480px; width: 100%; }
+
+  .results-trophy { font-size: 80px; margin-bottom: 16px; }
+
+  .results-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(30px, 7vw, 48px);
+    color: white;
+    margin-bottom: 8px;
+  }
+
+  .results-title span { color: var(--gold); }
+
+  .score-circle {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 20px auto;
+    box-shadow: 0 0 0 8px rgba(245,197,24,0.25);
+  }
+
+  .score-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 52px;
+    color: var(--purple);
+    line-height: 1;
+  }
+
+  .score-denom {
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    color: var(--purple-mid);
+  }
+
+  .results-message {
+    color: var(--pink-light);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .results-breakdown {
+    background: rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .breakdown-title {
+    color: var(--gold);
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+
+  .breakdown-dots { display: flex; gap: 4px; }
+  .dot-result { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-result.c { background: var(--correct); }
+  .dot-result.w { background: var(--wrong); }
+
+  .btn-retry {
+    background: linear-gradient(135deg, var(--pink), #c2185b);
+    color: white;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    padding: 14px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(233,30,140,0.4);
+    margin-right: 12px;
+  }
+
+  .btn-retry:hover { transform: translateY(-2px); }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    top: -10px;
+    animation: confettiFall linear forwards;
+    z-index: 999;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Shape SVGs inline */
+  .shape-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .animal-choice { font-size: 40px; }
+  .instrument-choice { font-size: 38px; }
+
+  /* Audio button */
+  .audio-btn {
+    background: var(--purple-light);
+    border: 2px solid var(--purple-mid);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--purple);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto 12px;
+  }
+  .audio-btn:hover { background: var(--purple); color: white; }
+
+  .shape-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fafafa;
+    min-width: 80px;
+    min-height: 80px;
+    gap: 6px;
+  }
+
+  .three-d-shape { font-size: 34px; }
+  .flat-shape { font-size: 34px; opacity: 0.9; }
+
+  .number-series-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .series-bead-group { text-align: center; }
+  .series-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: var(--purple);
+    border: 3px solid var(--purple-light);
+    border-radius: 12px;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: white;
+  }
+  .series-arrow { font-size: 22px; color: var(--pink); }
+
+  /* 2x2 analogy grid for Q1/Q2 */
+  .analogy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: fit-content;
+    margin: 0 auto;
+    background: #eee;
+    padding: 4px;
+    border-radius: 14px;
+  }
+  .analogy-cell {
+    width: 90px; height: 90px;
+    background: white;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+  }
+  .analogy-cell.unknown {
+    background: var(--gold-light);
+    border: 2px dashed var(--gold);
+    font-family: 'Fredoka One', cursive;
+    font-size: 40px;
+    color: var(--gold);
+  }
+
+  .choice-content { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+  /* classification display (Q3, Q10) */
+  .classify-row {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  }
+  .classify-item {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    background: #fafafa; border: 2px solid #ddd;
+    border-radius: 12px;
+    width: 80px; height: 80px;
+  }
+
+  /* Paper folding visual */
+  .paper-fold-steps {
+    display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .paper-step { text-align: center; }
+  .paper-step-label { font-size: 11px; font-weight: 800; color: var(--purple-mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .paper-step-arrow { font-size: 20px; color: var(--pink); align-self: center; margin-top: 12px; }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════ WELCOME SCREEN ══════════════ -->
+<div id="welcome" class="screen active">
+  <div class="star-field" id="starField"></div>
+  <div class="welcome-content">
+    <div class="trophy">🏆</div>
+    <div class="title-badge">CogAT Level 8 Practice</div>
+    <h1 class="welcome-title">Safia's<br><span>Brain Challenge!</span></h1>
+    <p class="welcome-subtitle">10 real CogAT-style questions · All 3 batteries</p>
+
+    <div class="info-cards">
+      <div class="info-card"><span class="num">10</span>Questions</div>
+      <div class="info-card"><span class="num">3</span>Batteries</div>
+      <div class="info-card"><span class="num">⭐</span>Earn Stars</div>
+    </div>
+
+    <button class="btn-start" onclick="startQuiz()">Let's Go! 🚀</button>
+  </div>
+</div>
+
+<!-- ══════════════ QUIZ SCREEN ══════════════ -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-logo">✨ CogAT</div>
+    <div class="progress-wrap">
+      <div class="progress-label">QUESTION <span id="qNum">1</span> OF 10</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+    </div>
+    <div class="score-badge">⭐ <span id="scoreDisplay">0</span></div>
+  </div>
+
+  <div class="quiz-body" id="quizBody">
+    <!-- injected dynamically -->
+  </div>
+
+  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next ➜</button>
+</div>
+
+<!-- ══════════════ RESULTS SCREEN ══════════════ -->
+<div id="results" class="screen">
+  <div class="star-field" id="starField2"></div>
+  <div class="results-content">
+    <div class="results-trophy" id="resultsTrophy">🏆</div>
+    <h2 class="results-title">You scored<br><span id="finalScore">0</span> out of 10!</h2>
+    <div class="results-message" id="resultsMessage"></div>
+
+    <div class="score-circle">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-denom">/ 10</div>
+    </div>
+
+    <div class="results-breakdown">
+      <div class="breakdown-title">📊 Battery Results</div>
+      <div class="breakdown-row">
+        <span>🔷 Nonverbal (Q1–4)</span>
+        <div class="breakdown-dots" id="nonverbalDots"></div>
+      </div>
+      <div class="breakdown-row">
+        <span>🔢 Quantitative (Q5–7)</span>
+        <div class="breakdown-dots" id="quantDots"></div>
+      </div>
+      <div class="breakdown-row">
+        <span>🗣️ Verbal (Q8–10)</span>
+        <div class="breakdown-dots" id="verbalDots"></div>
+      </div>
+    </div>
+
+    <button class="btn-retry" onclick="retryQuiz()">Try Again 🔄</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTION DATA (based on PDF sample test)
+// ─────────────────────────────────────────────
+const questions = [
+  {
+    id: 1,
+    battery: "Nonverbal",
+    type: "Figure Matrices",
+    instruction: "Look at the shapes in the grid. The top two shapes go together in a special way. Find the answer that goes with the bottom left shape the same way.",
+    renderQuestion: () => `
+      <div class="analogy-grid">
+        <div class="analogy-cell">🔺🔺</div>
+        <div class="analogy-cell">🔺🔺🔺</div>
+        <div class="analogy-cell">▼▼</div>
+        <div class="analogy-cell unknown">?</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Top row: 2 shapes → 3 shapes (rotated)</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:32px">▼▼▼</span><span class="choice-text">3 arrows</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:32px">○○○</span><span class="choice-text">3 circles</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:32px">▼▼▼▼</span><span class="choice-text">4 arrows</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:32px">▼▼</span><span class="choice-text">2 arrows</span></div>` },
+    ],
+    correct: 0,
+    explanation: "The top row shows 2 shapes becoming 3 shapes (rotated). So the bottom left (2 down-arrows) becomes 3 down-arrows. Answer: A ✅"
+  },
+  {
+    id: 2,
+    battery: "Nonverbal",
+    type: "Figure Matrices",
+    instruction: "The top two shapes go together. Choose the answer that goes with the bottom left shape the same way.",
+    renderQuestion: () => `
+      <div class="analogy-grid">
+        <div class="analogy-cell">🔵⬛<br>⬛🔵</div>
+        <div class="analogy-cell">⬛🔵<br>🔵⬛</div>
+        <div class="analogy-cell">🔺⬛<br>⬛🔺</div>
+        <div class="analogy-cell unknown">?</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">The top shape flips its arrangement</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:22px">🔺⬛<br>⬛🔺</span><span class="choice-text">same</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:22px">⬛⬛<br>🔺🔺</span><span class="choice-text">bottom row</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:22px">⬛🔺<br>🔺⬛</span><span class="choice-text">swapped</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🔺🔺<br>⬛⬛</span><span class="choice-text">top row</span></div>` },
+    ],
+    correct: 2,
+    explanation: "In the top row, the top shape moves to the bottom. So the triangles and squares swap positions. Answer: C ✅"
+  },
+  {
+    id: 3,
+    battery: "Nonverbal",
+    type: "Figure Classification",
+    instruction: "The first three shapes are alike in some way. Choose the answer that belongs in the same group.",
+    renderQuestion: () => `
+      <div class="classify-row">
+        <div class="classify-item">🟧🟦</div>
+        <div class="classify-item">🟩🟥</div>
+        <div class="classify-item">🟪🟨</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Each shape is split into TWO different colors</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:36px">🟦🟦</span><span class="choice-text">same color</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:36px">🟩🟧</span><span class="choice-text">two colors</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:36px">🟣</span><span class="choice-text">one color</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:36px">💚</span><span class="choice-text">one shape</span></div>` },
+    ],
+    correct: 1,
+    explanation: "All three shapes are divided into two equal halves with two different colors. Answer B also has two different colors. Answer: B ✅"
+  },
+  {
+    id: 4,
+    battery: "Nonverbal",
+    type: "Paper Folding",
+    instruction: "A paper is folded in half from bottom to top. Two holes are punched. When unfolded, what does it look like?",
+    renderQuestion: () => `
+      <div class="paper-fold-steps">
+        <div class="paper-step">
+          <div class="paper-step-label">Step 1: Full Paper</div>
+          <div style="width:90px;height:60px;background:#6488ea;border-radius:8px;border:2px solid #4a6bc8;"></div>
+        </div>
+        <div class="paper-step-arrow">➡️</div>
+        <div class="paper-step">
+          <div class="paper-step-label">Step 2: Fold up, punch 2 holes</div>
+          <div style="width:90px;height:32px;background:#6488ea;border-radius:8px 8px 0 0;border:2px solid #4a6bc8;position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:white;border:2px dashed #4a6bc8;"></div>
+            <div style="width:12px;height:12px;background:white;border:2px dashed #4a6bc8;border-radius:3px;"></div>
+          </div>
+          <div style="width:90px;height:3px;background:#3a5bc0;"></div>
+        </div>
+        <div class="paper-step-arrow">➡️</div>
+        <div class="paper-step">
+          <div class="paper-step-label">Unfolded = ?</div>
+          <div style="width:90px;height:60px;background:#6488ea;border-radius:8px;border:3px dashed var(--gold);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--gold);">?</div>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:12px;font-size:13px;color:#888;font-weight:700;">Each punch makes 2 holes when unfolded (top + mirror below)</p>
+    `,
+    choices: [
+      { label: "1", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;display:flex;align-items:center;justify-content:space-around;padding:0 8px;"><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;top:6px;left:10px;"></div><div style="width:8px;height:8px;background:white;border-radius:2px;position:absolute;top:6px;right:10px;"></div><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;bottom:6px;left:10px;"></div><div style="width:8px;height:8px;background:white;border-radius:2px;position:absolute;bottom:6px;right:10px;"></div></div><span class="choice-text">4 holes (2+2)</span></div>` },
+      { label: "2", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;"><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;top:8px;left:8px;"></div><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;bottom:8px;left:8px;"></div></div><span class="choice-text">2 circles only</span></div>` },
+      { label: "3", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;"><div style="width:8px;height:8px;border-radius:2px;background:white;position:absolute;top:8px;right:8px;"></div></div><span class="choice-text">1 hole only</span></div>` },
+      { label: "4", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;"></div><span class="choice-text">no holes</span></div>` },
+    ],
+    correct: 0,
+    explanation: "When paper is folded and you punch 2 holes, unfolding creates 4 holes total — each hole mirrors on the other half! Answer: 1 ✅"
+  },
+  {
+    id: 5,
+    battery: "Quantitative",
+    type: "Number Analogies",
+    instruction: "The top row shows a pattern. Find the answer that follows the same pattern for the bottom row.",
+    renderQuestion: () => `
+      <div class="analogy-grid" style="gap:8px;">
+        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
+          <span>🌸🌸🌸🌸</span>
+          <span>🌸🌸🌸🌸</span>
+          <span style="font-size:11px;color:#888;">8 flowers</span>
+        </div>
+        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
+          <span>🌸🌸🌸🌸</span>
+          <span style="font-size:11px;color:#888;">4 flowers</span>
+        </div>
+        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
+          <span>🍃🍃🍃</span>
+          <span>🍃🍃🍃</span>
+          <span style="font-size:11px;color:#888;">6 leaves</span>
+        </div>
+        <div class="analogy-cell unknown">?</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Top row: 8 → 4 (decreased by 4). Bottom: 6 → ?</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃🍃</span><span class="choice-text">4 leaves</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃</span><span class="choice-text">3 leaves</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃</span><span class="choice-text">2 leaves</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃🍃🍃🍃</span><span class="choice-text">6 leaves</span></div>` },
+    ],
+    correct: 2,
+    explanation: "The rule: decrease by 4. Flowers: 8 → 4. Leaves: 6 → 2. Answer: C ✅"
+  },
+  {
+    id: 6,
+    battery: "Quantitative",
+    type: "Number Series",
+    instruction: "Look at the number pattern on the abacus beads. What number comes next?",
+    renderQuestion: () => `
+      <div style="text-align:center;">
+        <div class="number-series-display">
+          <div class="series-num">10</div>
+          <div class="series-arrow">→</div>
+          <div class="series-num">9</div>
+          <div class="series-arrow">→</div>
+          <div class="series-num">7</div>
+          <div class="series-arrow">→</div>
+          <div class="series-num">6</div>
+          <div class="series-arrow">→</div>
+          <div class="series-num">4</div>
+          <div class="series-arrow">→</div>
+          <div class="series-num" style="background:var(--gold-light);border-color:var(--gold);color:var(--gold);">?</div>
+        </div>
+        <p style="margin-top:12px;font-size:13px;color:#888;font-weight:700;">Hint: The pattern alternates between −1 and −2</p>
+      </div>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">2</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">3</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">5</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">1</span></div>` },
+    ],
+    correct: 1,
+    explanation: "Pattern: −1, −2, −1, −2... So 10→9(−1)→7(−2)→6(−1)→4(−2)→3(−1). Answer: B ✅"
+  },
+  {
+    id: 7,
+    battery: "Quantitative",
+    type: "Number Puzzles",
+    instruction: "Solve the equation. What number is missing?",
+    renderQuestion: () => `
+      <div class="equation-display">
+        <div class="eq-box">23</div>
+        <div class="eq-op">=</div>
+        <div class="eq-box">9</div>
+        <div class="eq-op">+</div>
+        <div class="eq-box">7</div>
+        <div class="eq-op">+</div>
+        <div class="eq-box unknown">?</div>
+      </div>
+      <p style="text-align:center;font-size:13px;color:#888;font-weight:700;">23 = 9 + 7 + ?</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">7</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">8</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">9</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">6</span></div>` },
+    ],
+    correct: 0,
+    explanation: "9 + 7 = 16. Then 23 − 16 = 7. The missing number is 7. Answer: A ✅"
+  },
+  {
+    id: 8,
+    battery: "Verbal",
+    type: "Picture Analogies",
+    instruction: "The first two pictures go together in a special way. Choose the picture that goes with the third picture the same way.",
+    renderQuestion: () => `
+      <div class="analogy-grid">
+        <div class="analogy-cell" style="font-size:44px;">🐯</div>
+        <div class="analogy-cell" style="font-size:44px;">🥩</div>
+        <div class="analogy-cell" style="font-size:44px;">🐐</div>
+        <div class="analogy-cell unknown">?</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Tiger → meat (what a tiger eats). Goat → ?</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span class="animal-choice">🌾</span><span class="choice-text">Grass</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span class="animal-choice">🍕</span><span class="choice-text">Pizza</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span class="animal-choice">🥚</span><span class="choice-text">Egg</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span class="animal-choice">🍜</span><span class="choice-text">Noodles</span></div>` },
+    ],
+    correct: 0,
+    explanation: "A tiger eats meat. A goat eats grass/plants. Answer: A ✅"
+  },
+  {
+    id: 9,
+    battery: "Verbal",
+    type: "Sentence Completion",
+    instruction: "Listen carefully! Choose the picture that has exactly TWO 3D shapes.",
+    renderQuestion: () => `
+      <button class="audio-btn" onclick="speakSentence()">
+        🔊 Tap to hear the question
+      </button>
+      <p style="text-align:center;font-weight:800;font-size:16px;color:var(--purple);margin-bottom:16px;">
+        "Mark the picture that has <u>two</u> 3D shapes."
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin:0 auto;">
+        <div class="shape-card" style="background:#f0f8ff;">
+          <span style="font-size:13px;font-weight:800;color:#999;">Choice A</span>
+          <span>🔺🟥<br>🟢🔷</span>
+          <span style="font-size:11px;color:#888;">0 x 3D shapes</span>
+        </div>
+        <div class="shape-card" style="background:#f0fff0;">
+          <span style="font-size:13px;font-weight:800;color:#999;">Choice B</span>
+          <span>📦🔴<br>🔵🔷</span>
+          <span style="font-size:11px;color:#22c55e;font-weight:800;">✅ Cube + Sphere = 2 3D!</span>
+        </div>
+        <div class="shape-card">
+          <span style="font-size:13px;font-weight:800;color:#999;">Choice C</span>
+          <span>📦🟥<br>🔴🔺</span>
+          <span style="font-size:11px;color:#888;">Cube + Sphere = 2, but extra flat shapes</span>
+        </div>
+        <div class="shape-card">
+          <span style="font-size:13px;font-weight:800;color:#999;">Choice D</span>
+          <span>🔺🟥<br>🔴🔷</span>
+          <span style="font-size:11px;color:#888;">Only 1 3D shape</span>
+        </div>
+      </div>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span style="font-size:28px">🔺🟥🟢🔷</span><span class="choice-text">All flat</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span style="font-size:28px">📦🔴</span><span class="choice-text">Cube + Sphere</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span style="font-size:28px">📦🔴🔺</span><span class="choice-text">3 shapes</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span style="font-size:28px">🔺🔴🔷</span><span class="choice-text">1 sphere only</span></div>` },
+    ],
+    correct: 1,
+    explanation: "We need exactly 2 three-dimensional shapes. A cube (📦) and a sphere (🔴) are both 3D. Answer: B ✅"
+  },
+  {
+    id: 10,
+    battery: "Verbal",
+    type: "Picture Classification",
+    instruction: "The first three pictures are alike in some way. Choose the picture that belongs in the same group.",
+    renderQuestion: () => `
+      <div class="classify-row">
+        <div class="classify-item" title="Piano">🎹</div>
+        <div class="classify-item" title="Guitar">🎸</div>
+        <div class="classify-item" title="Trumpet">🎺</div>
+      </div>
+      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">All three are musical instruments you PLAY</p>
+    `,
+    choices: [
+      { label: "A", display: `<div class="choice-content"><span class="instrument-choice">🔊</span><span class="choice-text">Speaker</span></div>` },
+      { label: "B", display: `<div class="choice-content"><span class="instrument-choice">🎧</span><span class="choice-text">Headphones</span></div>` },
+      { label: "C", display: `<div class="choice-content"><span class="instrument-choice">🎷</span><span class="choice-text">Saxophone</span></div>` },
+      { label: "D", display: `<div class="choice-content"><span class="instrument-choice">📢</span><span class="choice-text">Megaphone</span></div>` },
+    ],
+    correct: 2,
+    explanation: "Piano, guitar, and trumpet are all musical instruments you play. A saxophone is also a musical instrument! Answer: C ✅"
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let currentQ = 0;
+let score = 0;
+let answers = [];
+let answered = false;
+
+// ─────────────────────────────────────────────
+//  STARS (welcome/results background)
+// ─────────────────────────────────────────────
+function makeStars(containerId, count = 40) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 4 + 2;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      animation-delay:${Math.random()*2}s;
+      animation-duration:${1.5+Math.random()*2}s;
+    `;
+    container.appendChild(s);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  QUIZ FLOW
+// ─────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  currentQ = 0; score = 0; answers = []; answered = false;
+  document.getElementById('scoreDisplay').textContent = '0';
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  answered = false;
+  document.getElementById('btnNext').style.display = 'none';
+  document.getElementById('qNum').textContent = currentQ + 1;
+  document.getElementById('progressFill').style.width = `${((currentQ + 1) / 10) * 100}%`;
+
+  const batteryColors = {
+    'Nonverbal': '#7c3aed',
+    'Quantitative': '#0ea5e9',
+    'Verbal': '#e91e8c'
+  };
+
+  const batteryEmojis = {
+    'Nonverbal': '🔷',
+    'Quantitative': '🔢',
+    'Verbal': '🗣️'
+  };
+
+  const choicesHTML = q.choices.map((c, i) => `
+    <button class="choice-btn" id="choice-${i}" onclick="selectAnswer(${i})">
+      <span class="choice-label">${c.label}</span>
+      ${c.display}
+    </button>
+  `).join('');
+
+  document.getElementById('quizBody').innerHTML = `
+    <div class="question-tag">
+      <div class="dot" style="background:${batteryColors[q.battery]}"></div>
+      ${batteryEmojis[q.battery]} ${q.battery} · ${q.type}
+    </div>
+    <h2 class="question-title">Question ${q.id}</h2>
+    <p class="question-instruction">${q.instruction}</p>
+    <div class="question-visual">
+      ${q.renderQuestion()}
+    </div>
+    <div class="choices-grid">
+      ${choicesHTML}
+    </div>
+    <div class="feedback-banner" id="feedbackBanner"></div>
+  `;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[currentQ];
+  const isCorrect = idx === q.correct;
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+  }
+
+  answers.push({ qIdx: currentQ, correct: isCorrect });
+
+  // Style buttons
+  document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === idx && isCorrect) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+    if (i === q.correct && !isCorrect) btn.classList.add('reveal-correct');
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedbackBanner');
+  fb.className = 'feedback-banner show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = isCorrect
+    ? `<span class="feedback-icon">🌟</span> <strong>Amazing! That's correct!</strong><div class="feedback-explanation">${q.explanation}</div>`
+    : `<span class="feedback-icon">💪</span> <strong>Not quite — keep trying!</strong><div class="feedback-explanation">${q.explanation}</div>`;
+
+  document.getElementById('btnNext').style.display = 'block';
+  document.getElementById('btnNext').textContent = currentQ < 9 ? 'Next ➜' : 'See Results 🏆';
+}
+
+function nextQuestion() {
+  if (currentQ < 9) {
+    currentQ++;
+    renderQuestion();
+    window.scrollTo(0, 0);
+  } else {
+    showResults();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESULTS
+// ─────────────────────────────────────────────
+function showResults() {
+  showScreen('results');
+  makeStars('starField2', 50);
+
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('scoreNum').textContent = score;
+
+  const msgs = [
+    [0,3, "Keep practicing — you're learning! 💪"],
+    [4,6, "Good effort! You're getting it! 😊"],
+    [7,8, "Great job Safia! Almost perfect! 🌟"],
+    [9,10, "INCREDIBLE! You're a genius! 🏆🎉"]
+  ];
+  const msg = msgs.find(([min,max]) => score >= min && score <= max);
+  document.getElementById('resultsMessage').textContent = msg ? msg[2] : '';
+
+  const trophies = score <= 3 ? '📚' : score <= 6 ? '🥈' : score <= 8 ? '🥇' : '🏆';
+  document.getElementById('resultsTrophy').textContent = trophies;
+
+  // Battery breakdown: Q1-4 nonverbal, Q5-7 quant, Q8-10 verbal
+  const ranges = [
+    { id: 'nonverbalDots', from: 0, to: 3 },
+    { id: 'quantDots', from: 4, to: 6 },
+    { id: 'verbalDots', from: 7, to: 9 },
+  ];
+
+  ranges.forEach(({ id, from, to }) => {
+    const container = document.getElementById(id);
+    container.innerHTML = '';
+    for (let i = from; i <= to; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot-result ' + (answers[i]?.correct ? 'c' : 'w');
+      container.appendChild(dot);
+    }
+  });
+
+  if (score >= 7) launchConfetti();
+}
+
+function launchConfetti() {
+  const colors = ['#e91e8c','#f5c518','#7c3aed','#22c55e','#0ea5e9','#ff6b35'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `
+        left:${Math.random()*100}vw;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        width:${6+Math.random()*8}px;
+        height:${6+Math.random()*8}px;
+        border-radius:${Math.random()>0.5?'50%':'2px'};
+        animation-duration:${2+Math.random()*2}s;
+        animation-delay:${Math.random()*0.5}s;
+      `;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3500);
+    }, i * 30);
+  }
+}
+
+function retryQuiz() {
+  startQuiz();
+}
+
+// TTS for Q9
+function speakSentence() {
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance("Mark the picture that has two 3D shapes.");
+    u.rate = 0.85; u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+// Init
+makeStars('starField', 40);
+</script>
+</body>
+</html>
