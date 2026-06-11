@@ -525,6 +525,164 @@
 
   .btn-retry:hover { transform: translateY(-2px); }
 
+  /* ── STEP-BY-STEP TUTOR ── */
+  .tutor-panel {
+    display: none;
+    margin-top: 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid #fbbf24;
+    box-shadow: 0 6px 24px rgba(245,197,24,0.2);
+    animation: slideUp 0.3s ease;
+  }
+  .tutor-panel.show { display: block; }
+
+  .tutor-header {
+    background: linear-gradient(90deg, #7c3aed, var(--purple-mid));
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tutor-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .tutor-name {
+    font-family: 'Fredoka One', cursive;
+    color: white;
+    font-size: 16px;
+  }
+  .tutor-subtitle {
+    color: var(--pink-light);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .tutor-steps { background: #fffbf0; padding: 16px 18px; }
+
+  .tutor-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px dashed #f0e0a0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
+  }
+  .tutor-step:last-child { border-bottom: none; }
+  .tutor-step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-bubble {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink), #c2185b);
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content { flex: 1; }
+  .step-title {
+    font-family: 'Fredoka One', cursive;
+    color: var(--purple);
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .step-text {
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .step-visual {
+    margin-top: 8px;
+    background: white;
+    border: 2px solid var(--purple-light);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--purple-mid);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .step-highlight {
+    background: var(--gold);
+    color: var(--purple);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+  }
+
+  .tutor-nav {
+    background: #fffbf0;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #f0e0a0;
+  }
+  .step-counter {
+    font-family: 'Fredoka One', cursive;
+    color: var(--purple-mid);
+    font-size: 14px;
+  }
+  .btn-next-step {
+    background: linear-gradient(135deg, var(--purple-mid), var(--purple));
+    color: white;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    padding: 10px 22px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .btn-next-step:hover { transform: translateY(-1px); }
+  .btn-got-it {
+    background: linear-gradient(135deg, var(--correct), #16a34a);
+    color: white;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    padding: 10px 22px;
+    border-radius: 30px;
+    cursor: pointer;
+  }
+
+  .show-steps-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 2px solid #fbbf24;
+    border-radius: 30px;
+    padding: 8px 18px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    color: #92400e;
+    cursor: pointer;
+    margin-top: 10px;
+    background: #fffbf0;
+    transition: all 0.15s;
+    width: 100%;
+    justify-content: center;
+  }
+  .show-steps-btn:hover { background: var(--gold-light); border-color: var(--gold); }
+
   /* CONFETTI */
   .confetti-piece {
     position: fixed;
@@ -753,7 +911,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:32px">▼▼</span><span class="choice-text">2 arrows</span></div>` },
     ],
     correct: 0,
-    explanation: "The top row shows 2 shapes becoming 3 shapes (rotated). So the bottom left (2 down-arrows) becomes 3 down-arrows. Answer: A ✅"
+    explanation: "The top row shows 2 shapes becoming 3 shapes (rotated). So the bottom left (2 down-arrows) becomes 3 down-arrows. Answer: A ✅",
+    steps: [
+      { title: "🔍 Look at the top row", text: "The top row has two boxes. Look at the FIRST box — it has 2 up-triangles (🔺🔺).", visual: `<span>First box:</span><span style="font-size:20px">🔺🔺</span><span>= 2 shapes</span>` },
+      { title: "📊 Now look at box two", text: "The second box has 3 triangles — and they are FLIPPED upside down!", visual: `<span>Second box:</span><span style="font-size:20px">🔺🔺🔺</span><span class="step-highlight">+1 shape, rotated</span>` },
+      { title: "💡 The rule is...", text: "Add 1 shape AND rotate/flip the shapes.", visual: `<span>Rule:</span><span class="step-highlight">count + 1, then flip</span>` },
+      { title: "✅ Apply it!", text: "The bottom left has 2 down-arrows (▼▼). Add 1 → we need 3 down-arrows. That's Answer A!", visual: `<span>▼▼</span><span>→</span><span class="step-highlight">▼▼▼ = A 🎉</span>` },
+    ]
   },
   {
     id: 2,
@@ -776,7 +940,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🔺🔺<br>⬛⬛</span><span class="choice-text">top row</span></div>` },
     ],
     correct: 2,
-    explanation: "In the top row, the top shape moves to the bottom. So the triangles and squares swap positions. Answer: C ✅"
+    explanation: "In the top row, the top shape moves to the bottom. So the triangles and squares swap positions. Answer: C ✅",
+    steps: [
+      { title: "🔍 Look at the top-left box", text: "The top-left box has shapes stacked: a dark shape on TOP and a circle on the BOTTOM.", visual: `<span>Top-left:</span><span class="step-highlight">dark = TOP, circle = BOTTOM</span>` },
+      { title: "🔄 Now look at the top-right box", text: "In the top-right box, the dark shape that was on TOP has MOVED to the BOTTOM! The circle moved up.", visual: `<span>Shapes</span><span>→</span><span class="step-highlight">swapped positions!</span>` },
+      { title: "💡 The rule is...", text: "The TOP shape and BOTTOM shape swap places from left to right.", visual: `<span>Rule:</span><span class="step-highlight">top shape ↔ bottom shape swap</span>` },
+      { title: "✅ Apply it!", text: "Bottom-left has triangle (🔺) on TOP and diamonds (⬛) on the BOTTOM. After swapping: diamonds go to top, triangle goes to bottom. That's Answer C!", visual: `<span>🔺 top → bottom</span><span>=</span><span class="step-highlight">Answer C 🎉</span>` },
+    ]
   },
   {
     id: 3,
@@ -798,7 +968,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:36px">💚</span><span class="choice-text">one shape</span></div>` },
     ],
     correct: 1,
-    explanation: "All three shapes are divided into two equal halves with two different colors. Answer B also has two different colors. Answer: B ✅"
+    explanation: "All three shapes are divided into two equal halves with two different colors. Answer B also has two different colors. Answer: B ✅",
+    steps: [
+      { title: "🔍 Look at shape 1", text: "The first shape is split into two halves — an orange half and a blue half. Two different colors!", visual: `<span>Shape 1:</span><span class="step-highlight">🟧 + 🟦 = 2 colors</span>` },
+      { title: "🔍 Look at shapes 2 and 3", text: "Shape 2 is green + red. Shape 3 is purple + yellow. They ALL have two different colors split down the middle.", visual: `<span>All have:</span><span class="step-highlight">2 halves, 2 colors</span>` },
+      { title: "💡 The rule is...", text: "Every shape in the group must be split into exactly 2 equal halves with 2 DIFFERENT colors.", visual: `<span>Rule:</span><span class="step-highlight">2 halves, 2 different colors</span>` },
+      { title: "✅ Apply it!", text: "Look at the choices. Only B has two different colors split in half. A is all blue, C and D are one color. Answer: B!", visual: `<span>B:</span><span class="step-highlight">🟩 + 🟧 = 2 colors = B 🎉</span>` },
+    ]
   },
   {
     id: 4,
@@ -835,7 +1011,13 @@ const questions = [
       { label: "4", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;"></div><span class="choice-text">no holes</span></div>` },
     ],
     correct: 0,
-    explanation: "When paper is folded and you punch 2 holes, unfolding creates 4 holes total — each hole mirrors on the other half! Answer: 1 ✅"
+    explanation: "When paper is folded and you punch 2 holes, unfolding creates 4 holes total — each hole mirrors on the other half! Answer: 1 ✅",
+    steps: [
+      { title: "📄 Start with a full paper", text: "Imagine a full piece of paper. It has a TOP half and a BOTTOM half.", visual: `<span>Full paper</span><span class="step-highlight">= Top half + Bottom half</span>` },
+      { title: "📐 Fold it in half", text: "When we fold the bottom UP to meet the top, the paper now has 2 layers stacked on top of each other.", visual: `<span>Fold up</span><span>→</span><span class="step-highlight">2 layers stacked</span>` },
+      { title: "🔵 Punch 2 holes", text: "We punch 2 holes through BOTH layers at once. Each punch goes through the top layer AND the bottom layer.", visual: `<span>2 punches</span><span>×</span><span class="step-highlight">2 layers = 4 holes!</span>` },
+      { title: "✅ Unfold it!", text: "When we unfold, each hole appears TWICE — once on top, once mirrored on the bottom. So 2 holes become 4 holes. Answer: 1!", visual: `<span>2 holes × 2 layers</span><span>=</span><span class="step-highlight">4 holes total = Answer 1 🎉</span>` },
+    ]
   },
   {
     id: 5,
@@ -869,7 +1051,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃🍃🍃🍃</span><span class="choice-text">6 leaves</span></div>` },
     ],
     correct: 2,
-    explanation: "The rule: decrease by 4. Flowers: 8 → 4. Leaves: 6 → 2. Answer: C ✅"
+    explanation: "The rule: decrease by 4. Flowers: 8 → 4. Leaves: 6 → 2. Answer: C ✅",
+    steps: [
+      { title: "🔍 Look at the top row", text: "The top-left box has 8 flowers (🌸🌸🌸🌸🌸🌸🌸🌸). Count them!", visual: `<span>Left box:</span><span class="step-highlight">8 flowers</span>` },
+      { title: "📊 Now the top-right box", text: "The top-right box has 4 flowers. How many did we lose?", visual: `<span>8 flowers</span><span>→</span><span class="step-highlight">4 flowers (−4!)</span>` },
+      { title: "💡 The rule is...", text: "The rule is: subtract 4. The amount goes down by 4 from left to right.", visual: `<span>Rule:</span><span class="step-highlight">number − 4</span>` },
+      { title: "✅ Apply it to leaves!", text: "The bottom-left has 6 leaves. Subtract 4: 6 − 4 = 2. We need 2 leaves. That's Answer C!", visual: `<span>6 leaves − 4</span><span>=</span><span class="step-highlight">2 leaves = C 🎉</span>` },
+    ]
   },
   {
     id: 6,
@@ -901,7 +1089,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">1</span></div>` },
     ],
     correct: 1,
-    explanation: "Pattern: −1, −2, −1, −2... So 10→9(−1)→7(−2)→6(−1)→4(−2)→3(−1). Answer: B ✅"
+    explanation: "Pattern: −1, −2, −1, −2... So 10→9(−1)→7(−2)→6(−1)→4(−2)→3(−1). Answer: B ✅",
+    steps: [
+      { title: "🔍 Look at the first jump", text: "10 → 9. How much did we subtract? We subtracted 1!", visual: `<span>10 → 9</span><span class="step-highlight">= minus 1</span>` },
+      { title: "📊 Look at the second jump", text: "9 → 7. How much this time? We subtracted 2!", visual: `<span>9 → 7</span><span class="step-highlight">= minus 2</span>` },
+      { title: "💡 See the pattern!", text: "The pattern ALTERNATES: subtract 1, then subtract 2, then subtract 1, then subtract 2...", visual: `<span>−1, −2, −1, −2...</span><span class="step-highlight">alternating!</span>` },
+      { title: "🔢 Check the whole series", text: "10 −1→ 9 −2→ 7 −1→ 6 −2→ 4. Next must be −1!", visual: `<span>4</span><span>− 1</span><span class="step-highlight">= 3 = Answer B 🎉</span>` },
+    ]
   },
   {
     id: 7,
@@ -927,7 +1121,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">6</span></div>` },
     ],
     correct: 0,
-    explanation: "9 + 7 = 16. Then 23 − 16 = 7. The missing number is 7. Answer: A ✅"
+    explanation: "9 + 7 = 16. Then 23 − 16 = 7. The missing number is 7. Answer: A ✅",
+    steps: [
+      { title: "🔍 Read the equation", text: "The equation says: 23 = 9 + 7 + ?. We need to find what ? equals.", visual: `<span>23</span><span>=</span><span>9 + 7 + </span><span class="step-highlight">?</span>` },
+      { title: "➕ Add the numbers we know", text: "First, add 9 + 7 together. What do you get?", visual: `<span>9 + 7</span><span>=</span><span class="step-highlight">16</span>` },
+      { title: "💡 Rewrite it simply", text: "Now the equation is: 23 = 16 + ?. What do we add to 16 to make 23?", visual: `<span>23 = 16 + </span><span class="step-highlight">?</span>` },
+      { title: "✅ Subtract to find the answer!", text: "23 − 16 = 7. So the missing number is 7. That's Answer A!", visual: `<span>23 − 16</span><span>=</span><span class="step-highlight">7 = Answer A 🎉</span>` },
+    ]
   },
   {
     id: 8,
@@ -950,7 +1150,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span class="animal-choice">🍜</span><span class="choice-text">Noodles</span></div>` },
     ],
     correct: 0,
-    explanation: "A tiger eats meat. A goat eats grass/plants. Answer: A ✅"
+    explanation: "A tiger eats meat. A goat eats grass/plants. Answer: A ✅",
+    steps: [
+      { title: "🔍 Look at the top pair", text: "The top row shows a TIGER (🐯) and a piece of MEAT (🥩). What is the connection?", visual: `<span>🐯 tiger</span><span>→</span><span class="step-highlight">eats 🥩 meat</span>` },
+      { title: "💡 The rule is...", text: "The connection is: animal → what that animal EATS. Tigers are meat-eaters (carnivores).", visual: `<span>Rule:</span><span class="step-highlight">animal → its food</span>` },
+      { title: "🐐 Now look at the bottom", text: "The bottom left shows a GOAT (🐐). What does a goat eat?", visual: `<span>🐐 goat eats...</span><span class="step-highlight">plants and grass!</span>` },
+      { title: "✅ Pick the right food!", text: "Goats eat grass and plants. Look at the choices — A shows grass (🌾). That's the answer!", visual: `<span>🐐 goat</span><span>→</span><span class="step-highlight">🌾 grass = Answer A 🎉</span>` },
+    ]
   },
   {
     id: 9,
@@ -994,7 +1200,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span style="font-size:28px">🔺🔴🔷</span><span class="choice-text">1 sphere only</span></div>` },
     ],
     correct: 1,
-    explanation: "We need exactly 2 three-dimensional shapes. A cube (📦) and a sphere (🔴) are both 3D. Answer: B ✅"
+    explanation: "We need exactly 2 three-dimensional shapes. A cube (📦) and a sphere (🔴) are both 3D. Answer: B ✅",
+    steps: [
+      { title: "🤔 What is a 3D shape?", text: "A 3D shape is solid — it has height, width AND depth. You can hold it in your hand! A cube and a sphere are 3D.", visual: `<span>3D shapes:</span><span class="step-highlight">📦 cube, 🔴 sphere, 🔺 pyramid</span>` },
+      { title: "📐 What is a flat (2D) shape?", text: "A flat shape only has height and width — like a drawing on paper. Squares, circles, diamonds on paper are 2D.", visual: `<span>2D shapes:</span><span class="step-highlight">🟥 square, 🔷 diamond, ⬛ flat</span>` },
+      { title: "🔍 The question asks...", text: "We need to find the choice that has EXACTLY TWO 3D shapes — not one, not three, exactly two!", visual: `<span>Goal:</span><span class="step-highlight">find exactly 2 three-dimensional shapes</span>` },
+      { title: "✅ Check each choice!", text: "Choice B has a cube (📦) and a sphere (🔴) — both 3D! That's exactly 2 three-dimensional shapes. Answer: B!", visual: `<span>📦 cube + 🔴 sphere</span><span>=</span><span class="step-highlight">2 3D shapes = B 🎉</span>` },
+    ]
   },
   {
     id: 10,
@@ -1016,7 +1228,13 @@ const questions = [
       { label: "D", display: `<div class="choice-content"><span class="instrument-choice">📢</span><span class="choice-text">Megaphone</span></div>` },
     ],
     correct: 2,
-    explanation: "Piano, guitar, and trumpet are all musical instruments you play. A saxophone is also a musical instrument! Answer: C ✅"
+    explanation: "Piano, guitar, and trumpet are all musical instruments you play. A saxophone is also a musical instrument! Answer: C ✅",
+    steps: [
+      { title: "🔍 Look at the three pictures", text: "We see a piano (🎹), a guitar (🎸), and a trumpet (🎺). What do they all have in common?", visual: `<span>🎹 🎸 🎺</span><span class="step-highlight">all make music!</span>` },
+      { title: "💡 They are all...", text: "They are all MUSICAL INSTRUMENTS — things you play to make music! They are not things you listen WITH (like speakers or headphones).", visual: `<span>Group rule:</span><span class="step-highlight">musical instruments you PLAY</span>` },
+      { title: "🔍 Check the choices", text: "A = speaker (plays music FOR you, not an instrument). B = headphones (you listen WITH it). D = megaphone. None of those are instruments!", visual: `<span>❌ Speaker ❌ Headphones ❌ Megaphone</span>` },
+      { title: "✅ The answer is C!", text: "A saxophone (🎷) is a musical instrument you PLAY — just like a piano, guitar, and trumpet! Answer: C!", visual: `<span>🎷 saxophone</span><span class="step-highlight">= musical instrument = C 🎉</span>` },
+    ]
   }
 ];
 
@@ -1133,12 +1351,122 @@ function selectAnswer(idx) {
   // Feedback
   const fb = document.getElementById('feedbackBanner');
   fb.className = 'feedback-banner show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
-  fb.innerHTML = isCorrect
-    ? `<span class="feedback-icon">🌟</span> <strong>Amazing! That's correct!</strong><div class="feedback-explanation">${q.explanation}</div>`
-    : `<span class="feedback-icon">💪</span> <strong>Not quite — keep trying!</strong><div class="feedback-explanation">${q.explanation}</div>`;
+
+  if (isCorrect) {
+    fb.innerHTML = `<span class="feedback-icon">🌟</span> <strong>Amazing! That's correct!</strong><div class="feedback-explanation">${q.explanation}</div>`;
+  } else {
+    fb.innerHTML = `
+      <span class="feedback-icon">💪</span> <strong>Not quite — let's figure it out together!</strong>
+      <div class="feedback-explanation">${q.explanation}</div>
+      <button class="show-steps-btn" onclick="showTutorPanel()">
+        🧠 Show me step-by-step!
+      </button>
+    `;
+  }
 
   document.getElementById('btnNext').style.display = 'block';
   document.getElementById('btnNext').textContent = currentQ < 9 ? 'Next ➜' : 'See Results 🏆';
+}
+
+// ─────────────────────────────────────────────
+//  TUTOR STEP-BY-STEP
+// ─────────────────────────────────────────────
+let tutorStepIdx = 0;
+
+function showTutorPanel() {
+  const q = questions[currentQ];
+  tutorStepIdx = 0;
+
+  // Hide the show-steps button
+  const showBtn = document.querySelector('.show-steps-btn');
+  if (showBtn) showBtn.style.display = 'none';
+
+  // Build tutor panel HTML
+  const stepsHTML = q.steps.map((s, i) => `
+    <div class="tutor-step" id="tutor-step-${i}">
+      <div class="step-bubble">${i + 1}</div>
+      <div class="step-content">
+        <div class="step-title">${s.title}</div>
+        <div class="step-text">${s.text}</div>
+        <div class="step-visual">${s.visual}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Insert tutor panel after feedback banner
+  const fb = document.getElementById('feedbackBanner');
+  const panel = document.createElement('div');
+  panel.className = 'tutor-panel show';
+  panel.id = 'tutorPanel';
+  panel.innerHTML = `
+    <div class="tutor-header">
+      <div class="tutor-avatar">🦉</div>
+      <div>
+        <div class="tutor-name">Zara the Wise Owl</div>
+        <div class="tutor-subtitle">Let me walk you through it!</div>
+      </div>
+    </div>
+    <div class="tutor-steps" id="tutorStepsContainer">
+      ${stepsHTML}
+    </div>
+    <div class="tutor-nav">
+      <div class="step-counter">Step <span id="stepCountCurrent">1</span> of ${q.steps.length}</div>
+      <button class="btn-next-step" id="tutorNavBtn" onclick="advanceTutorStep()">Next Step ➜</button>
+    </div>
+  `;
+  fb.after(panel);
+
+  // Scroll to tutor panel
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+  // Show only step 0 initially
+  revealTutorStep(0);
+}
+
+function revealTutorStep(idx) {
+  const q = questions[currentQ];
+  const stepEl = document.getElementById(`tutor-step-${idx}`);
+  if (!stepEl) return;
+
+  setTimeout(() => {
+    stepEl.classList.add('visible');
+    document.getElementById('stepCountCurrent').textContent = idx + 1;
+
+    // Update nav button
+    const navBtn = document.getElementById('tutorNavBtn');
+    if (idx >= q.steps.length - 1) {
+      navBtn.textContent = "Got it! ✅";
+      navBtn.className = 'btn-got-it';
+      navBtn.onclick = closeTutorPanel;
+    }
+  }, 100);
+}
+
+function advanceTutorStep() {
+  const q = questions[currentQ];
+  tutorStepIdx++;
+  if (tutorStepIdx < q.steps.length) {
+    revealTutorStep(tutorStepIdx);
+    // Scroll to new step
+    setTimeout(() => {
+      const stepEl = document.getElementById(`tutor-step-${tutorStepIdx}`);
+      if (stepEl) stepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 200);
+  }
+}
+
+function closeTutorPanel() {
+  const panel = document.getElementById('tutorPanel');
+  if (panel) {
+    panel.style.opacity = '0';
+    panel.style.transform = 'translateY(-8px)';
+    panel.style.transition = 'all 0.3s ease';
+    setTimeout(() => panel.remove(), 300);
+  }
+  // Scroll to Next button
+  setTimeout(() => {
+    document.getElementById('btnNext').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 350);
 }
 
 function nextQuestion() {
