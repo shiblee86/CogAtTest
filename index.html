@@ -1,1562 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Safia's CogAT Practice Test ✨</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
-
-  :root {
-    --pink: #e91e8c;
-    --pink-light: #f9c6e3;
-    --gold: #f5c518;
-    --gold-light: #fff8d6;
-    --purple: #2d1b69;
-    --purple-mid: #5b3fa0;
-    --purple-light: #ede8ff;
-    --white: #ffffff;
-    --correct: #22c55e;
-    --wrong: #ef4444;
-    --bg: #f8f0ff;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--purple);
-  }
-
-  /* SCREENS */
-  .screen { display: none; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-
-  /* ── WELCOME SCREEN ── */
-  #welcome {
-    background: linear-gradient(160deg, var(--purple) 0%, var(--purple-mid) 60%, #7c3aed 100%);
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-  }
-
-  .star-field {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; overflow: hidden; z-index: 0;
-  }
-  .star {
-    position: absolute; background: white; border-radius: 50%;
-    animation: twinkle 2s infinite alternate;
-  }
-
-  @keyframes twinkle { from { opacity: 0.2; } to { opacity: 1; } }
-
-  .welcome-content { position: relative; z-index: 1; max-width: 480px; }
-
-  .title-badge {
-    background: var(--gold);
-    color: var(--purple);
-    font-family: 'Fredoka One', cursive;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 6px 18px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-bottom: 16px;
-  }
-
-  .welcome-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(36px, 8vw, 58px);
-    color: white;
-    line-height: 1.1;
-    margin-bottom: 8px;
-  }
-
-  .welcome-title span { color: var(--gold); }
-
-  .welcome-subtitle {
-    color: var(--pink-light);
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 32px;
-  }
-
-  .trophy { font-size: 80px; margin-bottom: 16px; animation: bounce 1.5s infinite; }
-  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-
-  .info-cards {
-    display: flex; gap: 12px; justify-content: center;
-    flex-wrap: wrap; margin-bottom: 32px;
-  }
-
-  .info-card {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 14px;
-    padding: 12px 18px;
-    color: white;
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  .info-card .num { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--gold); display: block; }
-
-  .btn-start {
-    background: linear-gradient(135deg, var(--pink), #c2185b);
-    color: white;
-    border: none;
-    font-family: 'Fredoka One', cursive;
-    font-size: 22px;
-    padding: 16px 48px;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 6px 24px rgba(233,30,140,0.5);
-    transition: transform 0.15s, box-shadow 0.15s;
-    letter-spacing: 1px;
-  }
-
-  .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(233,30,140,0.6); }
-  .btn-start:active { transform: translateY(0); }
-
-  /* ── QUIZ SCREEN ── */
-  #quiz {
-    padding: 0;
-    background: var(--bg);
-    align-items: stretch;
-  }
-
-  .quiz-header {
-    background: linear-gradient(90deg, var(--purple) 0%, var(--purple-mid) 100%);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; top: 0; z-index: 10;
-  }
-
-  .quiz-logo {
-    font-family: 'Fredoka One', cursive;
-    color: var(--gold);
-    font-size: 20px;
-  }
-
-  .progress-wrap { flex: 1; margin: 0 16px; }
-  .progress-label { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; margin-bottom: 4px; letter-spacing: 1px; }
-  .progress-bar { height: 8px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); border-radius: 10px; transition: width 0.4s ease; }
-
-  .score-badge {
-    background: var(--gold);
-    color: var(--purple);
-    font-family: 'Fredoka One', cursive;
-    font-size: 16px;
-    padding: 4px 14px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
-
-  .quiz-body {
-    flex: 1;
-    padding: 24px 20px 100px;
-    max-width: 600px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .question-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--purple-light);
-    color: var(--purple-mid);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 5px 14px;
-    border-radius: 20px;
-    margin-bottom: 14px;
-  }
-
-  .question-tag .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--purple-mid);
-  }
-
-  .question-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(20px, 5vw, 28px);
-    color: var(--purple);
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-
-  .question-instruction {
-    color: #6b5b95;
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  /* Visual question area */
-  .question-visual {
-    background: white;
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 2px solid var(--purple-light);
-    box-shadow: 0 4px 16px rgba(45,27,105,0.06);
-  }
-
-  /* Matrix grid (2x2) */
-  .matrix-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    width: 180px;
-    margin: 0 auto;
-  }
-
-  .matrix-cell {
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    width: 86px;
-    height: 86px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    background: #fafafa;
-  }
-
-  .matrix-cell.question-mark {
-    background: var(--gold-light);
-    border-color: var(--gold);
-    font-size: 36px;
-    font-family: 'Fredoka One', cursive;
-    color: var(--gold);
-  }
-
-  /* Canvas-based questions */
-  .question-canvas {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-  }
-
-  /* Number puzzle display */
-  .equation-display {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 16px;
-  }
-
-  .eq-box {
-    border: 3px solid var(--purple-mid);
-    border-radius: 10px;
-    width: 56px; height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Fredoka One', cursive;
-    font-size: 24px;
-    color: var(--purple);
-    background: white;
-  }
-
-  .eq-box.unknown { background: var(--gold-light); border-color: var(--gold); color: var(--gold); }
-  .eq-op { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--purple-mid); }
-
-  /* Abacus display */
-  .abacus-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 12px;
-  }
-
-  .abacus-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .abacus-bead {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: linear-gradient(135deg, #f5a623, #e8890a);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-  .abacus-rod {
-    width: 3px;
-    background: #888;
-    flex: 1;
-    border-radius: 3px;
-    min-height: 10px;
-  }
-  .abacus-label {
-    font-family: 'Fredoka One', cursive;
-    font-size: 16px;
-    color: var(--purple);
-    margin-top: 4px;
-  }
-  .abacus-wrapper {
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    padding: 12px 16px;
-    background: #fafafa;
-    display: inline-flex;
-    align-items: flex-end;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  .abacus-section { text-align: center; }
-  .abacus-title { font-size: 12px; font-weight: 800; color: var(--purple-mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-
-  /* ANSWER CHOICES */
-  .choices-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .choice-btn {
-    background: white;
-    border: 3px solid #e0d8f0;
-    border-radius: 16px;
-    padding: 14px 12px;
-    cursor: pointer;
-    transition: all 0.18s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    color: var(--purple);
-    position: relative;
-    min-height: 80px;
-    justify-content: center;
-  }
-
-  .choice-btn:hover:not(:disabled) {
-    border-color: var(--purple-mid);
-    background: var(--purple-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(91,63,160,0.15);
-  }
-
-  .choice-btn .choice-label {
-    position: absolute;
-    top: 6px; left: 10px;
-    font-family: 'Fredoka One', cursive;
-    font-size: 13px;
-    color: #999;
-  }
-
-  .choice-btn .choice-emoji { font-size: 32px; }
-  .choice-btn .choice-text { font-size: 16px; font-family: 'Fredoka One', cursive; color: var(--purple-mid); }
-
-  .choice-btn.correct {
-    border-color: var(--correct);
-    background: #f0fdf4;
-    animation: correctPop 0.3s ease;
-  }
-
-  .choice-btn.wrong {
-    border-color: var(--wrong);
-    background: #fef2f2;
-  }
-
-  .choice-btn.reveal-correct {
-    border-color: var(--correct);
-    background: #f0fdf4;
-  }
-
-  @keyframes correctPop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-
-  /* FEEDBACK BANNER */
-  .feedback-banner {
-    display: none;
-    border-radius: 16px;
-    padding: 16px 20px;
-    margin-top: 16px;
-    font-weight: 700;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  .feedback-banner.show { display: block; animation: slideUp 0.25s ease; }
-  @keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-
-  .feedback-banner.correct-fb { background: #f0fdf4; border: 2px solid var(--correct); color: #166534; }
-  .feedback-banner.wrong-fb { background: #fef2f2; border: 2px solid var(--wrong); color: #991b1b; }
-
-  .feedback-icon { font-size: 22px; margin-right: 6px; }
-  .feedback-explanation { margin-top: 8px; font-weight: 600; font-size: 13px; color: #555; }
-
-  /* NEXT BUTTON */
-  .btn-next {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--purple-mid), var(--purple));
-    color: white;
-    border: none;
-    font-family: 'Fredoka One', cursive;
-    font-size: 20px;
-    padding: 14px 52px;
-    border-radius: 50px;
-    cursor: pointer;
-    display: none;
-    box-shadow: 0 6px 24px rgba(45,27,105,0.4);
-    z-index: 20;
-    animation: slideUp 0.25s ease;
-    white-space: nowrap;
-  }
-
-  .btn-next:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 10px 30px rgba(45,27,105,0.5); }
-
-  /* ── RESULTS SCREEN ── */
-  #results {
-    background: linear-gradient(160deg, var(--purple) 0%, var(--purple-mid) 100%);
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-  }
-
-  .results-content { max-width: 480px; width: 100%; }
-
-  .results-trophy { font-size: 80px; margin-bottom: 16px; }
-
-  .results-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(30px, 7vw, 48px);
-    color: white;
-    margin-bottom: 8px;
-  }
-
-  .results-title span { color: var(--gold); }
-
-  .score-circle {
-    width: 150px; height: 150px;
-    border-radius: 50%;
-    background: var(--gold);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    margin: 20px auto;
-    box-shadow: 0 0 0 8px rgba(245,197,24,0.25);
-  }
-
-  .score-num {
-    font-family: 'Fredoka One', cursive;
-    font-size: 52px;
-    color: var(--purple);
-    line-height: 1;
-  }
-
-  .score-denom {
-    font-family: 'Fredoka One', cursive;
-    font-size: 18px;
-    color: var(--purple-mid);
-  }
-
-  .results-message {
-    color: var(--pink-light);
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 24px;
-  }
-
-  .results-breakdown {
-    background: rgba(255,255,255,0.1);
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 24px;
-    text-align: left;
-  }
-
-  .breakdown-title {
-    color: var(--gold);
-    font-family: 'Fredoka One', cursive;
-    font-size: 18px;
-    margin-bottom: 12px;
-    text-align: center;
-  }
-
-  .breakdown-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    color: white;
-    font-weight: 700;
-    font-size: 14px;
-  }
-
-  .breakdown-row:last-child { border-bottom: none; }
-
-  .breakdown-dots { display: flex; gap: 4px; }
-  .dot-result { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-result.c { background: var(--correct); }
-  .dot-result.w { background: var(--wrong); }
-
-  .btn-retry {
-    background: linear-gradient(135deg, var(--pink), #c2185b);
-    color: white;
-    border: none;
-    font-family: 'Fredoka One', cursive;
-    font-size: 20px;
-    padding: 14px 40px;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 6px 24px rgba(233,30,140,0.4);
-    margin-right: 12px;
-  }
-
-  .btn-retry:hover { transform: translateY(-2px); }
-
-  /* ── STEP-BY-STEP TUTOR ── */
-  .tutor-panel {
-    display: none;
-    margin-top: 16px;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 2px solid #fbbf24;
-    box-shadow: 0 6px 24px rgba(245,197,24,0.2);
-    animation: slideUp 0.3s ease;
-  }
-  .tutor-panel.show { display: block; }
-
-  .tutor-header {
-    background: linear-gradient(90deg, #7c3aed, var(--purple-mid));
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .tutor-avatar {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: var(--gold);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-  .tutor-name {
-    font-family: 'Fredoka One', cursive;
-    color: white;
-    font-size: 16px;
-  }
-  .tutor-subtitle {
-    color: var(--pink-light);
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  .tutor-steps { background: #fffbf0; padding: 16px 18px; }
-
-  .tutor-step {
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    padding: 14px 0;
-    border-bottom: 1px dashed #f0e0a0;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.4s ease;
-  }
-  .tutor-step:last-child { border-bottom: none; }
-  .tutor-step.visible { opacity: 1; transform: translateY(0); }
-
-  .step-bubble {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--pink), #c2185b);
-    color: white;
-    font-family: 'Fredoka One', cursive;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .step-content { flex: 1; }
-  .step-title {
-    font-family: 'Fredoka One', cursive;
-    color: var(--purple);
-    font-size: 15px;
-    margin-bottom: 4px;
-  }
-  .step-text {
-    color: #555;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.5;
-  }
-  .step-visual {
-    margin-top: 8px;
-    background: white;
-    border: 2px solid var(--purple-light);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--purple-mid);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .step-highlight {
-    background: var(--gold);
-    color: var(--purple);
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-family: 'Fredoka One', cursive;
-    font-size: 15px;
-  }
-
-  .tutor-nav {
-    background: #fffbf0;
-    padding: 12px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 2px solid #f0e0a0;
-  }
-  .step-counter {
-    font-family: 'Fredoka One', cursive;
-    color: var(--purple-mid);
-    font-size: 14px;
-  }
-  .btn-next-step {
-    background: linear-gradient(135deg, var(--purple-mid), var(--purple));
-    color: white;
-    border: none;
-    font-family: 'Fredoka One', cursive;
-    font-size: 15px;
-    padding: 10px 22px;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: transform 0.15s;
-  }
-  .btn-next-step:hover { transform: translateY(-1px); }
-  .btn-got-it {
-    background: linear-gradient(135deg, var(--correct), #16a34a);
-    color: white;
-    border: none;
-    font-family: 'Fredoka One', cursive;
-    font-size: 15px;
-    padding: 10px 22px;
-    border-radius: 30px;
-    cursor: pointer;
-  }
-
-  .show-steps-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: 2px solid #fbbf24;
-    border-radius: 30px;
-    padding: 8px 18px;
-    font-family: 'Fredoka One', cursive;
-    font-size: 15px;
-    color: #92400e;
-    cursor: pointer;
-    margin-top: 10px;
-    background: #fffbf0;
-    transition: all 0.15s;
-    width: 100%;
-    justify-content: center;
-  }
-  .show-steps-btn:hover { background: var(--gold-light); border-color: var(--gold); }
-
-  /* CONFETTI */
-  .confetti-piece {
-    position: fixed;
-    width: 10px; height: 10px;
-    top: -10px;
-    animation: confettiFall linear forwards;
-    z-index: 999;
-    border-radius: 2px;
-  }
-  @keyframes confettiFall {
-    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-  }
-
-  /* Shape SVGs inline */
-  .shape-display {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .animal-choice { font-size: 40px; }
-  .instrument-choice { font-size: 38px; }
-
-  /* Audio button */
-  .audio-btn {
-    background: var(--purple-light);
-    border: 2px solid var(--purple-mid);
-    border-radius: 12px;
-    padding: 10px 20px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    color: var(--purple);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 auto 12px;
-  }
-  .audio-btn:hover { background: var(--purple); color: white; }
-
-  .shape-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    padding: 12px;
-    background: #fafafa;
-    min-width: 80px;
-    min-height: 80px;
-    gap: 6px;
-  }
-
-  .three-d-shape { font-size: 34px; }
-  .flat-shape { font-size: 34px; opacity: 0.9; }
-
-  .number-series-display {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .series-bead-group { text-align: center; }
-  .series-num {
-    font-family: 'Fredoka One', cursive;
-    font-size: 32px;
-    color: var(--purple);
-    border: 3px solid var(--purple-light);
-    border-radius: 12px;
-    width: 56px; height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    background: white;
-  }
-  .series-arrow { font-size: 22px; color: var(--pink); }
-
-  /* 2x2 analogy grid for Q1/Q2 */
-  .analogy-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    width: fit-content;
-    margin: 0 auto;
-    background: #eee;
-    padding: 4px;
-    border-radius: 14px;
-  }
-  .analogy-cell {
-    width: 90px; height: 90px;
-    background: white;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
-  }
-  .analogy-cell.unknown {
-    background: var(--gold-light);
-    border: 2px dashed var(--gold);
-    font-family: 'Fredoka One', cursive;
-    font-size: 40px;
-    color: var(--gold);
-  }
-
-  .choice-content { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-
-  /* classification display (Q3, Q10) */
-  .classify-row {
-    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-  }
-  .classify-item {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 44px;
-    background: #fafafa; border: 2px solid #ddd;
-    border-radius: 12px;
-    width: 80px; height: 80px;
-  }
-
-  /* Paper folding visual */
-  .paper-fold-steps {
-    display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap;
-  }
-  .paper-step { text-align: center; }
-  .paper-step-label { font-size: 11px; font-weight: 800; color: var(--purple-mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-  .paper-step-arrow { font-size: 20px; color: var(--pink); align-self: center; margin-top: 12px; }
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Safia's CogAT Mastery · Kid-Friendly Learning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ========== COMPLETE CSS ========== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Nunito', sans-serif; background: #f8f0ff; color: #2d1b69; min-height: 100vh; padding: 20px; }
+    .app-container { max-width: 1200px; margin: 0 auto; }
+    
+    /* header */
+    .mastery-header {
+      background: linear-gradient(135deg, #2d1b69, #5b3fa0);
+      border-radius: 32px;
+      padding: 16px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 8px 20px rgba(45, 27, 105, 0.2);
+    }
+    .logo h1 { font-family: 'Fredoka One', cursive; color: #f5c518; font-size: 1.6rem; }
+    .logo p { color: #f9c6e3; font-size: 0.8rem; font-weight: 700; }
+    .progress-stats { background: rgba(255,255,255,0.15); border-radius: 40px; padding: 8px 20px; display: flex; gap: 20px; }
+    .stat { text-align: center; }
+    .stat span:first-child { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: #f5c518; display: block; line-height: 1; }
+    .stat span:last-child { font-size: 0.7rem; font-weight: 800; color: white; text-transform: uppercase; }
+    
+    /* subtest grid */
+    .subtest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-bottom: 30px; }
+    .subtest-card {
+      background: white; border-radius: 24px; padding: 16px; border: 2px solid #ede8ff;
+      transition: all 0.2s ease; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .subtest-card:hover { transform: translateY(-3px); border-color: #f5c518; box-shadow: 0 12px 24px rgba(245,197,24,0.1); }
+    .subtest-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .subtest-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: #2d1b69; }
+    .subtest-battery { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #e91e8c; letter-spacing: 1px; margin: 6px 0; }
+    .badge { display: inline-block; font-size: 0.7rem; font-weight: 800; padding: 4px 12px; border-radius: 30px; margin-top: 8px; }
+    .badge-mastered { background: #22c55e20; color: #15803d; }
+    .badge-ready { background: #fff8e0; color: #b87300; }
+    
+    /* panels */
+    .panel { background: white; border-radius: 32px; padding: 24px; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #f0e9ff; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; border-bottom: 2px solid #f0e9ff; padding-bottom: 12px; margin-bottom: 20px; }
+    .back-btn { background: #ede8ff; border: none; font-weight: 800; padding: 8px 18px; border-radius: 30px; cursor: pointer; font-family: 'Nunito', sans-serif; color: #5b3fa0; transition: all 0.2s; }
+    .back-btn:hover { background: #e0d6ff; transform: translateY(-1px); }
+    .next-btn {
+      background: linear-gradient(135deg, #e91e8c, #c2185b); color: white; border: none;
+      font-family: 'Fredoka One', cursive; padding: 12px 32px; border-radius: 40px; font-size: 1.2rem;
+      cursor: pointer; margin-top: 20px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(233,30,140,0.3);
+    }
+    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(233,30,140,0.4); }
+    .next-btn.green { background: linear-gradient(135deg, #22c55e, #15803d); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+    .button-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .choices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+    .choice-btn { background: #faf7ff; border: 2px solid #e0d8f0; border-radius: 20px; padding: 14px; font-weight: 800; cursor: pointer; transition: all 0.1s; font-size: 1rem; }
+    .choice-btn:hover:not(:disabled) { background: #f5eefc; border-color: #f5c518; }
+    .choice-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .choice-btn.correct-choice { background: #d1fae5; border-color: #22c55e; }
+    .choice-btn.wrong-choice { background: #fee2e2; border-color: #ef4444; }
+    .feedback { padding: 12px 16px; border-radius: 20px; margin: 12px 0; font-weight: 700; }
+    .correct-fb { background: #e6f9ed; color: #166534; border-left: 5px solid #22c55e; }
+    .wrong-fb { background: #fff0f0; color: #991b1b; border-left: 5px solid #ef4444; }
+    .tutor-panel { background: #fffbf0; border-radius: 24px; margin-top: 16px; padding: 16px 20px; border-left: 6px solid #f5c518; font-weight: 600; line-height: 1.6; }
+    .show-tutor-btn { background: #f5c518; border: none; border-radius: 30px; padding: 6px 14px; font-weight: 800; cursor: pointer; margin-top: 8px; }
+    .study-content { line-height: 1.7; font-size: 1rem; }
+    .example-box { background: #f8f0ff; padding: 14px 18px; border-radius: 20px; margin: 12px 0; border-left: 5px solid #e91e8c; }
+    .q-progress-bar { height: 6px; background: #ede8ff; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+    .q-progress-fill { height: 100%; background: linear-gradient(90deg, #e91e8c, #f5c518); border-radius: 6px; transition: width 0.4s ease; }
+    .results-card { border-radius: 32px; padding: 28px 24px; text-align: center; }
+    .results-card.pass { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #22c55e; }
+    .results-card.fail { background: linear-gradient(135deg, #fefce8, #fffbe6); border: 2px solid #f5c518; }
+    .results-trophy { font-size: 4rem; margin-bottom: 12px; }
+    .results-title { font-family: 'Fredoka One', cursive; font-size: 1.7rem; }
+    .results-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+    .mastery-flash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(45,27,105,0.7); backdrop-filter: blur(4px); z-index: 1000; }
+    .mastery-flash-inner { background: white; border-radius: 40px; padding: 40px 32px; text-align: center; max-width: 360px; }
+    .confetti-piece { position: fixed; width: 9px; height: 9px; top: -10px; pointer-events: none; z-index: 999; animation: confettiFall linear forwards; }
+    @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+    @media (max-width: 700px) { .choices-grid { grid-template-columns: 1fr 1fr; } }
+    
+    .rule-steps { background: #f0e9ff; border-radius: 16px; padding: 12px; margin: 8px 0; }
+    .rule-step { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
+    .step-icon { width: 28px; height: 28px; background: #e91e8c20; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #e91e8c; }
+    .kid-tip { background: #e91e8c10; border-radius: 20px; padding: 12px; margin: 12px 0; text-align: center; font-weight: 800; color: #e91e8c; }
+  </style>
 </head>
 <body>
-
-<!-- ══════════════ WELCOME SCREEN ══════════════ -->
-<div id="welcome" class="screen active">
-  <div class="star-field" id="starField"></div>
-  <div class="welcome-content">
-    <div class="trophy">🏆</div>
-    <div class="title-badge">CogAT Level 8 Practice</div>
-    <h1 class="welcome-title">Safia's<br><span>Brain Challenge!</span></h1>
-    <p class="welcome-subtitle">10 real CogAT-style questions · All 3 batteries</p>
-
-    <div class="info-cards">
-      <div class="info-card"><span class="num">10</span>Questions</div>
-      <div class="info-card"><span class="num">3</span>Batteries</div>
-      <div class="info-card"><span class="num">⭐</span>Earn Stars</div>
-    </div>
-
-    <button class="btn-start" onclick="startQuiz()">Let's Go! 🚀</button>
-  </div>
-</div>
-
-<!-- ══════════════ QUIZ SCREEN ══════════════ -->
-<div id="quiz" class="screen">
-  <div class="quiz-header">
-    <div class="quiz-logo">✨ CogAT</div>
-    <div class="progress-wrap">
-      <div class="progress-label">QUESTION <span id="qNum">1</span> OF 10</div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
-    </div>
-    <div class="score-badge">⭐ <span id="scoreDisplay">0</span></div>
+<div class="app-container">
+  <div class="mastery-header">
+    <div class="logo"><h1>✨ CogAT Mastery · Safia</h1><p>🔷 Nonverbal · 🔢 Quantitative · 🗣️ Verbal</p></div>
+    <div class="progress-stats"><div class="stat"><span id="masteredCount">0</span><span>mastered</span></div><div class="stat"><span>9</span><span>subtests</span></div></div>
   </div>
 
-  <div class="quiz-body" id="quizBody">
-    <!-- injected dynamically -->
+  <div id="homeView">
+    <div class="panel" style="text-align:center;"><p>🎯 <strong>Pick any game to play!</strong> Each game has a Study Guide, a short Quiz, and a longer Exam. Pass the Exam to earn a Mastery Trophy! 🏆</p></div>
+    <div class="subtest-grid" id="subtestGrid"></div>
   </div>
 
-  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next ➜</button>
-</div>
-
-<!-- ══════════════ RESULTS SCREEN ══════════════ -->
-<div id="results" class="screen">
-  <div class="star-field" id="starField2"></div>
-  <div class="results-content">
-    <div class="results-trophy" id="resultsTrophy">🏆</div>
-    <h2 class="results-title">You scored<br><span id="finalScore">0</span> out of 10!</h2>
-    <div class="results-message" id="resultsMessage"></div>
-
-    <div class="score-circle">
-      <div class="score-num" id="scoreNum">0</div>
-      <div class="score-denom">/ 10</div>
-    </div>
-
-    <div class="results-breakdown">
-      <div class="breakdown-title">📊 Battery Results</div>
-      <div class="breakdown-row">
-        <span>🔷 Nonverbal (Q1–4)</span>
-        <div class="breakdown-dots" id="nonverbalDots"></div>
-      </div>
-      <div class="breakdown-row">
-        <span>🔢 Quantitative (Q5–7)</span>
-        <div class="breakdown-dots" id="quantDots"></div>
-      </div>
-      <div class="breakdown-row">
-        <span>🗣️ Verbal (Q8–10)</span>
-        <div class="breakdown-dots" id="verbalDots"></div>
-      </div>
-    </div>
-
-    <button class="btn-retry" onclick="retryQuiz()">Try Again 🔄</button>
-  </div>
+  <div id="detailView" style="display:none;"></div>
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-//  QUESTION DATA (based on PDF sample test)
-// ─────────────────────────────────────────────
-const questions = [
-  {
-    id: 1,
-    battery: "Nonverbal",
-    type: "Figure Matrices",
-    instruction: "Look at the shapes in the grid. The top two shapes go together in a special way. Find the answer that goes with the bottom left shape the same way.",
-    renderQuestion: () => `
-      <div class="analogy-grid">
-        <div class="analogy-cell">🔺🔺</div>
-        <div class="analogy-cell">🔺🔺🔺</div>
-        <div class="analogy-cell">▼▼</div>
-        <div class="analogy-cell unknown">?</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Top row: 2 shapes → 3 shapes (rotated)</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:32px">▼▼▼</span><span class="choice-text">3 arrows</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:32px">○○○</span><span class="choice-text">3 circles</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:32px">▼▼▼▼</span><span class="choice-text">4 arrows</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:32px">▼▼</span><span class="choice-text">2 arrows</span></div>` },
-    ],
-    correct: 0,
-    explanation: "The top row shows 2 shapes becoming 3 shapes (rotated). So the bottom left (2 down-arrows) becomes 3 down-arrows. Answer: A ✅",
-    steps: [
-      { title: "🔍 Look at the top row", text: "The top row has two boxes. Look at the FIRST box — it has 2 up-triangles (🔺🔺).", visual: `<span>First box:</span><span style="font-size:20px">🔺🔺</span><span>= 2 shapes</span>` },
-      { title: "📊 Now look at box two", text: "The second box has 3 triangles — and they are FLIPPED upside down!", visual: `<span>Second box:</span><span style="font-size:20px">🔺🔺🔺</span><span class="step-highlight">+1 shape, rotated</span>` },
-      { title: "💡 The rule is...", text: "Add 1 shape AND rotate/flip the shapes.", visual: `<span>Rule:</span><span class="step-highlight">count + 1, then flip</span>` },
-      { title: "✅ Apply it!", text: "The bottom left has 2 down-arrows (▼▼). Add 1 → we need 3 down-arrows. That's Answer A!", visual: `<span>▼▼</span><span>→</span><span class="step-highlight">▼▼▼ = A 🎉</span>` },
-    ]
-  },
-  {
-    id: 2,
-    battery: "Nonverbal",
-    type: "Figure Matrices",
-    instruction: "The top two shapes go together. Choose the answer that goes with the bottom left shape the same way.",
-    renderQuestion: () => `
-      <div class="analogy-grid">
-        <div class="analogy-cell">🔵⬛<br>⬛🔵</div>
-        <div class="analogy-cell">⬛🔵<br>🔵⬛</div>
-        <div class="analogy-cell">🔺⬛<br>⬛🔺</div>
-        <div class="analogy-cell unknown">?</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">The top shape flips its arrangement</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:22px">🔺⬛<br>⬛🔺</span><span class="choice-text">same</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:22px">⬛⬛<br>🔺🔺</span><span class="choice-text">bottom row</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:22px">⬛🔺<br>🔺⬛</span><span class="choice-text">swapped</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🔺🔺<br>⬛⬛</span><span class="choice-text">top row</span></div>` },
-    ],
-    correct: 2,
-    explanation: "In the top row, the top shape moves to the bottom. So the triangles and squares swap positions. Answer: C ✅",
-    steps: [
-      { title: "🔍 Look at the top-left box", text: "The top-left box has shapes stacked: a dark shape on TOP and a circle on the BOTTOM.", visual: `<span>Top-left:</span><span class="step-highlight">dark = TOP, circle = BOTTOM</span>` },
-      { title: "🔄 Now look at the top-right box", text: "In the top-right box, the dark shape that was on TOP has MOVED to the BOTTOM! The circle moved up.", visual: `<span>Shapes</span><span>→</span><span class="step-highlight">swapped positions!</span>` },
-      { title: "💡 The rule is...", text: "The TOP shape and BOTTOM shape swap places from left to right.", visual: `<span>Rule:</span><span class="step-highlight">top shape ↔ bottom shape swap</span>` },
-      { title: "✅ Apply it!", text: "Bottom-left has triangle (🔺) on TOP and diamonds (⬛) on the BOTTOM. After swapping: diamonds go to top, triangle goes to bottom. That's Answer C!", visual: `<span>🔺 top → bottom</span><span>=</span><span class="step-highlight">Answer C 🎉</span>` },
-    ]
-  },
-  {
-    id: 3,
-    battery: "Nonverbal",
-    type: "Figure Classification",
-    instruction: "The first three shapes are alike in some way. Choose the answer that belongs in the same group.",
-    renderQuestion: () => `
-      <div class="classify-row">
-        <div class="classify-item">🟧🟦</div>
-        <div class="classify-item">🟩🟥</div>
-        <div class="classify-item">🟪🟨</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Each shape is split into TWO different colors</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:36px">🟦🟦</span><span class="choice-text">same color</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:36px">🟩🟧</span><span class="choice-text">two colors</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:36px">🟣</span><span class="choice-text">one color</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:36px">💚</span><span class="choice-text">one shape</span></div>` },
-    ],
-    correct: 1,
-    explanation: "All three shapes are divided into two equal halves with two different colors. Answer B also has two different colors. Answer: B ✅",
-    steps: [
-      { title: "🔍 Look at shape 1", text: "The first shape is split into two halves — an orange half and a blue half. Two different colors!", visual: `<span>Shape 1:</span><span class="step-highlight">🟧 + 🟦 = 2 colors</span>` },
-      { title: "🔍 Look at shapes 2 and 3", text: "Shape 2 is green + red. Shape 3 is purple + yellow. They ALL have two different colors split down the middle.", visual: `<span>All have:</span><span class="step-highlight">2 halves, 2 colors</span>` },
-      { title: "💡 The rule is...", text: "Every shape in the group must be split into exactly 2 equal halves with 2 DIFFERENT colors.", visual: `<span>Rule:</span><span class="step-highlight">2 halves, 2 different colors</span>` },
-      { title: "✅ Apply it!", text: "Look at the choices. Only B has two different colors split in half. A is all blue, C and D are one color. Answer: B!", visual: `<span>B:</span><span class="step-highlight">🟩 + 🟧 = 2 colors = B 🎉</span>` },
-    ]
-  },
-  {
-    id: 4,
-    battery: "Nonverbal",
-    type: "Paper Folding",
-    instruction: "A paper is folded in half from bottom to top. Two holes are punched. When unfolded, what does it look like?",
-    renderQuestion: () => `
-      <div class="paper-fold-steps">
-        <div class="paper-step">
-          <div class="paper-step-label">Step 1: Full Paper</div>
-          <div style="width:90px;height:60px;background:#6488ea;border-radius:8px;border:2px solid #4a6bc8;"></div>
-        </div>
-        <div class="paper-step-arrow">➡️</div>
-        <div class="paper-step">
-          <div class="paper-step-label">Step 2: Fold up, punch 2 holes</div>
-          <div style="width:90px;height:32px;background:#6488ea;border-radius:8px 8px 0 0;border:2px solid #4a6bc8;position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 10px;">
-            <div style="width:14px;height:14px;border-radius:50%;background:white;border:2px dashed #4a6bc8;"></div>
-            <div style="width:12px;height:12px;background:white;border:2px dashed #4a6bc8;border-radius:3px;"></div>
-          </div>
-          <div style="width:90px;height:3px;background:#3a5bc0;"></div>
-        </div>
-        <div class="paper-step-arrow">➡️</div>
-        <div class="paper-step">
-          <div class="paper-step-label">Unfolded = ?</div>
-          <div style="width:90px;height:60px;background:#6488ea;border-radius:8px;border:3px dashed var(--gold);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--gold);">?</div>
-        </div>
-      </div>
-      <p style="text-align:center;margin-top:12px;font-size:13px;color:#888;font-weight:700;">Each punch makes 2 holes when unfolded (top + mirror below)</p>
-    `,
-    choices: [
-      { label: "1", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;display:flex;align-items:center;justify-content:space-around;padding:0 8px;"><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;top:6px;left:10px;"></div><div style="width:8px;height:8px;background:white;border-radius:2px;position:absolute;top:6px;right:10px;"></div><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;bottom:6px;left:10px;"></div><div style="width:8px;height:8px;background:white;border-radius:2px;position:absolute;bottom:6px;right:10px;"></div></div><span class="choice-text">4 holes (2+2)</span></div>` },
-      { label: "2", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;"><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;top:8px;left:8px;"></div><div style="width:10px;height:10px;border-radius:50%;background:white;position:absolute;bottom:8px;left:8px;"></div></div><span class="choice-text">2 circles only</span></div>` },
-      { label: "3", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;position:relative;"><div style="width:8px;height:8px;border-radius:2px;background:white;position:absolute;top:8px;right:8px;"></div></div><span class="choice-text">1 hole only</span></div>` },
-      { label: "4", display: `<div class="choice-content"><div style="width:70px;height:46px;background:#6488ea;border-radius:6px;"></div><span class="choice-text">no holes</span></div>` },
-    ],
-    correct: 0,
-    explanation: "When paper is folded and you punch 2 holes, unfolding creates 4 holes total — each hole mirrors on the other half! Answer: 1 ✅",
-    steps: [
-      { title: "📄 Start with a full paper", text: "Imagine a full piece of paper. It has a TOP half and a BOTTOM half.", visual: `<span>Full paper</span><span class="step-highlight">= Top half + Bottom half</span>` },
-      { title: "📐 Fold it in half", text: "When we fold the bottom UP to meet the top, the paper now has 2 layers stacked on top of each other.", visual: `<span>Fold up</span><span>→</span><span class="step-highlight">2 layers stacked</span>` },
-      { title: "🔵 Punch 2 holes", text: "We punch 2 holes through BOTH layers at once. Each punch goes through the top layer AND the bottom layer.", visual: `<span>2 punches</span><span>×</span><span class="step-highlight">2 layers = 4 holes!</span>` },
-      { title: "✅ Unfold it!", text: "When we unfold, each hole appears TWICE — once on top, once mirrored on the bottom. So 2 holes become 4 holes. Answer: 1!", visual: `<span>2 holes × 2 layers</span><span>=</span><span class="step-highlight">4 holes total = Answer 1 🎉</span>` },
-    ]
-  },
-  {
-    id: 5,
-    battery: "Quantitative",
-    type: "Number Analogies",
-    instruction: "The top row shows a pattern. Find the answer that follows the same pattern for the bottom row.",
-    renderQuestion: () => `
-      <div class="analogy-grid" style="gap:8px;">
-        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
-          <span>🌸🌸🌸🌸</span>
-          <span>🌸🌸🌸🌸</span>
-          <span style="font-size:11px;color:#888;">8 flowers</span>
-        </div>
-        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
-          <span>🌸🌸🌸🌸</span>
-          <span style="font-size:11px;color:#888;">4 flowers</span>
-        </div>
-        <div class="analogy-cell" style="font-size:14px;flex-direction:column;gap:2px;">
-          <span>🍃🍃🍃</span>
-          <span>🍃🍃🍃</span>
-          <span style="font-size:11px;color:#888;">6 leaves</span>
-        </div>
-        <div class="analogy-cell unknown">?</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Top row: 8 → 4 (decreased by 4). Bottom: 6 → ?</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃🍃</span><span class="choice-text">4 leaves</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃</span><span class="choice-text">3 leaves</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃</span><span class="choice-text">2 leaves</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:22px">🍃🍃🍃🍃🍃🍃</span><span class="choice-text">6 leaves</span></div>` },
-    ],
-    correct: 2,
-    explanation: "The rule: decrease by 4. Flowers: 8 → 4. Leaves: 6 → 2. Answer: C ✅",
-    steps: [
-      { title: "🔍 Look at the top row", text: "The top-left box has 8 flowers (🌸🌸🌸🌸🌸🌸🌸🌸). Count them!", visual: `<span>Left box:</span><span class="step-highlight">8 flowers</span>` },
-      { title: "📊 Now the top-right box", text: "The top-right box has 4 flowers. How many did we lose?", visual: `<span>8 flowers</span><span>→</span><span class="step-highlight">4 flowers (−4!)</span>` },
-      { title: "💡 The rule is...", text: "The rule is: subtract 4. The amount goes down by 4 from left to right.", visual: `<span>Rule:</span><span class="step-highlight">number − 4</span>` },
-      { title: "✅ Apply it to leaves!", text: "The bottom-left has 6 leaves. Subtract 4: 6 − 4 = 2. We need 2 leaves. That's Answer C!", visual: `<span>6 leaves − 4</span><span>=</span><span class="step-highlight">2 leaves = C 🎉</span>` },
-    ]
-  },
-  {
-    id: 6,
-    battery: "Quantitative",
-    type: "Number Series",
-    instruction: "Look at the number pattern on the abacus beads. What number comes next?",
-    renderQuestion: () => `
-      <div style="text-align:center;">
-        <div class="number-series-display">
-          <div class="series-num">10</div>
-          <div class="series-arrow">→</div>
-          <div class="series-num">9</div>
-          <div class="series-arrow">→</div>
-          <div class="series-num">7</div>
-          <div class="series-arrow">→</div>
-          <div class="series-num">6</div>
-          <div class="series-arrow">→</div>
-          <div class="series-num">4</div>
-          <div class="series-arrow">→</div>
-          <div class="series-num" style="background:var(--gold-light);border-color:var(--gold);color:var(--gold);">?</div>
-        </div>
-        <p style="margin-top:12px;font-size:13px;color:#888;font-weight:700;">Hint: The pattern alternates between −1 and −2</p>
-      </div>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">2</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">3</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">5</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">1</span></div>` },
-    ],
-    correct: 1,
-    explanation: "Pattern: −1, −2, −1, −2... So 10→9(−1)→7(−2)→6(−1)→4(−2)→3(−1). Answer: B ✅",
-    steps: [
-      { title: "🔍 Look at the first jump", text: "10 → 9. How much did we subtract? We subtracted 1!", visual: `<span>10 → 9</span><span class="step-highlight">= minus 1</span>` },
-      { title: "📊 Look at the second jump", text: "9 → 7. How much this time? We subtracted 2!", visual: `<span>9 → 7</span><span class="step-highlight">= minus 2</span>` },
-      { title: "💡 See the pattern!", text: "The pattern ALTERNATES: subtract 1, then subtract 2, then subtract 1, then subtract 2...", visual: `<span>−1, −2, −1, −2...</span><span class="step-highlight">alternating!</span>` },
-      { title: "🔢 Check the whole series", text: "10 −1→ 9 −2→ 7 −1→ 6 −2→ 4. Next must be −1!", visual: `<span>4</span><span>− 1</span><span class="step-highlight">= 3 = Answer B 🎉</span>` },
-    ]
-  },
-  {
-    id: 7,
-    battery: "Quantitative",
-    type: "Number Puzzles",
-    instruction: "Solve the equation. What number is missing?",
-    renderQuestion: () => `
-      <div class="equation-display">
-        <div class="eq-box">23</div>
-        <div class="eq-op">=</div>
-        <div class="eq-box">9</div>
-        <div class="eq-op">+</div>
-        <div class="eq-box">7</div>
-        <div class="eq-op">+</div>
-        <div class="eq-box unknown">?</div>
-      </div>
-      <p style="text-align:center;font-size:13px;color:#888;font-weight:700;">23 = 9 + 7 + ?</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">7</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">8</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">9</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:44px;font-family:'Fredoka One',cursive;color:var(--purple);">6</span></div>` },
-    ],
-    correct: 0,
-    explanation: "9 + 7 = 16. Then 23 − 16 = 7. The missing number is 7. Answer: A ✅",
-    steps: [
-      { title: "🔍 Read the equation", text: "The equation says: 23 = 9 + 7 + ?. We need to find what ? equals.", visual: `<span>23</span><span>=</span><span>9 + 7 + </span><span class="step-highlight">?</span>` },
-      { title: "➕ Add the numbers we know", text: "First, add 9 + 7 together. What do you get?", visual: `<span>9 + 7</span><span>=</span><span class="step-highlight">16</span>` },
-      { title: "💡 Rewrite it simply", text: "Now the equation is: 23 = 16 + ?. What do we add to 16 to make 23?", visual: `<span>23 = 16 + </span><span class="step-highlight">?</span>` },
-      { title: "✅ Subtract to find the answer!", text: "23 − 16 = 7. So the missing number is 7. That's Answer A!", visual: `<span>23 − 16</span><span>=</span><span class="step-highlight">7 = Answer A 🎉</span>` },
-    ]
-  },
-  {
-    id: 8,
-    battery: "Verbal",
-    type: "Picture Analogies",
-    instruction: "The first two pictures go together in a special way. Choose the picture that goes with the third picture the same way.",
-    renderQuestion: () => `
-      <div class="analogy-grid">
-        <div class="analogy-cell" style="font-size:44px;">🐯</div>
-        <div class="analogy-cell" style="font-size:44px;">🥩</div>
-        <div class="analogy-cell" style="font-size:44px;">🐐</div>
-        <div class="analogy-cell unknown">?</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">Tiger → meat (what a tiger eats). Goat → ?</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span class="animal-choice">🌾</span><span class="choice-text">Grass</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span class="animal-choice">🍕</span><span class="choice-text">Pizza</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span class="animal-choice">🥚</span><span class="choice-text">Egg</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span class="animal-choice">🍜</span><span class="choice-text">Noodles</span></div>` },
-    ],
-    correct: 0,
-    explanation: "A tiger eats meat. A goat eats grass/plants. Answer: A ✅",
-    steps: [
-      { title: "🔍 Look at the top pair", text: "The top row shows a TIGER (🐯) and a piece of MEAT (🥩). What is the connection?", visual: `<span>🐯 tiger</span><span>→</span><span class="step-highlight">eats 🥩 meat</span>` },
-      { title: "💡 The rule is...", text: "The connection is: animal → what that animal EATS. Tigers are meat-eaters (carnivores).", visual: `<span>Rule:</span><span class="step-highlight">animal → its food</span>` },
-      { title: "🐐 Now look at the bottom", text: "The bottom left shows a GOAT (🐐). What does a goat eat?", visual: `<span>🐐 goat eats...</span><span class="step-highlight">plants and grass!</span>` },
-      { title: "✅ Pick the right food!", text: "Goats eat grass and plants. Look at the choices — A shows grass (🌾). That's the answer!", visual: `<span>🐐 goat</span><span>→</span><span class="step-highlight">🌾 grass = Answer A 🎉</span>` },
-    ]
-  },
-  {
-    id: 9,
-    battery: "Verbal",
-    type: "Sentence Completion",
-    instruction: "Listen carefully! Choose the picture that has exactly TWO 3D shapes.",
-    renderQuestion: () => `
-      <button class="audio-btn" onclick="speakSentence()">
-        🔊 Tap to hear the question
-      </button>
-      <p style="text-align:center;font-weight:800;font-size:16px;color:var(--purple);margin-bottom:16px;">
-        "Mark the picture that has <u>two</u> 3D shapes."
-      </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin:0 auto;">
-        <div class="shape-card" style="background:#f0f8ff;">
-          <span style="font-size:13px;font-weight:800;color:#999;">Choice A</span>
-          <span>🔺🟥<br>🟢🔷</span>
-          <span style="font-size:11px;color:#888;">0 x 3D shapes</span>
-        </div>
-        <div class="shape-card" style="background:#f0fff0;">
-          <span style="font-size:13px;font-weight:800;color:#999;">Choice B</span>
-          <span>📦🔴<br>🔵🔷</span>
-          <span style="font-size:11px;color:#22c55e;font-weight:800;">✅ Cube + Sphere = 2 3D!</span>
-        </div>
-        <div class="shape-card">
-          <span style="font-size:13px;font-weight:800;color:#999;">Choice C</span>
-          <span>📦🟥<br>🔴🔺</span>
-          <span style="font-size:11px;color:#888;">Cube + Sphere = 2, but extra flat shapes</span>
-        </div>
-        <div class="shape-card">
-          <span style="font-size:13px;font-weight:800;color:#999;">Choice D</span>
-          <span>🔺🟥<br>🔴🔷</span>
-          <span style="font-size:11px;color:#888;">Only 1 3D shape</span>
-        </div>
-      </div>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span style="font-size:28px">🔺🟥🟢🔷</span><span class="choice-text">All flat</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span style="font-size:28px">📦🔴</span><span class="choice-text">Cube + Sphere</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span style="font-size:28px">📦🔴🔺</span><span class="choice-text">3 shapes</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span style="font-size:28px">🔺🔴🔷</span><span class="choice-text">1 sphere only</span></div>` },
-    ],
-    correct: 1,
-    explanation: "We need exactly 2 three-dimensional shapes. A cube (📦) and a sphere (🔴) are both 3D. Answer: B ✅",
-    steps: [
-      { title: "🤔 What is a 3D shape?", text: "A 3D shape is solid — it has height, width AND depth. You can hold it in your hand! A cube and a sphere are 3D.", visual: `<span>3D shapes:</span><span class="step-highlight">📦 cube, 🔴 sphere, 🔺 pyramid</span>` },
-      { title: "📐 What is a flat (2D) shape?", text: "A flat shape only has height and width — like a drawing on paper. Squares, circles, diamonds on paper are 2D.", visual: `<span>2D shapes:</span><span class="step-highlight">🟥 square, 🔷 diamond, ⬛ flat</span>` },
-      { title: "🔍 The question asks...", text: "We need to find the choice that has EXACTLY TWO 3D shapes — not one, not three, exactly two!", visual: `<span>Goal:</span><span class="step-highlight">find exactly 2 three-dimensional shapes</span>` },
-      { title: "✅ Check each choice!", text: "Choice B has a cube (📦) and a sphere (🔴) — both 3D! That's exactly 2 three-dimensional shapes. Answer: B!", visual: `<span>📦 cube + 🔴 sphere</span><span>=</span><span class="step-highlight">2 3D shapes = B 🎉</span>` },
-    ]
-  },
-  {
-    id: 10,
-    battery: "Verbal",
-    type: "Picture Classification",
-    instruction: "The first three pictures are alike in some way. Choose the picture that belongs in the same group.",
-    renderQuestion: () => `
-      <div class="classify-row">
-        <div class="classify-item" title="Piano">🎹</div>
-        <div class="classify-item" title="Guitar">🎸</div>
-        <div class="classify-item" title="Trumpet">🎺</div>
-      </div>
-      <p style="text-align:center;margin-top:10px;font-size:13px;color:#888;font-weight:700;">All three are musical instruments you PLAY</p>
-    `,
-    choices: [
-      { label: "A", display: `<div class="choice-content"><span class="instrument-choice">🔊</span><span class="choice-text">Speaker</span></div>` },
-      { label: "B", display: `<div class="choice-content"><span class="instrument-choice">🎧</span><span class="choice-text">Headphones</span></div>` },
-      { label: "C", display: `<div class="choice-content"><span class="instrument-choice">🎷</span><span class="choice-text">Saxophone</span></div>` },
-      { label: "D", display: `<div class="choice-content"><span class="instrument-choice">📢</span><span class="choice-text">Megaphone</span></div>` },
-    ],
-    correct: 2,
-    explanation: "Piano, guitar, and trumpet are all musical instruments you play. A saxophone is also a musical instrument! Answer: C ✅",
-    steps: [
-      { title: "🔍 Look at the three pictures", text: "We see a piano (🎹), a guitar (🎸), and a trumpet (🎺). What do they all have in common?", visual: `<span>🎹 🎸 🎺</span><span class="step-highlight">all make music!</span>` },
-      { title: "💡 They are all...", text: "They are all MUSICAL INSTRUMENTS — things you play to make music! They are not things you listen WITH (like speakers or headphones).", visual: `<span>Group rule:</span><span class="step-highlight">musical instruments you PLAY</span>` },
-      { title: "🔍 Check the choices", text: "A = speaker (plays music FOR you, not an instrument). B = headphones (you listen WITH it). D = megaphone. None of those are instruments!", visual: `<span>❌ Speaker ❌ Headphones ❌ Megaphone</span>` },
-      { title: "✅ The answer is C!", text: "A saxophone (🎷) is a musical instrument you PLAY — just like a piano, guitar, and trumpet! Answer: C!", visual: `<span>🎷 saxophone</span><span class="step-highlight">= musical instrument = C 🎉</span>` },
-    ]
-  }
-];
+  // ========== HELPER FUNCTIONS ==========
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
 
-// ─────────────────────────────────────────────
-//  STATE
-// ─────────────────────────────────────────────
-let currentQ = 0;
-let score = 0;
-let answers = [];
-let answered = false;
-
-// ─────────────────────────────────────────────
-//  STARS (welcome/results background)
-// ─────────────────────────────────────────────
-function makeStars(containerId, count = 40) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 4 + 2;
-    s.style.cssText = `
-      width:${size}px;height:${size}px;
-      left:${Math.random()*100}%;
-      top:${Math.random()*100}%;
-      animation-delay:${Math.random()*2}s;
-      animation-duration:${1.5+Math.random()*2}s;
-    `;
-    container.appendChild(s);
-  }
-}
-
-// ─────────────────────────────────────────────
-//  QUIZ FLOW
-// ─────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function startQuiz() {
-  currentQ = 0; score = 0; answers = []; answered = false;
-  document.getElementById('scoreDisplay').textContent = '0';
-  showScreen('quiz');
-  renderQuestion();
-}
-
-function renderQuestion() {
-  const q = questions[currentQ];
-  answered = false;
-  document.getElementById('btnNext').style.display = 'none';
-  document.getElementById('qNum').textContent = currentQ + 1;
-  document.getElementById('progressFill').style.width = `${((currentQ + 1) / 10) * 100}%`;
-
-  const batteryColors = {
-    'Nonverbal': '#7c3aed',
-    'Quantitative': '#0ea5e9',
-    'Verbal': '#e91e8c'
-  };
-
-  const batteryEmojis = {
-    'Nonverbal': '🔷',
-    'Quantitative': '🔢',
-    'Verbal': '🗣️'
-  };
-
-  const choicesHTML = q.choices.map((c, i) => `
-    <button class="choice-btn" id="choice-${i}" onclick="selectAnswer(${i})">
-      <span class="choice-label">${c.label}</span>
-      ${c.display}
-    </button>
-  `).join('');
-
-  document.getElementById('quizBody').innerHTML = `
-    <div class="question-tag">
-      <div class="dot" style="background:${batteryColors[q.battery]}"></div>
-      ${batteryEmojis[q.battery]} ${q.battery} · ${q.type}
-    </div>
-    <h2 class="question-title">Question ${q.id}</h2>
-    <p class="question-instruction">${q.instruction}</p>
-    <div class="question-visual">
-      ${q.renderQuestion()}
-    </div>
-    <div class="choices-grid">
-      ${choicesHTML}
-    </div>
-    <div class="feedback-banner" id="feedbackBanner"></div>
-  `;
-}
-
-function selectAnswer(idx) {
-  if (answered) return;
-  answered = true;
-
-  const q = questions[currentQ];
-  const isCorrect = idx === q.correct;
-
-  if (isCorrect) {
-    score++;
-    document.getElementById('scoreDisplay').textContent = score;
-  }
-
-  answers.push({ qIdx: currentQ, correct: isCorrect });
-
-  // Style buttons
-  document.querySelectorAll('.choice-btn').forEach((btn, i) => {
-    btn.disabled = true;
-    if (i === idx && isCorrect) btn.classList.add('correct');
-    else if (i === idx && !isCorrect) btn.classList.add('wrong');
-    if (i === q.correct && !isCorrect) btn.classList.add('reveal-correct');
-  });
-
-  // Feedback
-  const fb = document.getElementById('feedbackBanner');
-  fb.className = 'feedback-banner show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
-
-  if (isCorrect) {
-    fb.innerHTML = `<span class="feedback-icon">🌟</span> <strong>Amazing! That's correct!</strong><div class="feedback-explanation">${q.explanation}</div>`;
-  } else {
-    fb.innerHTML = `
-      <span class="feedback-icon">💪</span> <strong>Not quite — let's figure it out together!</strong>
-      <div class="feedback-explanation">${q.explanation}</div>
-      <button class="show-steps-btn" onclick="showTutorPanel()">
-        🧠 Show me step-by-step!
-      </button>
-    `;
-  }
-
-  document.getElementById('btnNext').style.display = 'block';
-  document.getElementById('btnNext').textContent = currentQ < 9 ? 'Next ➜' : 'See Results 🏆';
-}
-
-// ─────────────────────────────────────────────
-//  TUTOR STEP-BY-STEP
-// ─────────────────────────────────────────────
-let tutorStepIdx = 0;
-
-function showTutorPanel() {
-  const q = questions[currentQ];
-  tutorStepIdx = 0;
-
-  // Hide the show-steps button
-  const showBtn = document.querySelector('.show-steps-btn');
-  if (showBtn) showBtn.style.display = 'none';
-
-  // Build tutor panel HTML
-  const stepsHTML = q.steps.map((s, i) => `
-    <div class="tutor-step" id="tutor-step-${i}">
-      <div class="step-bubble">${i + 1}</div>
-      <div class="step-content">
-        <div class="step-title">${s.title}</div>
-        <div class="step-text">${s.text}</div>
-        <div class="step-visual">${s.visual}</div>
-      </div>
-    </div>
-  `).join('');
-
-  // Insert tutor panel after feedback banner
-  const fb = document.getElementById('feedbackBanner');
-  const panel = document.createElement('div');
-  panel.className = 'tutor-panel show';
-  panel.id = 'tutorPanel';
-  panel.innerHTML = `
-    <div class="tutor-header">
-      <div class="tutor-avatar">🦉</div>
-      <div>
-        <div class="tutor-name">Zara the Wise Owl</div>
-        <div class="tutor-subtitle">Let me walk you through it!</div>
-      </div>
-    </div>
-    <div class="tutor-steps" id="tutorStepsContainer">
-      ${stepsHTML}
-    </div>
-    <div class="tutor-nav">
-      <div class="step-counter">Step <span id="stepCountCurrent">1</span> of ${q.steps.length}</div>
-      <button class="btn-next-step" id="tutorNavBtn" onclick="advanceTutorStep()">Next Step ➜</button>
-    </div>
-  `;
-  fb.after(panel);
-
-  // Scroll to tutor panel
-  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-
-  // Show only step 0 initially
-  revealTutorStep(0);
-}
-
-function revealTutorStep(idx) {
-  const q = questions[currentQ];
-  const stepEl = document.getElementById(`tutor-step-${idx}`);
-  if (!stepEl) return;
-
-  setTimeout(() => {
-    stepEl.classList.add('visible');
-    document.getElementById('stepCountCurrent').textContent = idx + 1;
-
-    // Update nav button
-    const navBtn = document.getElementById('tutorNavBtn');
-    if (idx >= q.steps.length - 1) {
-      navBtn.textContent = "Got it! ✅";
-      navBtn.className = 'btn-got-it';
-      navBtn.onclick = closeTutorPanel;
-    }
-  }, 100);
-}
-
-function advanceTutorStep() {
-  const q = questions[currentQ];
-  tutorStepIdx++;
-  if (tutorStepIdx < q.steps.length) {
-    revealTutorStep(tutorStepIdx);
-    // Scroll to new step
-    setTimeout(() => {
-      const stepEl = document.getElementById(`tutor-step-${tutorStepIdx}`);
-      if (stepEl) stepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 200);
-  }
-}
-
-function closeTutorPanel() {
-  const panel = document.getElementById('tutorPanel');
-  if (panel) {
-    panel.style.opacity = '0';
-    panel.style.transform = 'translateY(-8px)';
-    panel.style.transition = 'all 0.3s ease';
-    setTimeout(() => panel.remove(), 300);
-  }
-  // Scroll to Next button
-  setTimeout(() => {
-    document.getElementById('btnNext').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 350);
-}
-
-function nextQuestion() {
-  if (currentQ < 9) {
-    currentQ++;
-    renderQuestion();
-    window.scrollTo(0, 0);
-  } else {
-    showResults();
-  }
-}
-
-// ─────────────────────────────────────────────
-//  RESULTS
-// ─────────────────────────────────────────────
-function showResults() {
-  showScreen('results');
-  makeStars('starField2', 50);
-
-  document.getElementById('finalScore').textContent = score;
-  document.getElementById('scoreNum').textContent = score;
-
-  const msgs = [
-    [0,3, "Keep practicing — you're learning! 💪"],
-    [4,6, "Good effort! You're getting it! 😊"],
-    [7,8, "Great job Safia! Almost perfect! 🌟"],
-    [9,10, "INCREDIBLE! You're a genius! 🏆🎉"]
-  ];
-  const msg = msgs.find(([min,max]) => score >= min && score <= max);
-  document.getElementById('resultsMessage').textContent = msg ? msg[2] : '';
-
-  const trophies = score <= 3 ? '📚' : score <= 6 ? '🥈' : score <= 8 ? '🥇' : '🏆';
-  document.getElementById('resultsTrophy').textContent = trophies;
-
-  // Battery breakdown: Q1-4 nonverbal, Q5-7 quant, Q8-10 verbal
-  const ranges = [
-    { id: 'nonverbalDots', from: 0, to: 3 },
-    { id: 'quantDots', from: 4, to: 6 },
-    { id: 'verbalDots', from: 7, to: 9 },
+  // Shape pairs for Figure Matrices
+  const shapePairs = [
+    ['▲', '▼'], ['◀', '▶'], ['◆', '◇'], ['■', '□'], ['●', '○']
   ];
 
-  ranges.forEach(({ id, from, to }) => {
-    const container = document.getElementById(id);
-    container.innerHTML = '';
-    for (let i = from; i <= to; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'dot-result ' + (answers[i]?.correct ? 'c' : 'w');
-      container.appendChild(dot);
+  // ========== SUBTEST DEFINITIONS ==========
+  const SUBTESTS = [
+    { id:0, name:"Figure Matrices", battery:"Nonverbal", icon:"🔷", quizSize:5, examSize:12, templates:[] },
+    { id:1, name:"Figure Classification", battery:"Nonverbal", icon:"🔷", quizSize:5, examSize:12, templates:[] },
+    { id:2, name:"Paper Folding", battery:"Nonverbal", icon:"🔷", quizSize:5, examSize:10, templates:[] },
+    { id:3, name:"Number Analogies", battery:"Quantitative", icon:"🔢", quizSize:5, examSize:12, templates:[] },
+    { id:4, name:"Number Series", battery:"Quantitative", icon:"🔢", quizSize:5, examSize:12, templates:[] },
+    { id:5, name:"Number Puzzles", battery:"Quantitative", icon:"🔢", quizSize:5, examSize:10, templates:[] },
+    { id:6, name:"Picture Analogies", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] },
+    { id:7, name:"Sentence Completion", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] },
+    { id:8, name:"Picture Classification", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] }
+  ];
+
+  // ========== FIGURE MATRICES ==========
+  for(let i = 0; i < 24; i++) {
+    SUBTESTS[0].templates.push(() => {
+      const [shapeA, shapeB] = shapePairs[rand(0, shapePairs.length - 1)];
+      const countStart = rand(2, 3);
+      const countEnd = countStart + rand(1, 2);
+      const correct = shapeB.repeat(countEnd);
+      return {
+        text: `🔷 TOP: ${shapeA.repeat(countStart)} → ${shapeB.repeat(countEnd)}\n🔷 BOTTOM: ${shapeA.repeat(countStart)} → ?`,
+        choices: shuffle([correct, shapeA.repeat(countEnd), shapeB.repeat(countEnd-1), shapeB.repeat(countEnd+1)]),
+        correctAnswer: correct,
+        explanation: `✨ The secret rule has 3 parts: 1) Shape changed from ${shapeA} to ${shapeB}, 2) Count went from ${countStart} to ${countEnd} (+${countEnd-countStart}), 3) Shape flipped/rotated!`,
+        steps: [`🔍 1st: Did the SHAPE change? Yes! ${shapeA} → ${shapeB}`, `🔢 2nd: Did the COUNT change? Yes! ${countStart} → ${countEnd} (grew by ${countEnd-countStart})`, `🔄 3rd: Did it ROTATE/FLIP? Yes!`, `✅ Apply all 3 rules to the bottom: ${correct}!`]
+      };
+    });
+  }
+
+  // ========== FIGURE CLASSIFICATION ==========
+  for(let i = 0; i < 18; i++) {
+    SUBTESTS[1].templates.push(() => {
+      const colors = [['🟥','🟦'],['🟩','🟨'],['🟪','🟧']];
+      const [c1,c2] = colors[rand(0, colors.length-1)];
+      const correct = `${c1}${c2}`;
+      return {
+        text: `🔷 Three shapes are split into TWO DIFFERENT colors: ${c1}|${c2}. Which one follows the same TWIN COLORS rule?`,
+        choices: shuffle([correct, `${c1}${c1}`, c1, `${c2}${c2}`]),
+        correctAnswer: correct,
+        explanation: `The "Twin Colors" rule: Each shape has two DIFFERENT colored halves!`,
+        steps: [`🎨 Look at the three shapes — each has two different colors!`, `👯 The correct answer must also have two different colors.`, `✅ ${correct} has two different colors — perfect match!`]
+      };
+    });
+  }
+
+  // ========== PAPER FOLDING ==========
+  for(let i = 0; i < 14; i++) {
+    SUBTESTS[2].templates.push(() => {
+      const punches = rand(1, 3);
+      const total = punches * 2;
+      return {
+        text: `📄 Paper folded once (bottom folded up to top). ${punches} hole(s) punched. How many holes when you open it?`,
+        choices: shuffle([`${total} holes`, `${total-1} holes`, `${punches} holes`, `${total+1} holes`]),
+        correctAnswer: `${total} holes`,
+        explanation: `Folding makes 2 layers. Each punch pokes through BOTH layers! ${punches} × 2 = ${total} holes.`,
+        steps: [`📁 When you fold paper, you have 2 layers on top of each other.`, `✂️ A hole punch goes through ALL the layers at once!`, `🔢 ${punches} punch(es) × 2 layers = ${total} holes when unfolded.`]
+      };
+    });
+  }
+
+  // ========== NUMBER ANALOGIES ==========
+  for(let i = 0; i < 20; i++) {
+    SUBTESTS[3].templates.push(() => {
+      const diff = rand(2, 5);
+      const first = rand(8, 15);
+      const second = first - diff;
+      const third = rand(8, 15);
+      const answer = third - diff;
+      return {
+        text: `🔢 Top: ${first} → ${second} (jumped DOWN by ${diff}). Bottom: ${third} → ? (jump DOWN by ${diff} too!)`,
+        choices: shuffle([answer.toString(), (answer+1).toString(), (answer-1).toString(), (third-2).toString()]),
+        correctAnswer: answer.toString(),
+        explanation: `The number jumped DOWN by ${diff}. So ${third} − ${diff} = ${answer}`,
+        steps: [`📏 First, find the jump: ${first} − ${second} = ${diff} (it went DOWN)`, `🦘 Apply the SAME jump to the bottom number: ${third} − ${diff} = ${answer}`]
+      };
+    });
+  }
+
+  // ========== NUMBER SERIES ==========
+  for(let i = 0; i < 20; i++) {
+    SUBTESTS[4].templates.push(() => {
+      const start = rand(10, 15);
+      const seq = [start, start-1, start-3, start-4, start-6];
+      const next = seq[4] - 1;
+      return {
+        text: `🔢 Hopscotch pattern: ${seq.join(', ')}, ___ ?`,
+        choices: shuffle([next.toString(), (next+1).toString(), (next-1).toString(), (next+2).toString()]),
+        correctAnswer: next.toString(),
+        explanation: `The jumps go: -1, -2, -1, -2... Next jump is -1! ${seq[4]} − 1 = ${next}`,
+        steps: [`🦘 Look at the hops: ${seq[0]}→${seq[1]} (down 1), ${seq[1]}→${seq[2]} (down 2)`, `🔄 The pattern repeats: down 1, down 2, down 1, down 2...`, `🎯 Next hop is down 1: ${seq[4]} − 1 = ${next}`]
+      };
+    });
+  }
+
+  // ========== NUMBER PUZZLES ==========
+  for(let i = 0; i < 16; i++) {
+    SUBTESTS[5].templates.push(() => {
+      const a = rand(4, 12);
+      const b = rand(3, 9);
+      const sum = a + b;
+      const total = sum + rand(2, 7);
+      const missing = total - sum;
+      return {
+        text: `🧩 ${total} = ${a} + ${b} + ?   (What number is missing?)`,
+        choices: shuffle([missing.toString(), (missing+1).toString(), (missing-1).toString(), (missing+2).toString()]),
+        correctAnswer: missing.toString(),
+        explanation: `Add the numbers you see: ${a} + ${b} = ${sum}. Then ask: ${total} − ${sum} = ${missing}`,
+        steps: [`➕ First, add what you know: ${a} + ${b} = ${sum}`, `❓ How many more to reach ${total}? ${total} − ${sum} = ${missing}`, `🎉 The missing number is ${missing}!`]
+      };
+    });
+  }
+
+  // ========== PICTURE ANALOGIES ==========
+  const animalFood = [['🐯','🥩','tiger','meat'], ['🐐','🌿','goat','grass'], ['🐭','🧀','mouse','cheese'], ['🐟','🐛','fish','worms'], ['🐕','🦴','dog','a bone']];
+  for(let i = 0; i < 18; i++) {
+    SUBTESTS[6].templates.push(() => {
+      const idx1 = rand(0, animalFood.length-1);
+      let idx2 = rand(0, animalFood.length-1);
+      while(idx2 === idx1) idx2 = rand(0, animalFood.length-1);
+      const [a1, f1, n1] = animalFood[idx1];
+      const [a2, f2, n2] = animalFood[idx2];
+      return {
+        text: `🗣️ ${a1} eats ${f1}. ${a2} eats ___ ?`,
+        choices: shuffle([f2, '🍕', '🥚', '🍎', '🍔', '🍪'].slice(0,4)),
+        correctAnswer: f2,
+        explanation: `${n2.charAt(0).toUpperCase() + n2.slice(1)}s eat ${f2}!`,
+        steps: [`🦁 First pair shows: animal → its favorite food!`, `🐐 ${a2} is a ${n2}. ${n2.charAt(0).toUpperCase() + n2.slice(1)}s eat ${f2}.`, `✅ Answer: ${f2}`]
+      };
+    });
+  }
+
+  // ========== SENTENCE COMPLETION ==========
+  const scVariants = [
+    { text: `"Point to the picture that has TWO solid (3D) shapes."`, correct: "📦🔴", wrongs: ["🔺🔴","📦📦🔴","🔷🔺"], steps: ["📦 Cube = solid (you can hold it)", "🔴 Sphere = solid", "That's 2 solid shapes!"] },
+    { text: `"Find the picture with ONE solid (3D) shape."`, correct: "🔺🔴", wrongs: ["📦🔴","📦📦🔴","🔷🔺"], steps: ["🔺 Triangle = flat (like a drawing)", "🔴 Sphere = solid", "That's exactly 1 solid shape!"] },
+    { text: `"Which picture has ZERO solid (3D) shapes — only flat shapes?"`, correct: "🔷🔺", wrongs: ["📦🔴","🔺🔴","📦📦🔴"], steps: ["🔷 Diamond = flat (2D)", "🔺 Triangle = flat (2D)", "Zero solid shapes — perfect!"] }
+  ];
+  for(let i = 0; i < 16; i++) {
+    SUBTESTS[7].templates.push(() => {
+      const v = scVariants[i % scVariants.length];
+      return { text: `👂 ${v.text}`, choices: shuffle([v.correct, ...v.wrongs]), correctAnswer: v.correct, explanation: v.steps.join(" "), steps: v.steps };
+    });
+  }
+
+  // ========== PICTURE CLASSIFICATION ==========
+  const categories = [
+    { name:"musical instruments", items:['🎹','🎸','🎺','🎷','🥁'], non:['🔊','🎧','📢'] },
+    { name:"vehicles", items:['🚗','🚌','🚂','✈️','🚢'], non:['🛑','⛽','🅿️'] },
+    { name:"fruits", items:['🍎','🍊','🍋','🍇','🍓'], non:['🥦','🥕','🧅'] }
+  ];
+  for(let i = 0; i < 16; i++) {
+    SUBTESTS[8].templates.push(() => {
+      const cat = categories[i % categories.length];
+      const shuffled = shuffle([...cat.items]);
+      const group = shuffled.slice(0, 3);
+      const correct = shuffled[3];
+      const wrongs = shuffle([...cat.non]).slice(0, 3);
+      return {
+        text: `🗣️ Group: ${group.join(' ')} — all are ${cat.name}. Which one belongs in the same family?`,
+        choices: shuffle([correct, ...wrongs]),
+        correctAnswer: correct,
+        explanation: `${correct} is also a ${cat.name.slice(0,-1)}!`,
+        steps: [`👨‍👩‍👧‍👦 Name the family: ${group[0]}, ${group[1]}, ${group[2]} are all ${cat.name}.`, `🔍 Find another member of the same family.`, `✅ ${correct} belongs!`]
+      };
+    });
+  }
+
+  // ========== MASTERY STATE ==========
+  let mastered = {};
+  function masteryKey(id) { return `sub_${id}`; }
+  function isMastered(id) { return !!mastered[masteryKey(id)]; }
+  function setMastered(id) { mastered[masteryKey(id)] = true; saveMastery(); updateHeader(); renderSubtestGrid(); }
+  function loadMastery() { try { const s = localStorage.getItem('cogat_mastery_v8'); if(s) mastered = JSON.parse(s); } catch(e){} updateHeader(); }
+  function saveMastery() { localStorage.setItem('cogat_mastery_v8', JSON.stringify(mastered)); }
+  function updateHeader() { document.getElementById('masteredCount').innerText = Object.values(mastered).filter(v=>v).length; }
+
+  function generateQuestions(sub, count) { return shuffle([...sub.templates]).slice(0,count).map(t=>t()); }
+
+  // ========== KID-FRIENDLY STUDY GUIDE ==========
+  function getKidTip(id) {
+    const tips = {
+      0: "🔍 Look for 3 things: Did the shape change? Did the number of shapes grow? Did the shape turn/rotate?",
+      1: "🎨 Look for the 'Twin Colors' Rule: Does the shape have two different colored halves? Keep looking for the twin!",
+      2: "📁 Think about real paper: If you fold it once, you have 2 layers. A hole punch goes through both layers at once!",
+      3: "📏 Find the 'Number Jump': What is the difference between the first two numbers? Do the same jump for the next pair.",
+      4: "🦘 Play 'Hopscotch': The numbers jump by different amounts (like -1, then -2). Watch the pattern jump!",
+      5: "🧩 Play 'Missing Piece': Add up all the numbers you see. How many more do you need to reach the big number?",
+      6: "🦁 Play 'The Relationship Game': If the Tiger eats Meat, what does the Goat eat? Match the food to the animal!",
+      7: "📦 Play 'Solid vs. Flat': A flat shape (like a square) is 2D. A solid shape (like a box) is 3D. Count only the solid ones!",
+      8: "👨‍👩‍👧‍👦 Play 'Who Belongs?': Name the group first. Are they musical instruments? Fruit? Vehicles? Pick the one that fits the family!"
+    };
+    return tips[id] || "Look for the pattern!";
+  }
+
+  function getKidExample(id) {
+    const ex = {
+      0: "▲▲ becomes ▼▼▼ (1. Shape changed from ▲ to ▼, 2. Count went from 2 to 3, 3. Rotated upside down!)",
+      1: "A square split into Red and Blue halves — that's a perfect TWIN COLORS match!",
+      2: "1 hole punch + 1 fold = 2 holes total (because 1 × 2 = 2)",
+      3: "If 8 becomes 5 (that is DOWN 3), then 12 must also go DOWN 3 to become 9.",
+      4: "10 hops to 9 (down 1), then 9 hops to 7 (down 2). Keep hopping: down 1, down 2, down 1, down 2! Next is down 1 → 3",
+      5: "Total is 23. You have 9 + 7 (which is 16). How many to reach 23? You need 7 more!",
+      6: "Tigers love meat 🥩. Goats love grass 🌿. Connect each animal to its favorite snack!",
+      7: "A cube 📦 is solid (3D). A square 🟥 is flat (2D). We want the picture with solid shapes!",
+      8: "🎹, 🎸, and 🎺 are all musical instruments. A 🎷 saxophone fits right into that band!"
+    };
+    return ex[id] || "Apply the same rule!";
+  }
+
+  // ========== UI STATE ==========
+  let currentSubtest = null, mode = 'quiz', questions = [], answers = [], qIdx = 0, score = 0, waiting = false;
+
+  function showHome() {
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('homeView').style.display = 'block';
+    renderSubtestGrid();
+  }
+
+  function renderSubtestGrid() {
+    const grid = document.getElementById('subtestGrid');
+    if (!grid) return;
+    updateHeader();
+    grid.innerHTML = SUBTESTS.map((st, idx) => {
+      const done = isMastered(st.id);
+      const badge = done ? 'badge-mastered' : 'badge-ready';
+      const text = done ? '✅ MASTERED!' : '🎮 PLAY NOW';
+      return `<div class="subtest-card" data-idx="${idx}">
+        <div class="subtest-icon">${st.icon}</div>
+        <div class="subtest-name">${st.name}</div>
+        <div class="subtest-battery">${st.battery}</div>
+        <div class="badge ${badge}">${text}</div>
+      </div>`;
+    }).join('');
+    document.querySelectorAll('.subtest-card').forEach(card => {
+      card.addEventListener('click', () => { openSubtest(parseInt(card.dataset.idx)); });
+    });
+  }
+
+  function openSubtest(idx) {
+    currentSubtest = SUBTESTS[idx];
+    document.getElementById('homeView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'block';
+    renderStudyView();
+  }
+
+  function renderStudyView() {
+    const sub = currentSubtest;
+    const detail = document.getElementById('detailView');
+    detail.innerHTML = `
+      <div class="panel">
+        <div class="panel-header"><h2>${sub.icon} ${sub.name} · Study Guide</h2><button class="back-btn" id="backHomeBtn">← Back to Games Menu</button></div>
+        <div class="study-content">
+          <div class="kid-tip">🎯 ${getKidTip(sub.id)}</div>
+          <div class="example-box">✨ <strong>Example:</strong> ${getKidExample(sub.id)}</div>
+          ${sub.id === 0 ? `<div class="rule-steps"><div class="rule-step"><div class="step-icon">1</div><span>🔍 Did the SHAPE change?</span></div><div class="rule-step"><div class="step-icon">2</div><span>🔢 Did the COUNT change?</span></div><div class="rule-step"><div class="step-icon">3</div><span>🔄 Did it ROTATE/FLIP?</span></div><div class="rule-step"><div class="step-icon">✅</div><span>Apply ALL three rules to the bottom shape!</span></div></div>` : ''}
+        </div>
+        <div class="button-group">
+          <button class="next-btn" id="startQuizBtn">🎮 Practice Quiz (${sub.quizSize} questions)</button>
+          <button class="next-btn green" id="startExamBtn">🏆 Mastery Exam (${sub.examSize} questions)</button>
+        </div>
+      </div>`;
+    document.getElementById('backHomeBtn').onclick = showHome;
+    document.getElementById('startQuizBtn').onclick = () => startAssessment('quiz');
+    document.getElementById('startExamBtn').onclick = () => startAssessment('exam');
+  }
+
+  function startAssessment(m) {
+    mode = m;
+    const qty = mode === 'quiz' ? currentSubtest.quizSize : currentSubtest.examSize;
+    questions = generateQuestions(currentSubtest, qty);
+    answers = []; qIdx = 0; score = 0; waiting = false;
+    renderQuestionCard();
+  }
+
+  function renderQuestionCard() {
+    waiting = false;
+    const q = questions[qIdx];
+    const total = questions.length;
+    const detail = document.getElementById('detailView');
+    detail.innerHTML = `
+      <div class="panel">
+        <div class="panel-header"><h3>${mode === 'quiz' ? '🎮 PRACTICE QUIZ' : '🏆 MASTERY EXAM'} · ${currentSubtest.name}</h3><button class="back-btn" id="exitBtn">← Exit to Menu</button></div>
+        <div class="q-progress-bar"><div class="q-progress-fill" style="width:${(qIdx/total)*100}%"></div></div>
+        <p style="font-size:0.8rem;font-weight:800;margin-bottom:12px;">Question ${qIdx+1} of ${total} · ⭐ Score: ${score}</p>
+        <div class="question-area">
+          <p class="question-text">❓ ${q.text}</p>
+          <div class="choices-grid" id="choicesGrid"></div>
+          <div id="feedbackArea"></div>
+          <button class="next-btn" id="nextBtn" style="display:none;">${qIdx+1 < total ? 'Next Question →' : 'See Results 🏆'}</button>
+        </div>
+      </div>`;
+    document.getElementById('exitBtn').onclick = showHome;
+    const grid = document.getElementById('choicesGrid');
+    q.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = ch;
+      btn.onclick = () => handleAnswer(ch, btn);
+      grid.appendChild(btn);
+    });
+    document.getElementById('nextBtn').onclick = () => { if (qIdx+1 < total) { qIdx++; renderQuestionCard(); } else finishAssessment(); };
+  }
+
+  function handleAnswer(selected, btn) {
+    if (waiting) return;
+    waiting = true;
+    const q = questions[qIdx];
+    const isCorrect = selected === q.correctAnswer;
+    if (isCorrect) score++;
+    answers[qIdx] = { correct: isCorrect, correctAnswer: q.correctAnswer, explanation: q.explanation, steps: q.steps };
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = true;
+      if (b.textContent === q.correctAnswer) b.classList.add('correct-choice');
+      else if (b === btn && !isCorrect) b.classList.add('wrong-choice');
+    });
+    const fbDiv = document.getElementById('feedbackArea');
+    fbDiv.innerHTML = `<div class="feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ CORRECT! ' : '❌ Not this time. '} ${q.explanation}
+      ${!isCorrect ? '<br><button class="show-tutor-btn" id="tutorBtn">🦉 Show me step-by-step</button>' : ''}
+    </div>`;
+    if (!isCorrect) {
+      document.getElementById('tutorBtn')?.addEventListener('click', () => {
+        fbDiv.insertAdjacentHTML('beforeend', `<div class="tutor-panel">🦉 Zara the Wise Owl says:<br><br>${q.steps.map(s => `📌 ${s}`).join('<br>')}</div>`);
+        document.getElementById('tutorBtn').style.display = 'none';
+      });
     }
+    document.getElementById('nextBtn').style.display = 'block';
+  }
+
+  function finishAssessment() {
+    const total = questions.length;
+    const finalScore = score;
+    const pct = (finalScore / total) * 100;
+    const passed = pct >= 80;
+    if (mode === 'quiz') {
+      if (passed) showResultCard(`🎉 Quiz Passed! ${finalScore}/${total}`, `Great job! Now try the MASTERY EXAM for ${currentSubtest.name}!`, passed, () => startAssessment('exam'));
+      else showResultCard(`📚 Quiz Score: ${finalScore}/${total}`, `You need 80% to pass. Review the Study Guide and try again!`, passed, () => startAssessment('quiz'));
+    } else {
+      if (passed) {
+        setMastered(currentSubtest.id);
+        showResultCard(`🏆 MASTERED! ${finalScore}/${total}`, `Amazing! You mastered ${currentSubtest.name}! 🎉 Come back anytime to practice more!`, passed, () => showHome());
+        launchConfetti();
+        showMasteryFlash(currentSubtest.name);
+      } else {
+        showResultCard(`📝 Exam Score: ${finalScore}/${total}`, `Need 80% to master. Try again with fresh questions!`, passed, () => startAssessment('exam'));
+      }
+    }
+  }
+
+  function showResultCard(title, msg, passed, onContinue) {
+    const detail = document.getElementById('detailView');
+    detail.innerHTML = `<div class="results-card ${passed ? 'pass' : 'fail'}">
+      <div class="results-trophy">${passed ? '🏆' : '📚'}</div>
+      <div class="results-title">${title}</div>
+      <div class="results-msg">${msg}</div>
+      <div class="results-actions"><button class="next-btn" id="continueBtn">Continue</button><button class="back-btn" id="menuBtn">Back to Games</button></div>
+    </div>`;
+    document.getElementById('continueBtn').onclick = onContinue;
+    document.getElementById('menuBtn').onclick = showHome;
+  }
+
+  function showMasteryFlash(name) {
+    const div = document.createElement('div'); div.className = 'mastery-flash';
+    div.innerHTML = `<div class="mastery-flash-inner"><div class="trophy">🏆</div><h2>MASTERED!</h2><p>${name} is complete!<br>Keep practicing to stay sharp!</p><button class="next-btn" id="flashClose">Continue 🚀</button></div>`;
+    document.body.appendChild(div);
+    div.querySelector('#flashClose').onclick = () => div.remove();
+    setTimeout(() => div.remove(), 4000);
+  }
+
+  function launchConfetti() {
+    const colors = ['#e91e8c','#f5c518','#7c3aed','#22c55e'];
+    for(let i=0;i<60;i++) setTimeout(()=>{ const c=document.createElement('div'); c.className='confetti-piece'; c.style.cssText=`left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; width:${6+Math.random()*8}px; height:${6+Math.random()*8}px; animation-duration:${1.8+Math.random()*2}s;`; document.body.appendChild(c); setTimeout(()=>c.remove(),3000); }, i*25);
+  }
+
+  // ========== INITIALIZATION ==========
+  document.addEventListener('DOMContentLoaded', () => {
+    loadMastery();
+    renderSubtestGrid();
   });
-
-  if (score >= 7) launchConfetti();
-}
-
-function launchConfetti() {
-  const colors = ['#e91e8c','#f5c518','#7c3aed','#22c55e','#0ea5e9','#ff6b35'];
-  for (let i = 0; i < 80; i++) {
-    setTimeout(() => {
-      const c = document.createElement('div');
-      c.className = 'confetti-piece';
-      c.style.cssText = `
-        left:${Math.random()*100}vw;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        width:${6+Math.random()*8}px;
-        height:${6+Math.random()*8}px;
-        border-radius:${Math.random()>0.5?'50%':'2px'};
-        animation-duration:${2+Math.random()*2}s;
-        animation-delay:${Math.random()*0.5}s;
-      `;
-      document.body.appendChild(c);
-      setTimeout(() => c.remove(), 3500);
-    }, i * 30);
-  }
-}
-
-function retryQuiz() {
-  startQuiz();
-}
-
-// TTS for Q9
-function speakSentence() {
-  if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance("Mark the picture that has two 3D shapes.");
-    u.rate = 0.85; u.pitch = 1.1;
-    window.speechSynthesis.speak(u);
-  }
-}
-
-// Init
-makeStars('starField', 40);
 </script>
 </body>
 </html>
