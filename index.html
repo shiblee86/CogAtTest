@@ -3,28 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Safia's CogAT Mastery · 9 Subtests · Dark Mode</title>
-  <!-- System fonts only (offline-first, no external dependencies) -->
+  <title>Safia's CogAT Mastery · Enhanced Edition</title>
   <style>
-    /* Offline-first: using system fonts only - no Google Fonts import */
+    /* System fonts only - offline-first */
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+      transition: background 0.2s ease, color 0.2s ease;
     }
     h1, h2, h3, .logo h1, .next-btn, .results-title { 
       font-family: 'Fredoka One', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, cursive;
     }
-    /* Fallback if Fredoka One isn't available */
-    @font-face {
-      font-family: 'Fredoka One';
-      src: local('Fredoka One'), local('FredokaOne-Regular');
-      font-weight: normal;
-      font-style: normal;
-    }
-  </style>
-  <style>
-    /* ========== COMPLETE CSS WITH DARK MODE SUPPORT ========== */
     
-    /* Light theme (default) */
+    /* ========== REDUCED MOTION SUPPORT ========== */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+      }
+      .confetti-piece {
+        display: none !important;
+      }
+    }
+    
+    /* ========== CSS VARIABLES ========== */
     :root {
       --bg: #f8f0ff;
       --text: #2d1b69;
@@ -49,9 +55,9 @@
       --progress-fill: linear-gradient(90deg, #e91e8c, #f5c518);
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       --shadow-md: 0 8px 20px rgba(45, 27, 105, 0.2);
+      --focus-outline: #f5c518;
     }
 
-    /* Dark theme override */
     body.dark-theme {
       --bg: #121212;
       --text: #f3f4f6;
@@ -76,10 +82,9 @@
       --progress-fill: linear-gradient(90deg, #e91e8c, #f5c518);
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.3);
+      --focus-outline: #ffdd44;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; transition: background 0.2s ease, color 0.2s ease; }
     .app-container { max-width: 1200px; margin: 0 auto; }
     
     /* header */
@@ -116,12 +121,25 @@
       padding: 8px 16px;
       border-radius: 40px;
       cursor: pointer;
-      font-family: 'Nunito', sans-serif;
       color: white;
       transition: all 0.2s;
       font-size: 0.85rem;
     }
     .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+    
+    /* ========== UNIFIED FOCUS STYLES (WCAG compliant) ========== */
+    button:focus-visible,
+    .subtest-card:focus-visible,
+    .theme-toggle:focus-visible,
+    .back-btn:focus-visible,
+    .next-btn:focus-visible,
+    .show-tutor-btn:focus-visible,
+    .choice-btn:focus-visible {
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 4px;
+      position: relative;
+      z-index: 1;
+    }
     
     /* subtest grid */
     .subtest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-bottom: 30px; }
@@ -139,6 +157,10 @@
     .badge-ready { background: #fff8e0; color: #b87300; }
     body.dark-theme .badge-ready { background: #4a3a1a; color: #f5c518; }
     
+    /* progress ring for subtest */
+    .subtest-progress { margin-top: 10px; height: 4px; background: var(--progress-bg); border-radius: 2px; overflow: hidden; }
+    .subtest-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #f5c518); border-radius: 2px; transition: width 0.3s ease; }
+    
     /* panels */
     .panel { background: var(--panel); border-radius: 32px; padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow); border: 1px solid var(--panel-border); }
     .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; border-bottom: 2px solid var(--panel-border); padding-bottom: 12px; margin-bottom: 20px; }
@@ -151,7 +173,6 @@
       padding: 8px 18px;
       border-radius: 30px;
       cursor: pointer;
-      font-family: 'Nunito', sans-serif;
       color: var(--text);
       transition: all 0.2s;
     }
@@ -174,24 +195,42 @@
     .next-btn.green { background: linear-gradient(135deg, #22c55e, #15803d); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
     .button-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
     
-    .choices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+    /* Enhanced question styling */
+    .question-text {
+      font-size: 1.2rem;
+      line-height: 1.7;
+      white-space: pre-line;
+      margin-bottom: 24px;
+      font-weight: 700;
+      background: var(--example-bg);
+      padding: 16px 20px;
+      border-radius: 20px;
+      border-left: 5px solid #e91e8c;
+    }
+    
+    .choices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 20px 0; }
     .choice-btn {
       background: var(--choice-bg);
-      border: 2px solid var(--choice-border);
+      border: 3px solid var(--choice-border);
       border-radius: 20px;
-      padding: 14px;
+      padding: 16px 12px;
       font-weight: 800;
       cursor: pointer;
       transition: all 0.1s;
-      font-size: 1rem;
+      font-size: 1.3rem;
       color: var(--text);
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
-    .choice-btn:hover:not(:disabled) { background: var(--choice-hover); border-color: #f5c518; }
+    .choice-btn:hover:not(:disabled) { background: var(--choice-hover); border-color: #f5c518; transform: scale(1.02); }
     .choice-btn:disabled { opacity: 0.7; cursor: not-allowed; }
     .choice-btn.correct-choice { background: #22c55e30; border-color: #22c55e; }
     .choice-btn.wrong-choice { background: #ef444430; border-color: #ef4444; }
     
-    .feedback { padding: 12px 16px; border-radius: 20px; margin: 12px 0; font-weight: 700; }
+    .feedback { padding: 14px 18px; border-radius: 20px; margin: 12px 0; font-weight: 700; font-size: 1rem; line-height: 1.6; }
     .correct-fb { background: var(--correct-bg); color: var(--correct-text); border-left: 5px solid #22c55e; }
     .wrong-fb { background: var(--wrong-bg); color: var(--wrong-text); border-left: 5px solid #ef4444; }
     
@@ -199,48 +238,72 @@
       background: var(--tutor-bg);
       border-radius: 24px;
       margin-top: 16px;
-      padding: 16px 20px;
+      padding: 18px 22px;
       border-left: 6px solid var(--tutor-border);
       font-weight: 600;
-      line-height: 1.6;
+      line-height: 1.7;
       color: var(--text);
+      font-size: 0.95rem;
     }
     .show-tutor-btn {
       background: #f5c518;
       border: none;
       border-radius: 30px;
-      padding: 6px 14px;
+      padding: 8px 18px;
       font-weight: 800;
       cursor: pointer;
-      margin-top: 8px;
+      margin-top: 10px;
       color: #2d1b69;
+      font-size: 0.9rem;
     }
     .study-content { line-height: 1.7; font-size: 1rem; }
     .example-box { background: var(--example-bg); padding: 14px 18px; border-radius: 20px; margin: 12px 0; border-left: 5px solid #e91e8c; }
-    .q-progress-bar { height: 6px; background: var(--progress-bg); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+    .q-progress-bar { height: 8px; background: var(--progress-bg); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
     .q-progress-fill { height: 100%; background: var(--progress-fill); border-radius: 6px; transition: width 0.4s ease; }
     
     .results-card { border-radius: 32px; padding: 28px 24px; text-align: center; background: var(--panel); }
     .results-card.pass { background: linear-gradient(135deg, #22c55e20, #22c55e10); border: 2px solid #22c55e; }
     .results-card.fail { background: linear-gradient(135deg, #f5c51820, #f5c51810); border: 2px solid #f5c518; }
-    .results-trophy { font-size: 4rem; margin-bottom: 12px; }
-    .results-title { font-family: 'Fredoka One', cursive; font-size: 1.7rem; color: var(--text); }
+    .results-trophy { font-size: 4.5rem; margin-bottom: 12px; }
+    .results-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--text); }
     .results-msg { margin-top: 12px; line-height: 1.6; font-size: 1rem; color: var(--text); }
     .results-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
     
     .mastery-flash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; }
     .mastery-flash-inner { background: var(--panel); border-radius: 40px; padding: 40px 32px; text-align: center; max-width: 360px; color: var(--text); }
-    .confetti-piece { position: fixed; width: 9px; height: 9px; top: -10px; pointer-events: none; z-index: 999; animation: confettiFall linear forwards; }
+    .confetti-piece { position: fixed; width: 10px; height: 10px; top: -10px; pointer-events: none; z-index: 999; animation: confettiFall linear forwards; }
     @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
-    @media (max-width: 700px) { .choices-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 700px) { .choices-grid { grid-template-columns: 1fr 1fr; } .choice-btn { font-size: 1rem; min-height: 65px; } }
     
     .rule-steps { background: var(--example-bg); border-radius: 16px; padding: 12px; margin: 8px 0; }
     .rule-step { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
     .step-icon { width: 28px; height: 28px; background: #e91e8c20; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #e91e8c; }
-    .kid-tip { background: #e91e8c10; border-radius: 20px; padding: 12px; margin: 12px 0; text-align: center; font-weight: 800; color: #e91e8c; }
+    .kid-tip { background: #e91e8c10; border-radius: 20px; padding: 12px; margin: 12px 0; text-align: center; font-weight: 800; color: #e91e8c; font-size: 1rem; }
     
-    /* Accessibility focus styles */
-    button:focus-visible, .subtest-card:focus-visible { outline: 3px solid #f5c518; outline-offset: 2px; }
+    /* aria-live region for screen readers */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+    
+    /* aria-pressed attribute styling for theme toggle */
+    .theme-toggle[aria-pressed="true"]::before {
+      content: "☀️ ";
+    }
+    .theme-toggle[aria-pressed="false"]::before {
+      content: "🌙 ";
+    }
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
   </style>
 </head>
 <body>
@@ -248,10 +311,13 @@
   <div class="mastery-header">
     <div class="logo"><h1>✨ CogAT Mastery · Safia</h1><p>🔷 Nonverbal · 🔢 Quantitative · 🗣️ Verbal</p></div>
     <div class="stats-and-theme">
-      <div class="progress-stats"><div class="stat"><span id="masteredCount">0</span><span>mastered</span></div><div class="stat"><span>9</span><span>subtests</span></div></div>
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙 Dark Mode</button>
+      <div class="progress-stats"><div class="stat"><span id="masteredCount">0</span><span>mastered</span></div><div class="stat"><span id="totalSubtests">9</span><span>subtests</span></div></div>
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">Dark Mode</button>
     </div>
   </div>
+
+  <!-- aria-live region for screen reader announcements -->
+  <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <div id="homeView">
     <div class="panel" style="text-align:center;"><p>🎯 <strong>Pick any game to play!</strong> Each game has a Study Guide, a short Quiz, and a longer Exam. Pass the Exam to earn a Mastery Trophy! 🏆</p></div>
@@ -262,42 +328,46 @@
 </div>
 
 <script>
-  // ========== DARK MODE TOGGLE FUNCTION ==========
+  // ========== CONSTANTS ==========
+  const STORAGE_KEYS = {
+    mastery: 'cogat_mastery_v14',
+    theme: 'cogat_theme'
+  };
+  
+  // ========== DARK MODE TOGGLE ==========
   function toggleTheme() {
-    document.body.classList.toggle('dark-theme');
-    const isDark = document.body.classList.contains('dark-theme');
-    try {
-      localStorage.setItem('cogat_theme', isDark ? 'dark' : 'light');
-    } catch(e) {}
+    const isDark = !document.body.classList.contains('dark-theme');
+    document.body.classList.toggle('dark-theme', isDark);
     const btn = document.getElementById('themeToggle');
     if (btn) {
-      btn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+      btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+      btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
     }
+    try { localStorage.setItem(STORAGE_KEYS.theme, isDark ? 'dark' : 'light'); } catch(e) {}
   }
 
   // ========== HELPER FUNCTIONS ==========
   function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-  
-  function shuffle(arr) { 
-    const a = [...arr];
-    for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} 
-    return a; 
-  }
-  
+  function shuffle(arr) { const a = [...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
   function unique(arr) { return [...new Set(arr)]; }
+  
+  function announce(message) {
+    const live = document.getElementById('liveRegion');
+    if (live) live.textContent = message;
+  }
 
-  // Real rotation pairs that actually show transformation
+  // ========== ENHANCED TRANSFORMATIONS ==========
   const rotationPairs = [
     { from: '▲', to: '▼', desc: 'triangle flips upside down' },
     { from: '▼', to: '▲', desc: 'triangle flips right side up' },
     { from: '◀', to: '▶', desc: 'arrow flips direction' },
     { from: '▶', to: '◀', desc: 'arrow flips direction' },
+    { from: '⬆', to: '⬇', desc: 'up arrow becomes down arrow' },
+    { from: '⬇', to: '⬆', desc: 'down arrow becomes up arrow' },
     { from: '◆', to: '◇', desc: 'diamond changes from filled to empty' },
     { from: '◇', to: '◆', desc: 'diamond changes from empty to filled' },
-    { from: '■', to: '□', desc: 'square changes from filled to empty' },
-    { from: '□', to: '■', desc: 'square changes from empty to filled' },
-    { from: '●', to: '○', desc: 'circle changes from filled to empty' },
-    { from: '○', to: '●', desc: 'circle changes from empty to filled' }
+    { from: '⬛', to: '⬜', desc: 'square changes from filled to empty' },
+    { from: '⬜', to: '⬛', desc: 'square changes from empty to filled' }
   ];
 
   // ========== SUBTEST DEFINITIONS ==========
@@ -312,9 +382,12 @@
     { id:7, name:"Sentence Completion", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] },
     { id:8, name:"Picture Classification", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] }
   ];
+  
+  // Update total subtests display
+  document.getElementById('totalSubtests').innerText = SUBTESTS.length;
 
-  // ========== FIGURE MATRICES - ensures 4 choices always ==========
-  for(let i = 0; i < 24; i++) {
+  // ========== ENHANCED FIGURE MATRICES ==========
+  for(let i = 0; i < 30; i++) {
     SUBTESTS[0].templates.push(() => {
       const pair = rotationPairs[rand(0, rotationPairs.length - 1)];
       const shapeA = pair.from;
@@ -329,46 +402,40 @@
         shapeB.repeat(countEnd - 1),
         shapeB.repeat(countEnd + 1)
       ]);
-      
-      while (choices.length < 4) {
-        choices.push(shapeB.repeat(countEnd + choices.length));
-      }
+      while (choices.length < 4) choices.push(shapeB.repeat(countEnd + choices.length));
       choices = shuffle(choices);
       
       return {
-        text: `🔷 TOP: ${shapeA.repeat(countStart)} → ${shapeB.repeat(countEnd)}\n🔷 BOTTOM: ${shapeA.repeat(countStart)} → ?`,
+        text: `🔷 TOP ROW: ${shapeA.repeat(countStart)}  →  ${shapeB.repeat(countEnd)}\n🔷 BOTTOM ROW: ${shapeA.repeat(countStart)}  →  ?`,
         choices: choices,
         correctAnswer: correct,
-        explanation: `✨ The rule has 3 parts: 1) Shape changed (${pair.desc}), 2) Count went from ${countStart} to ${countEnd} (+${countEnd-countStart}), 3) The shape transformed!`,
-        steps: [`🔍 1st: Did the SHAPE change? Yes! ${pair.desc}`, `🔢 2nd: Did the COUNT change? Yes! ${countStart} → ${countEnd} (grew by ${countEnd-countStart})`, `🔄 3rd: Did it TRANSFORM? Yes! ${shapeA} → ${shapeB}`, `✅ Apply all 3 rules to the bottom: ${correct}!`]
+        explanation: `✨ Rule: ${pair.desc} + count increased by ${countEnd-countStart}!`,
+        steps: [`🔍 1st: Shape changed! ${pair.desc}`, `🔢 2nd: Count: ${countStart} → ${countEnd} (+${countEnd-countStart})`, `✅ Apply to bottom: ${correct}`]
       };
     });
   }
 
-  // ========== FIGURE CLASSIFICATION - ensures 4 choices always ==========
-  for(let i = 0; i < 18; i++) {
+  // ========== FIGURE CLASSIFICATION ==========
+  const colorPairs = [['🔴 RED', '🔵 BLUE'], ['🟢 GREEN', '🟡 YELLOW'], ['🟣 PURPLE', '🟠 ORANGE'], ['🔵 BLUE', '🟢 GREEN']];
+  for(let i = 0; i < 20; i++) {
     SUBTESTS[1].templates.push(() => {
-      const colors = [['🟥','🟦'],['🟩','🟨'],['🟪','🟧'],['🟧','🟩']];
-      const [c1,c2] = colors[rand(0, colors.length-1)];
-      const correct = `${c1}${c2}`;
-      let choices = unique([correct, `${c1}${c1}`, c1, `${c2}${c2}`]);
-      // Ensure we always have 4 choices (future-proofing)
-      while (choices.length < 4) {
-        choices.push(`${c1}${c1}${c1}`);
-      }
+      const [c1, c2] = colorPairs[rand(0, colorPairs.length-1)];
+      const correct = `${c1} + ${c2}`;
+      let choices = unique([correct, `${c1} + ${c1}`, c1, `${c2} + ${c2}`]);
+      while (choices.length < 4) choices.push(`${c1} + ${c1} + ${c1}`);
       choices = shuffle(choices);
       return {
-        text: `🔷 Three shapes are split into TWO DIFFERENT colors: ${c1}|${c2}. Which one follows the same TWIN COLORS rule?`,
+        text: `🔷 Three shapes: each is split into TWO DIFFERENT colors (${c1} and ${c2}). Which choice follows the same TWIN COLORS rule?`,
         choices: choices,
         correctAnswer: correct,
         explanation: `The "Twin Colors" rule: Each shape has two DIFFERENT colored halves!`,
-        steps: [`🎨 Look at the three shapes — each has two different colors!`, `👯 The correct answer must also have two different colors.`, `✅ ${correct} has two different colors — perfect match!`]
+        steps: [`🎨 All three shapes have two different colors.`, `👯 Find the choice with two different colors.`, `✅ ${correct} has two different colors!`]
       };
     });
   }
 
   // ========== PAPER FOLDING ==========
-  for(let i = 0; i < 14; i++) {
+  for(let i = 0; i < 20; i++) {
     SUBTESTS[2].templates.push(() => {
       const punches = rand(1, 3);
       const total = punches * 2;
@@ -377,14 +444,14 @@
         text: `📄 Paper folded once (bottom folded up to top). ${punches} hole(s) punched. How many holes when you open it?`,
         choices: shuffle(unique(options)),
         correctAnswer: `${total} holes`,
-        explanation: `Folding makes 2 layers. Each punch pokes through BOTH layers! ${punches} × 2 = ${total} holes.`,
-        steps: [`📁 When you fold paper, you have 2 layers on top of each other.`, `✂️ A hole punch goes through ALL the layers at once!`, `🔢 ${punches} punch(es) × 2 layers = ${total} holes when unfolded.`]
+        explanation: `Folding makes 2 layers. Each punch goes through BOTH layers! ${punches} × 2 = ${total}`,
+        steps: [`📁 Fold = 2 layers stacked.`, `✂️ Each punch goes through ALL layers.`, `🔢 ${punches} × 2 = ${total} holes!`]
       };
     });
   }
 
   // ========== NUMBER ANALOGIES ==========
-  for(let i = 0; i < 20; i++) {
+  for(let i = 0; i < 25; i++) {
     SUBTESTS[3].templates.push(() => {
       const diff = rand(2, 5);
       const first = rand(8, 15);
@@ -393,38 +460,46 @@
       const answer = third - diff;
       const options = [answer.toString(), (answer+1).toString(), (answer-1).toString(), (third-2).toString()];
       const uniqueOptions = unique(options);
-      while(uniqueOptions.length < 4) {
-        uniqueOptions.push((answer + uniqueOptions.length + 2).toString());
-      }
+      while(uniqueOptions.length < 4) uniqueOptions.push((answer + uniqueOptions.length + 2).toString());
       return {
         text: `🔢 Top: ${first} → ${second} (jumped DOWN by ${diff}). Bottom: ${third} → ? (jump DOWN by ${diff} too!)`,
         choices: shuffle(uniqueOptions.slice(0,4)),
         correctAnswer: answer.toString(),
-        explanation: `The number jumped DOWN by ${diff}. So ${third} − ${diff} = ${answer}`,
-        steps: [`📏 First, find the jump: ${first} − ${second} = ${diff} (it went DOWN)`, `🦘 Apply the SAME jump to the bottom number: ${third} − ${diff} = ${answer}`]
+        explanation: `The number jumped DOWN by ${diff}. ${third} − ${diff} = ${answer}`,
+        steps: [`📏 Find the jump: ${first} − ${second} = ${diff}`, `🦘 Apply same jump: ${third} − ${diff} = ${answer}`]
       };
     });
   }
 
-  // ========== NUMBER SERIES ==========
-  for(let i = 0; i < 20; i++) {
+  // ========== ENHANCED NUMBER SERIES ==========
+  const hopPatterns = [
+    { steps: [-1, -2], desc: "-1, then -2" },
+    { steps: [-2, -3], desc: "-2, then -3" },
+    { steps: [+1, +2], desc: "+1, then +2" }
+  ];
+  for(let i = 0; i < 25; i++) {
     SUBTESTS[4].templates.push(() => {
-      const start = rand(10, 15);
-      const seq = [start, start-1, start-3, start-4, start-6];
-      const next = seq[4] - 1;
+      const pattern = hopPatterns[rand(0, hopPatterns.length-1)];
+      const start = rand(10, 18);
+      const seq = [start];
+      for(let s = 0; s < 4; s++) {
+        seq.push(seq[seq.length-1] + pattern.steps[s % pattern.steps.length]);
+      }
+      const nextStep = pattern.steps[4 % pattern.steps.length];
+      const next = seq[seq.length-1] + nextStep;
       const options = [next.toString(), (next+1).toString(), (next-1).toString(), (next+2).toString()];
       return {
-        text: `🔢 Hopscotch pattern: ${seq.join(', ')}, ___ ?`,
+        text: `🔢 Pattern: ${seq.join(', ')}, ___ ?`,
         choices: shuffle(unique(options)),
         correctAnswer: next.toString(),
-        explanation: `The hops go: -1, -2, -1, -2... Next hop is -1! ${seq[4]} − 1 = ${next}`,
-        steps: [`🦘 Look at the hops: ${seq[0]}→${seq[1]} (down 1), ${seq[1]}→${seq[2]} (down 2)`, `🔄 The pattern repeats: down 1, down 2, down 1, down 2...`, `🎯 Next hop is down 1: ${seq[4]} − 1 = ${next}`]
+        explanation: `The hops go: ${pattern.desc}... Next hop = ${nextStep >= 0 ? '+' + nextStep : nextStep} → ${next}`,
+        steps: [`🦘 Look at the hops! Pattern: ${pattern.desc}`, `🎯 Next number is ${next}`]
       };
     });
   }
 
   // ========== NUMBER PUZZLES ==========
-  for(let i = 0; i < 16; i++) {
+  for(let i = 0; i < 20; i++) {
     SUBTESTS[5].templates.push(() => {
       const a = rand(4, 12);
       const b = rand(3, 9);
@@ -433,61 +508,58 @@
       const missing = total - sum;
       const options = [missing.toString(), (missing+1).toString(), (missing-1).toString(), (missing+2).toString()];
       return {
-        text: `🧩 ${total} = ${a} + ${b} + ?   (What number is missing?)`,
+        text: `🧩 ${total} = ${a} + ${b} + ?`,
         choices: shuffle(unique(options)),
         correctAnswer: missing.toString(),
-        explanation: `Add the numbers you see: ${a} + ${b} = ${sum}. Then ask: ${total} − ${sum} = ${missing}`,
-        steps: [`➕ First, add what you know: ${a} + ${b} = ${sum}`, `❓ How many more to reach ${total}? ${total} − ${sum} = ${missing}`, `🎉 The missing number is ${missing}!`]
+        explanation: `${a} + ${b} = ${sum}. ${total} − ${sum} = ${missing}`,
+        steps: [`➕ Add: ${a} + ${b} = ${sum}`, `❓ Need ${total} − ${sum} = ${missing}`]
       };
     });
   }
 
   // ========== PICTURE ANALOGIES ==========
-  const animalFood = [['🐯','🥩','tiger','meat'], ['🐐','🌿','goat','grass'], ['🐭','🧀','mouse','cheese'], ['🐟','🐛','fish','worms'], ['🐕','🦴','dog','a bone']];
-  const allDistractorsList = ['🍕', '🥚', '🍎', '🍔', '🍪', '🍦', '🍩'];
-  
-  for(let i = 0; i < 18; i++) {
+  const animalFood = [['🐯', '🥩', 'tiger', 'meat'], ['🐐', '🌿', 'goat', 'grass'], ['🐭', '🧀', 'mouse', 'cheese'], ['🐟', '🐛', 'fish', 'worms'], ['🐕', '🦴', 'dog', 'a bone'], ['🐱', '🐟', 'cat', 'fish'], ['🐘', '🌿', 'elephant', 'plants'], ['🐒', '🍌', 'monkey', 'banana']];
+  const foodDistractors = ['🍕', '🥚', '🍎', '🍔', '🍪', '🍦', '🍩', '🍫'];
+  for(let i = 0; i < 25; i++) {
     SUBTESTS[6].templates.push(() => {
       const idx1 = rand(0, animalFood.length-1);
       let idx2 = rand(0, animalFood.length-1);
       while(idx2 === idx1) idx2 = rand(0, animalFood.length-1);
       const [a1, f1, n1] = animalFood[idx1];
       const [a2, f2, n2] = animalFood[idx2];
-      
-      const distractors = shuffle(allDistractorsList.filter(d => d !== f2)).slice(0, 3);
+      const distractors = shuffle(foodDistractors.filter(d => d !== f2)).slice(0, 3);
       const choices = shuffle([f2, ...distractors]);
-      
       return {
         text: `🗣️ ${a1} eats ${f1}. ${a2} eats ___ ?`,
         choices: choices,
         correctAnswer: f2,
         explanation: `${n2.charAt(0).toUpperCase() + n2.slice(1)}s eat ${f2}!`,
-        steps: [`🦁 First pair shows: animal → its favorite food!`, `🐐 ${a2} is a ${n2}. ${n2.charAt(0).toUpperCase() + n2.slice(1)}s eat ${f2}.`, `✅ Answer: ${f2}`]
+        steps: [`🦁 First: animal → its food.`, `🐐 ${a2} eats ${f2}.`]
       };
     });
   }
 
   // ========== SENTENCE COMPLETION ==========
   const scVariants = [
-    { text: `"Point to the picture that has TWO solid (3D) shapes."`, correct: "📦🔴", wrongs: ["🔺🔴","📦📦🔴","🔷🔺"], steps: ["📦 Cube = solid (you can hold it)", "🔴 Sphere = solid", "That's 2 solid shapes!"] },
-    { text: `"Find the picture with ONE solid (3D) shape."`, correct: "🔺🔴", wrongs: ["📦🔴","📦📦🔴","🔷🔺"], steps: ["🔺 Triangle = flat (like a drawing)", "🔴 Sphere = solid", "That's exactly 1 solid shape!"] },
-    { text: `"Which picture has ZERO solid (3D) shapes — only flat shapes?"`, correct: "🔷🔺", wrongs: ["📦🔴","🔺🔴","📦📦🔴"], steps: ["🔷 Diamond = flat (2D)", "🔺 Triangle = flat (2D)", "Zero solid shapes — perfect!"] }
+    { text: `"Point to the picture that has TWO solid (3D) shapes."`, correct: "📦🔴", wrongs: ["🔺🔴","📦📦🔴","🔷🔺"], steps: ["📦 Cube = solid", "🔴 Sphere = solid", "That's 2 solid shapes!"] },
+    { text: `"Find the picture with ONE solid (3D) shape."`, correct: "🔺🔴", wrongs: ["📦🔴","📦📦🔴","🔷🔺"], steps: ["🔺 Triangle = flat", "🔴 Sphere = solid", "Exactly 1 solid shape!"] },
+    { text: `"Which picture has ZERO solid (3D) shapes — only flat shapes?"`, correct: "🔷🔺", wrongs: ["📦🔴","🔺🔴","📦📦🔴"], steps: ["🔷 Diamond = flat", "🔺 Triangle = flat", "Zero solid shapes!"] }
   ];
-  for(let i = 0; i < 16; i++) {
+  for(let i = 0; i < 20; i++) {
     SUBTESTS[7].templates.push(() => {
       const v = scVariants[i % scVariants.length];
-      const options = [v.correct, ...v.wrongs];
-      return { text: `👂 ${v.text}`, choices: shuffle(unique(options)), correctAnswer: v.correct, explanation: v.steps.join(" "), steps: v.steps };
+      return { text: `👂 ${v.text}`, choices: shuffle(unique([v.correct, ...v.wrongs])), correctAnswer: v.correct, explanation: v.steps.join(" "), steps: v.steps };
     });
   }
 
   // ========== PICTURE CLASSIFICATION ==========
   const categories = [
-    { name:"musical instruments", items:['🎹','🎸','🎺','🎷','🥁'], non:['🔊','🎧','📢'] },
-    { name:"vehicles", items:['🚗','🚌','🚂','✈️','🚢'], non:['🛑','⛽','🅿️'] },
-    { name:"fruits", items:['🍎','🍊','🍋','🍇','🍓'], non:['🥦','🥕','🧅'] }
+    { name:"musical instruments", items:['🎹','🎸','🎺','🎷','🥁','🎻'], non:['🔊','🎧','📢'] },
+    { name:"vehicles", items:['🚗','🚌','🚂','✈️','🚢','🚁'], non:['🛑','⛽','🅿️'] },
+    { name:"fruits", items:['🍎','🍊','🍋','🍇','🍓','🍒'], non:['🥦','🥕','🧅'] },
+    { name:"animals", items:['🐶','🐱','🐭','🐹','🐰','🦊'], non:['🌵','🍄','🪨'] }
   ];
-  for(let i = 0; i < 16; i++) {
+  for(let i = 0; i < 20; i++) {
     SUBTESTS[8].templates.push(() => {
       const cat = categories[i % categories.length];
       const shuffled = shuffle([...cat.items]);
@@ -495,71 +567,63 @@
       const correct = shuffled[3];
       const options = [correct, ...shuffle([...cat.non]).slice(0, 3)];
       return {
-        text: `🗣️ Group: ${group.join(' ')} — all are ${cat.name}. Which one belongs in the same family?`,
+        text: `🗣️ Group: ${group.join(' ')} — all are ${cat.name}. Which one belongs?`,
         choices: shuffle(unique(options)),
         correctAnswer: correct,
         explanation: `${correct} is also a ${cat.name.slice(0,-1)}!`,
-        steps: [`👨‍👩‍👧‍👦 Name the family: ${group[0]}, ${group[1]}, ${group[2]} are all ${cat.name}.`, `🔍 Find another member of the same family.`, `✅ ${correct} belongs!`]
+        steps: [`👨‍👩‍👧‍👦 Name the family: all ${cat.name}.`, `✅ ${correct} belongs!`]
       };
     });
   }
 
-  // ========== MASTERY STATE with safe localStorage ==========
+  // ========== MASTERY STATE ==========
   let mastered = {};
   function masteryKey(id) { return `sub_${id}`; }
   function isMastered(id) { return !!mastered[masteryKey(id)]; }
   function setMastered(id) { mastered[masteryKey(id)] = true; saveMastery(); updateHeader(); renderSubtestGrid(); }
-  function loadMastery() { 
-    try { 
-      const s = localStorage.getItem('cogat_mastery_v12'); 
-      if(s) mastered = JSON.parse(s); 
-    } catch(e) {} 
-    updateHeader(); 
+  function loadMastery() { try { const s = localStorage.getItem(STORAGE_KEYS.mastery); if(s) mastered = JSON.parse(s); } catch(e) {} updateHeader(); }
+  function saveMastery() { try { localStorage.setItem(STORAGE_KEYS.mastery, JSON.stringify(mastered)); } catch(e) {} }
+  function updateHeader() { 
+    const count = Object.values(mastered).filter(v=>v).length;
+    document.getElementById('masteredCount').innerText = count;
   }
-  function saveMastery() { 
-    try { 
-      localStorage.setItem('cogat_mastery_v12', JSON.stringify(mastered)); 
-    } catch(e) {} 
-  }
-  function updateHeader() { document.getElementById('masteredCount').innerText = Object.values(mastered).filter(v=>v).length; }
 
-  function generateQuestions(sub, count) { 
-    return shuffle(sub.templates).slice(0, count).map(t => t()); 
-  }
+  function generateQuestions(sub, count) { return shuffle(sub.templates).slice(0, count).map(t => t()); }
 
   // ========== KID-FRIENDLY STUDY GUIDE ==========
   function getKidTip(id) {
     const tips = {
       0: "🔍 Look for 3 things: Did the shape change? Did the number of shapes grow? Did the shape transform?",
       1: "🎨 Look for the 'Twin Colors' Rule: Does the shape have two different colored halves?",
-      2: "📁 Think about real paper: If you fold it once, you have 2 layers. A hole punch goes through both layers!",
-      3: "📏 Find the 'Number Jump': What is the difference between the first two numbers? Do the same jump for the next pair.",
-      4: "🦘 Play 'Hopscotch': The numbers jump by different amounts (like -1, then -2). Watch the pattern!",
-      5: "🧩 Play 'Missing Piece': Add up all the numbers you see. How many more to reach the big number?",
-      6: "🦁 Play 'The Relationship Game': If the Tiger eats Meat, what does the Goat eat? Match the food to the animal!",
-      7: "📦 Play 'Solid vs. Flat': A flat shape (like a triangle) is flat. A solid shape (like a cube) you can hold!",
-      8: "👨‍👩‍👧‍👦 Play 'Who Belongs?': Name the group first. Are they instruments? Fruit? Pick the one that fits!"
+      2: "📁 Fold once = 2 layers. Each punch goes through both layers!",
+      3: "📏 Find the 'Number Jump' between the first two numbers. Do the same jump!",
+      4: "🦘 Watch the hopping pattern! It repeats the same jumps.",
+      5: "🧩 Add what you see. How many more to reach the total?",
+      6: "🦁 If Tiger eats Meat, what does Goat eat? Match food to animal!",
+      7: "📦 Solid shapes (cube, sphere) vs Flat shapes (triangle, square). Count solids!",
+      8: "👨‍👩‍👧‍👦 Name the family first. Then find another family member!"
     };
     return tips[id] || "Look for the pattern!";
   }
 
   function getKidExample(id) {
     const ex = {
-      0: "▲▲ becomes ▼▼▼ (shape flipped, count went from 2 to 3!)",
-      1: "A square split into Red and Blue halves — that's a perfect TWIN COLORS match!",
-      2: "1 hole punch + 1 fold = 2 holes total (because 1 × 2 = 2)",
-      3: "If 8 becomes 5 (that's DOWN 3), then 12 must also go DOWN 3 to become 9.",
-      4: "10 hops to 9 (down 1), then 9 hops to 7 (down 2). Keep hopping: down 1, down 2, down 1, down 2!",
-      5: "Total is 23. You have 9 + 7 (which is 16). How many to reach 23? You need 7 more!",
-      6: "Tigers love meat 🥩. Goats love grass 🌿. Connect each animal to its favorite snack!",
-      7: "A cube 📦 is solid (3D). A square 🟥 is flat (2D). We want the picture with solid shapes!",
-      8: "🎹, 🎸, and 🎺 are all musical instruments. A 🎷 saxophone fits right into that band!"
+      0: "▲▲ becomes ▼▼▼ (shape flipped, count 2→3!)",
+      1: "Square split into RED and BLUE — two different colors!",
+      2: "1 punch + 1 fold = 2 holes (1 × 2 = 2)",
+      3: "If 8→5 (down 3), then 12→9 (also down 3)",
+      4: "10,9,7,6,4... hops: -1, -2, -1, -2... next -1 = 3",
+      5: "23 = 9 + 7 + ? → 9+7=16, 23-16=7",
+      6: "🐯 eats 🥩 → 🐐 eats 🌿",
+      7: "📦 and 🔴 are both solid (3D) shapes",
+      8: "🎹, 🎸, 🎺 are instruments → 🎷 is also an instrument"
     };
     return ex[id] || "Apply the same rule!";
   }
 
   // ========== UI STATE ==========
-  let currentSubtest = null, mode = 'quiz', questions = [], answers = [], qIdx = 0, score = 0, waiting = false;
+  let currentSubtest = null, mode = 'quiz', questions = [], answers = [], qIdx = 0, score = 0, locked = false;
+  let currentFlashTimer = null;
 
   function showHome() {
     document.getElementById('detailView').style.display = 'none';
@@ -573,13 +637,13 @@
     updateHeader();
     grid.innerHTML = SUBTESTS.map((st, idx) => {
       const done = isMastered(st.id);
-      const badge = done ? 'badge-mastered' : 'badge-ready';
-      const text = done ? '✅ MASTERED!' : '🎮 PLAY NOW';
+      const progressPercent = done ? 100 : 0;
       return `<div class="subtest-card" data-idx="${idx}" role="button" tabindex="0" aria-label="Play ${st.name}">
         <div class="subtest-icon">${st.icon}</div>
         <div class="subtest-name">${st.name}</div>
         <div class="subtest-battery">${st.battery}</div>
-        <div class="badge ${badge}">${text}</div>
+        <div class="badge ${done ? 'badge-mastered' : 'badge-ready'}">${done ? '✅ MASTERED!' : '🎮 PLAY NOW'}</div>
+        <div class="subtest-progress"><div class="subtest-progress-fill" style="width:${progressPercent}%"></div></div>
       </div>`;
     }).join('');
     document.querySelectorAll('.subtest-card').forEach(card => {
@@ -600,15 +664,15 @@
     const detail = document.getElementById('detailView');
     detail.innerHTML = `
       <div class="panel">
-        <div class="panel-header"><h2>${sub.icon} ${sub.name} · Study Guide</h2><button class="back-btn" id="backHomeBtn" aria-label="Back to games menu">← Back to Games Menu</button></div>
+        <div class="panel-header"><h2>${sub.icon} ${sub.name} · Study Guide</h2><button type="button" class="back-btn" id="backHomeBtn">← Back to Games</button></div>
         <div class="study-content">
           <div class="kid-tip">🎯 ${getKidTip(sub.id)}</div>
           <div class="example-box">✨ <strong>Example:</strong> ${getKidExample(sub.id)}</div>
-          ${sub.id === 0 ? `<div class="rule-steps"><div class="rule-step"><div class="step-icon">1</div><span>🔍 Did the SHAPE change?</span></div><div class="rule-step"><div class="step-icon">2</div><span>🔢 Did the COUNT change?</span></div><div class="rule-step"><div class="step-icon">3</div><span>🔄 Did it TRANSFORM?</span></div><div class="rule-step"><div class="step-icon">✅</div><span>Apply ALL three rules to the bottom shape!</span></div></div>` : ''}
+          ${sub.id === 0 ? `<div class="rule-steps"><div class="rule-step"><div class="step-icon">1</div><span>🔍 Did the SHAPE change?</span></div><div class="rule-step"><div class="step-icon">2</div><span>🔢 Did the COUNT change?</span></div><div class="rule-step"><div class="step-icon">3</div><span>🔄 Did it TRANSFORM?</span></div></div>` : ''}
         </div>
         <div class="button-group">
-          <button class="next-btn" id="startQuizBtn" aria-label="Start practice quiz">🎮 Practice Quiz (${sub.quizSize} questions)</button>
-          <button class="next-btn green" id="startExamBtn" aria-label="Start mastery exam">🏆 Mastery Exam (${sub.examSize} questions)</button>
+          <button type="button" class="next-btn" id="startQuizBtn">🎮 Practice Quiz (${sub.quizSize} questions)</button>
+          <button type="button" class="next-btn green" id="startExamBtn">🏆 Mastery Exam (${sub.examSize} questions)</button>
         </div>
       </div>`;
     document.getElementById('backHomeBtn').onclick = showHome;
@@ -620,32 +684,31 @@
     mode = m;
     const qty = mode === 'quiz' ? currentSubtest.quizSize : currentSubtest.examSize;
     questions = generateQuestions(currentSubtest, qty);
-    answers = []; qIdx = 0; score = 0; waiting = false;
+    answers = []; qIdx = 0; score = 0; locked = false;
     renderQuestionCard();
   }
 
   function renderQuestionCard() {
-    waiting = false;
+    locked = false;
     const q = questions[qIdx];
     const total = questions.length;
     const progressPercent = ((qIdx + 1) / total) * 100;
     const detail = document.getElementById('detailView');
     detail.innerHTML = `
       <div class="panel">
-        <div class="panel-header"><h3>${mode === 'quiz' ? '🎮 PRACTICE QUIZ' : '🏆 MASTERY EXAM'} · ${currentSubtest.name}</h3><button class="back-btn" id="exitBtn" aria-label="Exit to menu">← Exit to Menu</button></div>
+        <div class="panel-header"><h3>${mode === 'quiz' ? '🎮 PRACTICE QUIZ' : '🏆 MASTERY EXAM'} · ${currentSubtest.name}</h3><button type="button" class="back-btn" id="exitBtn">← Exit</button></div>
         <div class="q-progress-bar"><div class="q-progress-fill" style="width:${progressPercent}%"></div></div>
         <p style="font-size:0.8rem;font-weight:800;margin-bottom:12px;">Question ${qIdx+1} of ${total} · ⭐ Score: ${score}</p>
-        <div class="question-area">
-          <p class="question-text" role="heading" aria-level="3">❓ ${q.text}</p>
-          <div class="choices-grid" id="choicesGrid"></div>
-          <div id="feedbackArea"></div>
-          <button class="next-btn" id="nextBtn" style="display:none;" aria-label="Next question">${qIdx+1 < total ? 'Next Question →' : 'See Results 🏆'}</button>
-        </div>
+        <div class="question-text" role="heading" aria-level="3">❓ ${q.text}</div>
+        <div class="choices-grid" id="choicesGrid"></div>
+        <div id="feedbackArea"></div>
+        <button type="button" class="next-btn" id="nextBtn" style="display:none;">${qIdx+1 < total ? 'Next →' : 'See Results 🏆'}</button>
       </div>`;
     document.getElementById('exitBtn').onclick = showHome;
     const grid = document.getElementById('choicesGrid');
     q.choices.forEach(ch => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'choice-btn';
       btn.textContent = ch;
       btn.setAttribute('aria-label', `Choose answer ${ch}`);
@@ -656,11 +719,16 @@
   }
 
   function handleAnswer(selected, btn) {
-    if (waiting) return;
-    waiting = true;
+    if (locked) return;
+    locked = true;
     const q = questions[qIdx];
     const isCorrect = selected === q.correctAnswer;
-    if (isCorrect) score++;
+    if (isCorrect) {
+      score++;
+      announce(`Correct! ${q.explanation}`);
+    } else {
+      announce(`Incorrect. The correct answer is ${q.correctAnswer}. ${q.explanation}`);
+    }
     answers[qIdx] = { correct: isCorrect, correctAnswer: q.correctAnswer, explanation: q.explanation, steps: q.steps };
     document.querySelectorAll('.choice-btn').forEach(b => {
       b.disabled = true;
@@ -670,12 +738,12 @@
     const fbDiv = document.getElementById('feedbackArea');
     fbDiv.innerHTML = `<div class="feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
       ${isCorrect ? '✅ CORRECT! ' : '❌ Not this time. '} ${q.explanation}
-      ${!isCorrect ? '<br><button class="show-tutor-btn" id="tutorBtn" aria-label="Show step-by-step help">🦉 Show me step-by-step</button>' : ''}
+      ${!isCorrect ? '<br><button type="button" class="show-tutor-btn" id="tutorBtn">🦉 Show step-by-step</button>' : ''}
     </div>`;
     if (!isCorrect) {
       document.getElementById('tutorBtn')?.addEventListener('click', () => {
         if (!fbDiv.querySelector('.tutor-panel')) {
-          fbDiv.insertAdjacentHTML('beforeend', `<div class="tutor-panel">🦉 Zara the Wise Owl says:<br><br>${q.steps.map(s => `📌 ${s}`).join('<br>')}</div>`);
+          fbDiv.insertAdjacentHTML('beforeend', `<div class="tutor-panel">🦉 Zara says:<br><br>${q.steps.map(s => `📌 ${s}`).join('<br>')}</div>`);
           document.getElementById('tutorBtn').style.display = 'none';
         }
       });
@@ -689,16 +757,23 @@
     const pct = (finalScore / total) * 100;
     const passed = pct >= 80;
     if (mode === 'quiz') {
-      if (passed) showResultCard(`🎉 Quiz Passed! ${finalScore}/${total}`, `Great job! Now try the MASTERY EXAM for ${currentSubtest.name}!`, passed, () => startAssessment('exam'));
-      else showResultCard(`📚 Quiz Score: ${finalScore}/${total}`, `You need 80% to pass. Review the Study Guide and try again!`, passed, () => startAssessment('quiz'));
+      if (passed) {
+        announce(`Quiz passed! You scored ${finalScore} out of ${total}. Now try the mastery exam!`);
+        showResultCard(`🎉 Quiz Passed! ${finalScore}/${total}`, `Great job! Now try the MASTERY EXAM for ${currentSubtest.name}!`, passed, () => startAssessment('exam'));
+      } else {
+        announce(`Quiz score: ${finalScore} out of ${total}. Need 80% to pass. Try again!`);
+        showResultCard(`📚 Quiz Score: ${finalScore}/${total}`, `Need 80% to pass. Review and try again!`, passed, () => startAssessment('quiz'));
+      }
     } else {
       if (passed) {
         setMastered(currentSubtest.id);
-        showResultCard(`🏆 MASTERED! ${finalScore}/${total}`, `Amazing! You mastered ${currentSubtest.name}! 🎉 Come back anytime to practice more!`, passed, () => showHome());
+        announce(`Congratulations! You mastered ${currentSubtest.name} with ${finalScore} out of ${total}!`);
+        showResultCard(`🏆 MASTERED! ${finalScore}/${total}`, `Amazing! You mastered ${currentSubtest.name}! 🎉`, passed, () => showHome());
         launchConfetti();
         showMasteryFlash(currentSubtest.name);
       } else {
-        showResultCard(`📝 Exam Score: ${finalScore}/${total}`, `Need 80% to master. Try again with fresh questions!`, passed, () => startAssessment('exam'));
+        announce(`Exam score: ${finalScore} out of ${total}. Need 80% to master. Try again!`);
+        showResultCard(`📝 Exam Score: ${finalScore}/${total}`, `Need 80% to master. Try again!`, passed, () => startAssessment('exam'));
       }
     }
   }
@@ -709,72 +784,55 @@
       <div class="results-trophy">${passed ? '🏆' : '📚'}</div>
       <div class="results-title">${title}</div>
       <div class="results-msg">${msg}</div>
-      <div class="results-actions"><button class="next-btn" id="continueBtn" aria-label="Continue">Continue</button><button class="back-btn" id="menuBtn" aria-label="Back to games menu">Back to Games</button></div>
+      <div class="results-actions"><button type="button" class="next-btn" id="continueBtn">Continue</button><button type="button" class="back-btn" id="menuBtn">Back to Games</button></div>
     </div>`;
     document.getElementById('continueBtn').onclick = onContinue;
     document.getElementById('menuBtn').onclick = showHome;
   }
 
-  // FIX: Mastery Flash with proper timer cleanup
-  let currentFlashTimer = null;
   function showMasteryFlash(name) {
-    // Clean up any existing flash
-    if (currentFlashTimer) {
-      clearTimeout(currentFlashTimer);
-      currentFlashTimer = null;
-    }
-    const existingFlash = document.querySelector('.mastery-flash');
-    if (existingFlash) existingFlash.remove();
-    
+    if (currentFlashTimer) { clearTimeout(currentFlashTimer); currentFlashTimer = null; }
+    const existing = document.querySelector('.mastery-flash');
+    if (existing) existing.remove();
     const div = document.createElement('div'); 
     div.className = 'mastery-flash';
-    div.innerHTML = `<div class="mastery-flash-inner"><div class="trophy">🏆</div><h2>MASTERED!</h2><p>${name} is complete!<br>Keep practicing to stay sharp!</p><button class="next-btn" id="flashClose" aria-label="Close celebration">Continue 🚀</button></div>`;
+    div.innerHTML = `<div class="mastery-flash-inner"><div class="trophy">🏆</div><h2>MASTERED!</h2><p>${name} is complete!<br>Keep practicing!</p><button type="button" class="next-btn" id="flashClose">Continue 🚀</button></div>`;
     document.body.appendChild(div);
-    
-    const timer = setTimeout(() => {
-      if (div && div.remove) div.remove();
-      currentFlashTimer = null;
-    }, 4000);
+    const timer = setTimeout(() => { if (div && div.remove) div.remove(); currentFlashTimer = null; }, 4000);
     currentFlashTimer = timer;
-    
-    div.querySelector('#flashClose').onclick = () => {
-      if (timer) clearTimeout(timer);
-      if (div && div.remove) div.remove();
-      currentFlashTimer = null;
-    };
+    div.querySelector('#flashClose').onclick = () => { if (timer) clearTimeout(timer); if (div && div.remove) div.remove(); currentFlashTimer = null; };
   }
 
-  // FIX: Confetti colors that pop in both light and dark mode
   function launchConfetti() {
     const isDark = document.body.classList.contains('dark-theme');
-    const colors = isDark 
-      ? ['#ff69b4', '#ffdd44', '#aa66ff', '#44ff88', '#ff8844', '#66ccff', '#ff99cc']
-      : ['#e91e8c', '#f5c518', '#7c3aed', '#22c55e', '#ff6b35', '#0ea5e9', '#ff4444'];
-    for(let i=0;i<80;i++) setTimeout(()=>{ 
+    const colors = isDark ? ['#ff69b4', '#ffdd44', '#aa66ff', '#44ff88', '#ff8844'] : ['#e91e8c', '#f5c518', '#7c3aed', '#22c55e', '#ff6b35'];
+    for(let i=0;i<70;i++) setTimeout(()=>{ 
       const c=document.createElement('div'); 
       c.className='confetti-piece'; 
-      c.style.cssText=`left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; width:${6+Math.random()*10}px; height:${6+Math.random()*10}px; border-radius:${Math.random()>0.5?'50%':'2px'}; animation-duration:${1.5+Math.random()*2.5}s; animation-delay:${Math.random()*0.3}s;`; 
+      c.style.cssText=`left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; width:${6+Math.random()*8}px; height:${6+Math.random()*8}px; border-radius:${Math.random()>0.5?'50%':'2px'}; animation-duration:${1.5+Math.random()*2}s;`; 
       document.body.appendChild(c); 
       setTimeout(()=>c.remove(),3500); 
     }, i*25);
   }
 
-  // ========== INITIALIZATION with Dark Mode ==========
+  // ========== INITIALIZATION ==========
   document.addEventListener('DOMContentLoaded', () => {
     try {
-      const savedTheme = localStorage.getItem('cogat_theme');
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.theme);
       if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
         const btn = document.getElementById('themeToggle');
-        if (btn) btn.textContent = '☀️ Light Mode';
+        if (btn) {
+          btn.setAttribute('aria-pressed', 'true');
+          btn.textContent = 'Light Mode';
+        }
+      } else {
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.setAttribute('aria-pressed', 'false');
       }
     } catch(e) {}
-    
     const themeBtn = document.getElementById('themeToggle');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', toggleTheme);
-    }
-    
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
     loadMastery();
     renderSubtestGrid();
   });
