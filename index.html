@@ -28,6 +28,9 @@
       .confetti-piece {
         display: none !important;
       }
+      .choice-btn.correct-choice {
+        animation: none !important;
+      }
     }
     
     /* ========== CSS VARIABLES ========== */
@@ -134,7 +137,8 @@
     .back-btn:focus-visible,
     .next-btn:focus-visible,
     .show-tutor-btn:focus-visible,
-    .choice-btn:focus-visible {
+    .choice-btn:focus-visible,
+    [tabindex="0"]:focus-visible {
       outline: 3px solid var(--focus-outline);
       outline-offset: 4px;
       position: relative;
@@ -227,8 +231,19 @@
     }
     .choice-btn:hover:not(:disabled) { background: var(--choice-hover); border-color: #f5c518; transform: scale(1.02); }
     .choice-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-    .choice-btn.correct-choice { background: #22c55e30; border-color: #22c55e; }
+    .choice-btn.correct-choice { 
+      background: #22c55e30; 
+      border-color: #22c55e;
+      animation: pulse 0.3s ease-in-out;
+    }
     .choice-btn.wrong-choice { background: #ef444430; border-color: #ef4444; }
+    
+    /* Pulse animation for correct answers */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
     
     .feedback { padding: 14px 18px; border-radius: 20px; margin: 12px 0; font-weight: 700; font-size: 1rem; line-height: 1.6; }
     .correct-fb { background: var(--correct-bg); color: var(--correct-text); border-left: 5px solid #22c55e; }
@@ -280,7 +295,7 @@
     .step-icon { width: 28px; height: 28px; background: #e91e8c20; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #e91e8c; }
     .kid-tip { background: #e91e8c10; border-radius: 20px; padding: 12px; margin: 12px 0; text-align: center; font-weight: 800; color: #e91e8c; font-size: 1rem; }
     
-    /* aria-live region for screen readers */
+    /* aria-live region for screen readers - best practice with role="status" */
     .sr-only {
       position: absolute;
       width: 1px;
@@ -290,6 +305,13 @@
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
       border: 0;
+    }
+    
+    /* Focus management - ensure headings are focusable */
+    h2:focus-visible, h3:focus-visible, .panel-header h2:focus-visible {
+      outline: 2px solid var(--focus-outline);
+      outline-offset: 4px;
+      border-radius: 8px;
     }
     
     /* aria-pressed attribute styling for theme toggle */
@@ -316,8 +338,8 @@
     </div>
   </div>
 
-  <!-- aria-live region for screen reader announcements -->
-  <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <!-- aria-live region for screen reader announcements - best practice with role="status" -->
+  <div id="liveRegion" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <div id="homeView">
     <div class="panel" style="text-align:center;"><p>🎯 <strong>Pick any game to play!</strong> Each game has a Study Guide, a short Quiz, and a longer Exam. Pass the Exam to earn a Mastery Trophy! 🏆</p></div>
@@ -330,7 +352,7 @@
 <script>
   // ========== CONSTANTS ==========
   const STORAGE_KEYS = {
-    mastery: 'cogat_mastery_v14',
+    mastery: 'cogat_mastery_v15',
     theme: 'cogat_theme'
   };
   
@@ -344,6 +366,7 @@
       btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
     }
     try { localStorage.setItem(STORAGE_KEYS.theme, isDark ? 'dark' : 'light'); } catch(e) {}
+    announce(isDark ? 'Dark mode enabled' : 'Light mode enabled');
   }
 
   // ========== HELPER FUNCTIONS ==========
@@ -354,6 +377,19 @@
   function announce(message) {
     const live = document.getElementById('liveRegion');
     if (live) live.textContent = message;
+    console.log('Screen reader announcement:', message);
+  }
+  
+  // Focus management - set focus to heading after view changes
+  function setFocusToHeading(selector) {
+    setTimeout(() => {
+      const element = document.querySelector(selector);
+      if (element && element.focus) {
+        element.setAttribute('tabindex', '-1');
+        element.focus();
+        element.removeAttribute('tabindex');
+      }
+    }, 50);
   }
 
   // ========== ENHANCED TRANSFORMATIONS ==========
@@ -629,6 +665,9 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('homeView').style.display = 'block';
     renderSubtestGrid();
+    // Focus management: move focus to the home view heading
+    setFocusToHeading('.logo h1');
+    announce('Returned to games menu');
   }
 
   function renderSubtestGrid() {
@@ -657,6 +696,9 @@
     document.getElementById('homeView').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
     renderStudyView();
+    // Focus management: move focus to the study guide heading
+    setFocusToHeading('.panel-header h2');
+    announce(`Opened ${currentSubtest.name} study guide`);
   }
 
   function renderStudyView() {
@@ -664,7 +706,7 @@
     const detail = document.getElementById('detailView');
     detail.innerHTML = `
       <div class="panel">
-        <div class="panel-header"><h2>${sub.icon} ${sub.name} · Study Guide</h2><button type="button" class="back-btn" id="backHomeBtn">← Back to Games</button></div>
+        <div class="panel-header"><h2 tabindex="-1">${sub.icon} ${sub.name} · Study Guide</h2><button type="button" class="back-btn" id="backHomeBtn">← Back to Games</button></div>
         <div class="study-content">
           <div class="kid-tip">🎯 ${getKidTip(sub.id)}</div>
           <div class="example-box">✨ <strong>Example:</strong> ${getKidExample(sub.id)}</div>
@@ -686,6 +728,7 @@
     questions = generateQuestions(currentSubtest, qty);
     answers = []; qIdx = 0; score = 0; locked = false;
     renderQuestionCard();
+    announce(`Starting ${mode === 'quiz' ? 'practice quiz' : 'mastery exam'} with ${qty} questions`);
   }
 
   function renderQuestionCard() {
@@ -696,7 +739,7 @@
     const detail = document.getElementById('detailView');
     detail.innerHTML = `
       <div class="panel">
-        <div class="panel-header"><h3>${mode === 'quiz' ? '🎮 PRACTICE QUIZ' : '🏆 MASTERY EXAM'} · ${currentSubtest.name}</h3><button type="button" class="back-btn" id="exitBtn">← Exit</button></div>
+        <div class="panel-header"><h3 tabindex="-1">${mode === 'quiz' ? '🎮 PRACTICE QUIZ' : '🏆 MASTERY EXAM'} · ${currentSubtest.name}</h3><button type="button" class="back-btn" id="exitBtn">← Exit</button></div>
         <div class="q-progress-bar"><div class="q-progress-fill" style="width:${progressPercent}%"></div></div>
         <p style="font-size:0.8rem;font-weight:800;margin-bottom:12px;">Question ${qIdx+1} of ${total} · ⭐ Score: ${score}</p>
         <div class="question-text" role="heading" aria-level="3">❓ ${q.text}</div>
@@ -716,11 +759,18 @@
       grid.appendChild(btn);
     });
     document.getElementById('nextBtn').onclick = () => { if (qIdx+1 < total) { qIdx++; renderQuestionCard(); } else finishAssessment(); };
+    // Focus the question text for screen readers
+    setFocusToHeading('.question-text');
   }
 
   function handleAnswer(selected, btn) {
     if (locked) return;
+    
+    // Immediately disable all choice buttons to prevent double-clicks (robust state management)
+    const allButtons = document.querySelectorAll('.choice-btn');
+    allButtons.forEach(b => { b.disabled = true; });
     locked = true;
+    
     const q = questions[qIdx];
     const isCorrect = selected === q.correctAnswer;
     if (isCorrect) {
@@ -730,11 +780,12 @@
       announce(`Incorrect. The correct answer is ${q.correctAnswer}. ${q.explanation}`);
     }
     answers[qIdx] = { correct: isCorrect, correctAnswer: q.correctAnswer, explanation: q.explanation, steps: q.steps };
-    document.querySelectorAll('.choice-btn').forEach(b => {
-      b.disabled = true;
+    
+    allButtons.forEach(b => {
       if (b.textContent === q.correctAnswer) b.classList.add('correct-choice');
       else if (b === btn && !isCorrect) b.classList.add('wrong-choice');
     });
+    
     const fbDiv = document.getElementById('feedbackArea');
     fbDiv.innerHTML = `<div class="feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
       ${isCorrect ? '✅ CORRECT! ' : '❌ Not this time. '} ${q.explanation}
@@ -745,10 +796,16 @@
         if (!fbDiv.querySelector('.tutor-panel')) {
           fbDiv.insertAdjacentHTML('beforeend', `<div class="tutor-panel">🦉 Zara says:<br><br>${q.steps.map(s => `📌 ${s}`).join('<br>')}</div>`);
           document.getElementById('tutorBtn').style.display = 'none';
+          announce('Opening step-by-step explanation');
         }
       });
     }
     document.getElementById('nextBtn').style.display = 'block';
+    // Focus the next button for keyboard navigation
+    setTimeout(() => {
+      const nextBtn = document.getElementById('nextBtn');
+      if (nextBtn) nextBtn.focus();
+    }, 50);
   }
 
   function finishAssessment() {
@@ -788,6 +845,11 @@
     </div>`;
     document.getElementById('continueBtn').onclick = onContinue;
     document.getElementById('menuBtn').onclick = showHome;
+    // Focus the continue button
+    setTimeout(() => {
+      const continueBtn = document.getElementById('continueBtn');
+      if (continueBtn) continueBtn.focus();
+    }, 50);
   }
 
   function showMasteryFlash(name) {
@@ -801,6 +863,11 @@
     const timer = setTimeout(() => { if (div && div.remove) div.remove(); currentFlashTimer = null; }, 4000);
     currentFlashTimer = timer;
     div.querySelector('#flashClose').onclick = () => { if (timer) clearTimeout(timer); if (div && div.remove) div.remove(); currentFlashTimer = null; };
+    // Focus the close button
+    setTimeout(() => {
+      const closeBtn = div.querySelector('#flashClose');
+      if (closeBtn) closeBtn.focus();
+    }, 50);
   }
 
   function launchConfetti() {
@@ -835,6 +902,7 @@
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
     loadMastery();
     renderSubtestGrid();
+    announce('CogAT Mastery app loaded. Select a game to begin.');
   });
 </script>
 </body>
