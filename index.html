@@ -4,13 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Safia's CogAT Mastery · 9 Subtests · Dark Mode</title>
-  <!-- System fonts as fallback for offline use -->
+  <!-- System fonts only (offline-first, no external dependencies) -->
   <style>
-    /* Fallback fonts if Google Fonts fails to load */
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
-    /* Fallback: if Google Fonts doesn't load, use system fonts */
-    body { font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-    h1, h2, h3, .logo h1, .next-btn, .results-title { font-family: 'Fredoka One', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, cursive; }
+    /* Offline-first: using system fonts only - no Google Fonts import */
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    h1, h2, h3, .logo h1, .next-btn, .results-title { 
+      font-family: 'Fredoka One', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, cursive;
+    }
+    /* Fallback if Fredoka One isn't available */
+    @font-face {
+      font-family: 'Fredoka One';
+      src: local('Fredoka One'), local('FredokaOne-Regular');
+      font-weight: normal;
+      font-style: normal;
+    }
   </style>
   <style>
     /* ========== COMPLETE CSS WITH DARK MODE SUPPORT ========== */
@@ -304,7 +313,7 @@
     { id:8, name:"Picture Classification", battery:"Verbal", icon:"🗣️", quizSize:5, examSize:12, templates:[] }
   ];
 
-  // ========== FIGURE MATRICES - FIXED: ensures 4 choices always ==========
+  // ========== FIGURE MATRICES - ensures 4 choices always ==========
   for(let i = 0; i < 24; i++) {
     SUBTESTS[0].templates.push(() => {
       const pair = rotationPairs[rand(0, rotationPairs.length - 1)];
@@ -321,7 +330,6 @@
         shapeB.repeat(countEnd + 1)
       ]);
       
-      // FIX: Ensure we always have 4 choices
       while (choices.length < 4) {
         choices.push(shapeB.repeat(countEnd + choices.length));
       }
@@ -337,16 +345,21 @@
     });
   }
 
-  // ========== FIGURE CLASSIFICATION ==========
+  // ========== FIGURE CLASSIFICATION - ensures 4 choices always ==========
   for(let i = 0; i < 18; i++) {
     SUBTESTS[1].templates.push(() => {
       const colors = [['🟥','🟦'],['🟩','🟨'],['🟪','🟧'],['🟧','🟩']];
       const [c1,c2] = colors[rand(0, colors.length-1)];
       const correct = `${c1}${c2}`;
-      const options = [correct, `${c1}${c1}`, c1, `${c2}${c2}`];
+      let choices = unique([correct, `${c1}${c1}`, c1, `${c2}${c2}`]);
+      // Ensure we always have 4 choices (future-proofing)
+      while (choices.length < 4) {
+        choices.push(`${c1}${c1}${c1}`);
+      }
+      choices = shuffle(choices);
       return {
         text: `🔷 Three shapes are split into TWO DIFFERENT colors: ${c1}|${c2}. Which one follows the same TWIN COLORS rule?`,
-        choices: shuffle(unique(options)),
+        choices: choices,
         correctAnswer: correct,
         explanation: `The "Twin Colors" rule: Each shape has two DIFFERENT colored halves!`,
         steps: [`🎨 Look at the three shapes — each has two different colors!`, `👯 The correct answer must also have two different colors.`, `✅ ${correct} has two different colors — perfect match!`]
@@ -498,14 +511,14 @@
   function setMastered(id) { mastered[masteryKey(id)] = true; saveMastery(); updateHeader(); renderSubtestGrid(); }
   function loadMastery() { 
     try { 
-      const s = localStorage.getItem('cogat_mastery_v11'); 
+      const s = localStorage.getItem('cogat_mastery_v12'); 
       if(s) mastered = JSON.parse(s); 
     } catch(e) {} 
     updateHeader(); 
   }
   function saveMastery() { 
     try { 
-      localStorage.setItem('cogat_mastery_v11', JSON.stringify(mastered)); 
+      localStorage.setItem('cogat_mastery_v12', JSON.stringify(mastered)); 
     } catch(e) {} 
   }
   function updateHeader() { document.getElementById('masteredCount').innerText = Object.values(mastered).filter(v=>v).length; }
@@ -623,7 +636,7 @@
         <div class="q-progress-bar"><div class="q-progress-fill" style="width:${progressPercent}%"></div></div>
         <p style="font-size:0.8rem;font-weight:800;margin-bottom:12px;">Question ${qIdx+1} of ${total} · ⭐ Score: ${score}</p>
         <div class="question-area">
-          <p class="question-text">❓ ${q.text}</p>
+          <p class="question-text" role="heading" aria-level="3">❓ ${q.text}</p>
           <div class="choices-grid" id="choicesGrid"></div>
           <div id="feedbackArea"></div>
           <button class="next-btn" id="nextBtn" style="display:none;" aria-label="Next question">${qIdx+1 < total ? 'Next Question →' : 'See Results 🏆'}</button>
@@ -702,27 +715,48 @@
     document.getElementById('menuBtn').onclick = showHome;
   }
 
+  // FIX: Mastery Flash with proper timer cleanup
+  let currentFlashTimer = null;
   function showMasteryFlash(name) {
-    const div = document.createElement('div'); div.className = 'mastery-flash';
+    // Clean up any existing flash
+    if (currentFlashTimer) {
+      clearTimeout(currentFlashTimer);
+      currentFlashTimer = null;
+    }
+    const existingFlash = document.querySelector('.mastery-flash');
+    if (existingFlash) existingFlash.remove();
+    
+    const div = document.createElement('div'); 
+    div.className = 'mastery-flash';
     div.innerHTML = `<div class="mastery-flash-inner"><div class="trophy">🏆</div><h2>MASTERED!</h2><p>${name} is complete!<br>Keep practicing to stay sharp!</p><button class="next-btn" id="flashClose" aria-label="Close celebration">Continue 🚀</button></div>`;
     document.body.appendChild(div);
-    div.querySelector('#flashClose').onclick = () => div.remove();
-    setTimeout(() => div.remove(), 4000);
+    
+    const timer = setTimeout(() => {
+      if (div && div.remove) div.remove();
+      currentFlashTimer = null;
+    }, 4000);
+    currentFlashTimer = timer;
+    
+    div.querySelector('#flashClose').onclick = () => {
+      if (timer) clearTimeout(timer);
+      if (div && div.remove) div.remove();
+      currentFlashTimer = null;
+    };
   }
 
   // FIX: Confetti colors that pop in both light and dark mode
   function launchConfetti() {
     const isDark = document.body.classList.contains('dark-theme');
     const colors = isDark 
-      ? ['#ff69b4', '#ffdd44', '#aa66ff', '#44ff88', '#ff8844', '#66ccff']
-      : ['#e91e8c', '#f5c518', '#7c3aed', '#22c55e', '#ff6b35', '#0ea5e9'];
-    for(let i=0;i<70;i++) setTimeout(()=>{ 
+      ? ['#ff69b4', '#ffdd44', '#aa66ff', '#44ff88', '#ff8844', '#66ccff', '#ff99cc']
+      : ['#e91e8c', '#f5c518', '#7c3aed', '#22c55e', '#ff6b35', '#0ea5e9', '#ff4444'];
+    for(let i=0;i<80;i++) setTimeout(()=>{ 
       const c=document.createElement('div'); 
       c.className='confetti-piece'; 
-      c.style.cssText=`left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; width:${6+Math.random()*8}px; height:${6+Math.random()*8}px; border-radius:${Math.random()>0.5?'50%':'2px'}; animation-duration:${1.5+Math.random()*2}s;`; 
+      c.style.cssText=`left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; width:${6+Math.random()*10}px; height:${6+Math.random()*10}px; border-radius:${Math.random()>0.5?'50%':'2px'}; animation-duration:${1.5+Math.random()*2.5}s; animation-delay:${Math.random()*0.3}s;`; 
       document.body.appendChild(c); 
-      setTimeout(()=>c.remove(),3000); 
-    }, i*30);
+      setTimeout(()=>c.remove(),3500); 
+    }, i*25);
   }
 
   // ========== INITIALIZATION with Dark Mode ==========
