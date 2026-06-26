@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Safia's CogAT Detective Academy</title>
+  <title>Safia's CogAT Detective Academy · Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
-
     :root {
       --bg: #f5f0ff;
       --text: #1e1245;
@@ -27,8 +26,8 @@
       --wrong-text: #b91c1c;
       --tip-bg: #fffbeb;
       --tip-border: #f5c518;
-      --shadow: 0 4px 16px rgba(30,18,69,0.08);
-      --shadow-hover: 0 10px 30px rgba(30,18,69,0.15);
+      --shadow: 0 4px 16px rgba(30, 18, 69, 0.08);
+      --shadow-hover: 0 10px 30px rgba(30, 18, 69, 0.15);
       --focus: #f5c518;
       --muted: #7c6fa0;
     }
@@ -49,17 +48,28 @@
       --wrong-text: #fca5a5;
       --tip-bg: #1e1a0a;
       --tip-border: #f5c518;
-      --shadow: 0 4px 16px rgba(0,0,0,0.4);
-      --shadow-hover: 0 10px 30px rgba(0,0,0,0.5);
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.5);
       --muted: #9d8fcc;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { transition: none !important; animation: none !important; }
-      .confetti { display: none !important; }
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+      .confetti {
+        display: none !important;
+      }
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: 'Nunito', -apple-system, sans-serif;
@@ -70,9 +80,11 @@
       transition: background 0.25s, color 0.25s;
     }
 
-    .app { max-width: 1100px; margin: 0 auto; }
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-    /* ── HEADER ── */
     .header {
       background: linear-gradient(135deg, var(--header-start), var(--header-end));
       border-radius: 28px;
@@ -85,26 +97,73 @@
       margin-bottom: 24px;
       box-shadow: var(--shadow-hover);
     }
-    .header-logo { display: flex; align-items: center; gap: 12px; }
-    .header-logo .badge-icon { font-size: 2.4rem; }
-    .header-logo h1 { font-family: 'Fredoka One', cursive; color: var(--gold); font-size: 1.5rem; line-height: 1.1; }
-    .header-logo p { color: #d4b8ff; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .trophy-count { background: rgba(255,255,255,0.12); border-radius: 40px; padding: 8px 18px; display: flex; gap: 16px; }
-    .tc-item { text-align: center; }
-    .tc-item .num { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--gold); line-height: 1; display: block; }
-    .tc-item .lbl { font-size: 0.65rem; font-weight: 900; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px; }
-    .theme-btn {
-      background: rgba(255,255,255,0.15);
-      border: none; border-radius: 30px;
-      padding: 8px 16px; color: white;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800; font-size: 0.82rem;
-      cursor: pointer; transition: background 0.2s;
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .theme-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-logo .badge-icon {
+      font-size: 2.4rem;
+    }
+    .header-logo h1 {
+      font-family: 'Fredoka One', cursive;
+      color: var(--gold);
+      font-size: 1.5rem;
+      line-height: 1.1;
+    }
+    .header-logo p {
+      color: #d4b8ff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .trophy-count {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 40px;
+      padding: 8px 18px;
+      display: flex;
+      gap: 16px;
+    }
+    .tc-item {
+      text-align: center;
+    }
+    .tc-item .num {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.8rem;
+      color: var(--gold);
+      line-height: 1;
+      display: block;
+    }
+    .tc-item .lbl {
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .theme-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 30px;
+      padding: 8px 16px;
+      color: white;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .theme-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
 
-    /* ── TIPS BAR ── */
     .tips-bar {
       background: linear-gradient(135deg, #1e1245, #4a2d9c);
       border-radius: 20px;
@@ -115,27 +174,46 @@
       gap: 12px;
       box-shadow: var(--shadow);
     }
-    .tips-bar .tip-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .tips-bar p { color: #e8d8ff; font-size: 0.88rem; font-weight: 700; line-height: 1.5; }
-    .tips-bar strong { color: var(--gold); }
+    .tips-bar .tip-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .tips-bar p {
+      color: #e8d8ff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .tips-bar strong {
+      color: var(--gold);
+    }
 
-    /* ── BATTERY SECTIONS ── */
-    .battery-section { margin-bottom: 28px; }
+    .battery-section {
+      margin-bottom: 28px;
+    }
     .battery-label {
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-family: 'Fredoka One', cursive;
-      font-size: 1.1rem; color: var(--muted);
+      font-size: 1.1rem;
+      color: var(--muted);
       margin-bottom: 12px;
       padding-left: 4px;
     }
     .battery-label::after {
-      content: ''; flex: 1;
-      height: 2px; background: var(--panel-border);
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: var(--panel-border);
       border-radius: 2px;
     }
 
-    /* ── SUBTEST GRID ── */
-    .subtest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .subtest-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
     .subtest-card {
       background: var(--card-bg);
       border-radius: 22px;
@@ -144,23 +222,74 @@
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: var(--shadow);
-      display: flex; flex-direction: column; gap: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .subtest-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: var(--shadow-hover); }
-    .subtest-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-    .sc-top { display: flex; align-items: flex-start; justify-content: space-between; }
-    .sc-icon { font-size: 2rem; }
-    .sc-status { font-size: 0.7rem; font-weight: 900; padding: 4px 10px; border-radius: 20px; }
-    .status-mastered { background: #dcfce7; color: #15803d; }
-    .status-ready { background: #ede5ff; color: #6d28d9; }
-    body.dark .status-mastered { background: #0f2d1a; color: #6ee7a0; }
-    body.dark .status-ready { background: #2d1a50; color: #c4b5fd; }
-    .sc-name { font-family: 'Fredoka One', cursive; font-size: 1.15rem; color: var(--text); }
-    .sc-desc { font-size: 0.78rem; color: var(--muted); font-weight: 700; line-height: 1.4; }
-    .sc-bar { height: 5px; background: var(--panel-border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .sc-bar-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); border-radius: 3px; transition: width 0.4s; }
+    .subtest-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      box-shadow: var(--shadow-hover);
+    }
+    .subtest-card:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+    .sc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .sc-icon {
+      font-size: 2rem;
+    }
+    .sc-status {
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .status-mastered {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .status-ready {
+      background: #ede5ff;
+      color: #6d28d9;
+    }
+    body.dark .status-mastered {
+      background: #0f2d1a;
+      color: #6ee7a0;
+    }
+    body.dark .status-ready {
+      background: #2d1a50;
+      color: #c4b5fd;
+    }
+    .sc-name {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+    .sc-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .sc-bar {
+      height: 5px;
+      background: var(--panel-border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .sc-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink), var(--gold));
+      border-radius: 3px;
+      transition: width 0.4s;
+    }
 
-    /* ── PANEL ── */
     .panel {
       background: var(--panel);
       border-radius: 28px;
@@ -170,978 +299,1594 @@
       border: 1px solid var(--panel-border);
     }
     .panel-head {
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
       border-bottom: 2px solid var(--panel-border);
-      padding-bottom: 14px; margin-bottom: 20px;
+      padding-bottom: 14px;
+      margin-bottom: 20px;
     }
-    .panel-head h2 { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--text); }
+    .panel-head h2 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.3rem;
+      color: var(--text);
+    }
     .back-btn {
-      background: var(--choice-bg); border: 2px solid var(--choice-border);
-      border-radius: 30px; padding: 7px 16px;
-      font-family: 'Nunito', sans-serif; font-weight: 800;
-      font-size: 0.85rem; color: var(--text);
-      cursor: pointer; transition: all 0.15s;
+      background: var(--choice-bg);
+      border: 2px solid var(--choice-border);
+      border-radius: 30px;
+      padding: 7px 16px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .back-btn:hover { background: var(--panel-border); }
-    .back-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .back-btn:hover {
+      background: var(--panel-border);
+    }
 
-    /* ── STUDY GUIDE ── */
-    .study-content { line-height: 1.7; }
+    .study-content {
+      line-height: 1.7;
+    }
     .kid-tip {
-      background: var(--tip-bg); border-left: 5px solid var(--tip-border);
-      border-radius: 16px; padding: 14px 18px;
-      font-weight: 800; color: var(--text); margin-bottom: 16px;
+      background: var(--tip-bg);
+      border-left: 5px solid var(--tip-border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 16px;
       font-size: 0.95rem;
     }
-    body.dark .kid-tip { background: #1e1a06; }
     .example-box {
-      background: var(--choice-bg); border-radius: 16px;
-      padding: 14px 18px; margin-bottom: 16px;
-      border-left: 5px solid var(--pink); font-size: 0.9rem;
-      font-weight: 700; line-height: 1.6;
+      background: var(--choice-bg);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border-left: 5px solid var(--pink);
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.6;
     }
-    .strategy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
     .strategy-card {
-      background: var(--choice-bg); border-radius: 14px;
-      padding: 12px 14px; border: 2px solid var(--choice-border);
-      font-size: 0.85rem; font-weight: 700;
+      background: var(--choice-bg);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 2px solid var(--choice-border);
+      font-size: 0.85rem;
+      font-weight: 700;
     }
     .strategy-card .s-num {
       font-family: 'Fredoka One', cursive;
-      font-size: 1.4rem; color: var(--pink); display: block; margin-bottom: 4px;
+      font-size: 1.4rem;
+      color: var(--pink);
+      display: block;
+      margin-bottom: 4px;
     }
-    .analogy-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.82rem; }
-    .analogy-table th { background: var(--purple); color: white; padding: 8px 12px; text-align: left; font-weight: 800; }
-    .analogy-table td { padding: 7px 12px; border-bottom: 1px solid var(--panel-border); font-weight: 600; }
-    .analogy-table tr:nth-child(even) td { background: var(--choice-bg); }
 
-    /* ── TEST TIPS SECTION ── */
-    .test-tips-section { margin-top: 16px; }
-    .test-tips-section h4 { font-family: 'Fredoka One', cursive; font-size: 1rem; margin-bottom: 10px; color: var(--pink); }
-    .tip-list { display: flex; flex-direction: column; gap: 8px; }
-    .tip-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; font-weight: 700; }
-    .tip-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--pink); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 0.9rem; flex-shrink: 0; }
-
-    /* ── BUTTONS ── */
-    .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
     .btn-primary {
       background: linear-gradient(135deg, var(--pink), #c2185b);
-      color: white; border: none; border-radius: 40px;
+      color: white;
+      border: none;
+      border-radius: 40px;
       padding: 12px 28px;
-      font-family: 'Fredoka One', cursive; font-size: 1.1rem;
-      cursor: pointer; transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(233,30,140,0.3);
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,140,0.4); }
-    .btn-primary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 30, 140, 0.4);
+    }
     .btn-green {
       background: linear-gradient(135deg, #22c55e, #15803d);
-      box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
     }
-    .btn-green:hover { box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+    .btn-green:hover {
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
 
-    /* ── QUESTION CARD ── */
-    .q-meta { font-size: 0.8rem; font-weight: 800; color: var(--muted); margin-bottom: 12px; }
-    .q-progress { height: 8px; background: var(--panel-border); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
-    .q-progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); border-radius: 6px; transition: width 0.4s; }
+    .q-meta {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .q-progress {
+      height: 8px;
+      background: var(--panel-border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .q-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink), var(--gold));
+      border-radius: 6px;
+      transition: width 0.4s;
+    }
     .q-text {
-      font-size: 1.05rem; font-weight: 800; line-height: 1.7;
-      background: var(--choice-bg); border-radius: 18px;
-      padding: 16px 20px; border-left: 5px solid var(--pink);
-      margin-bottom: 20px; white-space: pre-line;
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.7;
+      background: var(--choice-bg);
+      border-radius: 18px;
+      padding: 16px 20px;
+      border-left: 5px solid var(--pink);
+      margin-bottom: 20px;
+      white-space: pre-line;
     }
 
-    /* Paper folding visual */
-    .paper-visual { margin: 12px 0 20px; text-align: center; }
-    .paper-visual svg { max-width: 100%; height: auto; }
+    .vector-figure {
+      width: 60px;
+      height: 60px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .vector-figure polygon,
+    .vector-figure rect,
+    .vector-figure circle {
+      transition: fill 0.2s, stroke 0.2s;
+    }
 
-    /* ── CHOICES ── */
-    .choices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .choice-btn .pic-icon {
+      font-size: 3rem;
+      margin-bottom: 4px;
+      line-height: 1.2;
+      display: block;
+    }
+    .choice-btn .choice-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .choice-btn .vector-figure {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 4px;
+      display: block;
+    }
+
+    .paper-visual {
+      margin: 12px 0 20px;
+      text-align: center;
+    }
+    .paper-visual svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .choices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
     .choice-btn {
-      background: var(--choice-bg); border: 3px solid var(--choice-border);
-      border-radius: 18px; padding: 14px 10px;
-      font-family: 'Nunito', sans-serif; font-weight: 800;
-      font-size: 1.2rem; color: var(--text);
-      cursor: pointer; transition: all 0.12s;
-      min-height: 75px; display: flex;
-      align-items: center; justify-content: center;
-      text-align: center; line-height: 1.3;
+      background: var(--choice-bg);
+      border: 3px solid var(--choice-border);
+      border-radius: 18px;
+      padding: 14px 10px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.12s;
+      min-height: 75px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1.3;
+      gap: 2px;
     }
-    .choice-btn:hover:not(:disabled) { background: var(--panel-border); border-color: var(--gold); transform: scale(1.02); }
-    .choice-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-    .choice-btn:disabled { cursor: not-allowed; opacity: 0.75; }
-    .choice-btn.correct { background: var(--correct-bg); border-color: var(--green); color: var(--correct-text); animation: pop 0.25s ease; }
-    .choice-btn.wrong { background: var(--wrong-bg); border-color: #ef4444; color: var(--wrong-text); }
-    @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+    .choice-btn:hover:not(:disabled) {
+      background: var(--panel-border);
+      border-color: var(--gold);
+      transform: scale(1.02);
+    }
+    .choice-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+    .choice-btn.correct {
+      background: var(--correct-bg);
+      border-color: var(--green);
+      color: var(--correct-text);
+      animation: pop 0.25s ease;
+    }
+    .choice-btn.correct .choice-label {
+      color: var(--correct-text);
+    }
+    .choice-btn.wrong {
+      background: var(--wrong-bg);
+      border-color: #ef4444;
+      color: var(--wrong-text);
+    }
+    .choice-btn.wrong .choice-label {
+      color: var(--wrong-text);
+    }
+    @keyframes pop {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.06);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
 
-    /* ── FEEDBACK ── */
     .feedback {
-      border-radius: 18px; padding: 14px 18px;
-      font-weight: 700; font-size: 0.95rem; line-height: 1.6;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      line-height: 1.6;
       margin-bottom: 10px;
     }
-    .feedback.correct-fb { background: var(--correct-bg); color: var(--correct-text); border-left: 5px solid var(--green); }
-    .feedback.wrong-fb { background: var(--wrong-bg); color: var(--wrong-text); border-left: 5px solid #ef4444; }
+    .feedback.correct-fb {
+      background: var(--correct-bg);
+      color: var(--correct-text);
+      border-left: 5px solid var(--green);
+    }
+    .feedback.wrong-fb {
+      background: var(--wrong-bg);
+      color: var(--wrong-text);
+      border-left: 5px solid #ef4444;
+    }
     .tutor-btn {
-      background: var(--gold); border: none; border-radius: 25px;
-      padding: 7px 16px; font-family: 'Nunito', sans-serif;
-      font-weight: 800; font-size: 0.85rem; cursor: pointer;
-      color: var(--header-start); margin-top: 8px;
+      background: var(--gold);
+      border: none;
+      border-radius: 25px;
+      padding: 7px 16px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--header-start);
+      margin-top: 8px;
     }
     .tutor-panel {
-      background: var(--tip-bg); border-left: 5px solid var(--tip-border);
-      border-radius: 16px; padding: 14px 18px;
-      margin-top: 10px; font-weight: 700;
-      font-size: 0.9rem; line-height: 1.7;
+      background: var(--tip-bg);
+      border-left: 5px solid var(--tip-border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-top: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.7;
     }
-    body.dark .tutor-panel { background: #1e1a06; }
 
-    /* ── LISTENING CUE (Sentence Completion) ── */
     .listening-cue {
       background: linear-gradient(135deg, #1e1245, #4a2d9c);
-      border-radius: 18px; padding: 16px 20px;
-      color: white; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 14px;
+      border-radius: 18px;
+      padding: 16px 20px;
+      color: white;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .listen-icon { font-size: 2.2rem; flex-shrink: 0; }
-    .listen-text { font-weight: 800; font-size: 0.95rem; line-height: 1.5; }
-    .listen-label { color: var(--gold); font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .listen-icon {
+      font-size: 2.2rem;
+      flex-shrink: 0;
+    }
+    .listen-text {
+      font-weight: 800;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .listen-label {
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
     .speak-btn {
-      background: var(--gold); border: none; border-radius: 20px;
-      padding: 6px 14px; cursor: pointer;
+      background: var(--gold);
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
       font-family: 'Nunito', sans-serif;
-      font-weight: 800; font-size: 0.8rem;
-      color: var(--header-start); margin-top: 8px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: var(--header-start);
+      margin-top: 8px;
     }
 
-    /* ── RESULTS ── */
     .results-card {
-      border-radius: 28px; padding: 32px 24px;
-      text-align: center; border: 3px solid var(--panel-border);
+      border-radius: 28px;
+      padding: 32px 24px;
+      text-align: center;
+      border: 3px solid var(--panel-border);
       background: var(--panel);
     }
-    .results-card.pass { border-color: var(--green); background: var(--correct-bg); }
-    .results-card.fail { border-color: var(--gold); }
-    body.dark .results-card.pass { background: #0f2d1a; }
-    .r-trophy { font-size: 4.5rem; margin-bottom: 10px; }
-    .r-title { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--text); }
-    .r-msg { color: var(--muted); font-weight: 700; margin-top: 10px; line-height: 1.6; font-size: 0.95rem; }
+    .results-card.pass {
+      border-color: var(--green);
+      background: var(--correct-bg);
+    }
+    .results-card.fail {
+      border-color: var(--gold);
+    }
+    body.dark .results-card.pass {
+      background: #0f2d1a;
+    }
+    .r-trophy {
+      font-size: 4.5rem;
+      margin-bottom: 10px;
+    }
+    .r-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2rem;
+      color: var(--text);
+    }
+    .r-msg {
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 10px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
     .gifted-badge {
-      display: inline-block; background: var(--gold);
-      color: var(--header-start); border-radius: 20px;
-      padding: 6px 16px; font-weight: 900; font-size: 0.85rem;
+      display: inline-block;
+      background: var(--gold);
+      color: var(--header-start);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-weight: 900;
+      font-size: 0.85rem;
       margin-top: 10px;
     }
-    .r-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+    .r-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
 
-    /* ── MASTERY OVERLAY ── */
     .mastery-overlay {
-      position: fixed; inset: 0;
-      background: rgba(10,5,30,0.85); backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 30, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       z-index: 100;
     }
     .mastery-box {
-      background: var(--panel); border-radius: 36px;
-      padding: 40px 32px; text-align: center;
-      max-width: 340px; width: 90%; color: var(--text);
+      background: var(--panel);
+      border-radius: 36px;
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+      color: var(--text);
       border: 3px solid var(--gold);
     }
-    .mastery-box h2 { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--gold); }
-    .mastery-box p { font-weight: 700; margin: 8px 0 20px; color: var(--muted); }
+    .mastery-box h2 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2rem;
+      color: var(--gold);
+    }
+    .mastery-box p {
+      font-weight: 700;
+      margin: 8px 0 20px;
+      color: var(--muted);
+    }
 
-    /* ── CONFETTI ── */
     .confetti {
-      position: fixed; pointer-events: none; z-index: 99;
-      width: 10px; height: 10px; top: -12px;
+      position: fixed;
+      pointer-events: none;
+      z-index: 99;
+      width: 10px;
+      height: 10px;
+      top: -12px;
       animation: fall linear forwards;
     }
-    @keyframes fall { to { transform: translateY(105vh) rotate(900deg); opacity: 0; } }
+    @keyframes fall {
+      to {
+        transform: translateY(105vh) rotate(900deg);
+        opacity: 0;
+      }
+    }
 
-    /* ── UTILITIES ── */
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-    .hidden { display: none !important; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    .hidden {
+      display: none !important;
+    }
 
     @media (max-width: 600px) {
-      .choices-grid { grid-template-columns: 1fr 1fr; }
-      .choice-btn { font-size: 1rem; min-height: 65px; }
-      .header-logo h1 { font-size: 1.2rem; }
+      .choices-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .choice-btn {
+        font-size: 1rem;
+        min-height: 65px;
+      }
+      .choice-btn .pic-icon {
+        font-size: 2.4rem;
+      }
+      .header-logo h1 {
+        font-size: 1.2rem;
+      }
     }
   </style>
 </head>
 <body>
-<div class="app">
-  <header class="header">
-    <div class="header-logo">
-      <div class="badge-icon">🔎</div>
-      <div>
-        <h1>CogAT Detective Academy</h1>
-        <p>Gifted &amp; Talented Test Prep · Level 8</p>
+  <div class="app">
+    <header class="header">
+      <div class="header-logo">
+        <div class="badge-icon">🔎</div>
+        <div>
+          <h1>CogAT Detective Academy</h1>
+          <p>Gifted &amp; Talented Test Prep · Level 8</p>
+        </div>
       </div>
-    </div>
-    <div class="header-right">
-      <div class="trophy-count">
-        <div class="tc-item"><span class="num" id="masteredCount">0</span><span class="lbl">Mastered</span></div>
-        <div class="tc-item"><span class="num">9</span><span class="lbl">Total</span></div>
+      <div class="header-right">
+        <div class="trophy-count">
+          <div class="tc-item">
+            <span class="num" id="masteredCount">0</span>
+            <span class="lbl">Mastered</span>
+          </div>
+          <div class="tc-item">
+            <span class="num">9</span>
+            <span class="lbl">Total</span>
+          </div>
+        </div>
+        <button class="theme-btn" id="themeBtn" aria-pressed="false">🌙 Dark</button>
       </div>
-      <button class="theme-btn" id="themeBtn" aria-pressed="false">🌙 Dark</button>
-    </div>
-  </header>
+    </header>
 
-  <div id="liveRegion" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="liveRegion" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- HOME -->
-  <div id="homeView">
-    <div class="tips-bar">
-      <div class="tip-icon">🕵️</div>
-      <p>A good detective: <strong>looks at ALL answer choices</strong> before picking one · <strong>eliminates wrong answers</strong> first · <strong>always guesses</strong> (no points taken away!) · comes up with a <strong>"rule"</strong> before choosing</p>
+    <div id="homeView">
+      <div class="tips-bar">
+        <div class="tip-icon">🕵️</div>
+        <p>A good detective: <strong>looks at ALL answer choices</strong> before picking one · <strong>eliminates wrong answers</strong> first · <strong>always guesses</strong> (no points taken away!) · comes up with a <strong>"rule"</strong> before choosing</p>
+      </div>
+      <div id="subtestList"></div>
     </div>
-    <div id="subtestList"></div>
+
+    <div id="detailView" class="hidden"></div>
   </div>
 
-  <!-- DETAIL (study / quiz / results) -->
-  <div id="detailView" class="hidden"></div>
-</div>
+  <script>
+    // ─────────────────────────────────────────────
+    //  CONSTANTS
+    // ─────────────────────────────────────────────
+    const PASS_THRESHOLD = 80;
+    const GIFTED_THRESHOLD = 95;
+    const CONFETTI_COUNT = 70;
+    const STORAGE_KEY = 'cogat_mastery_v23';
+    const OLD_KEYS = ['cogat_mastery_v22', 'cogat_mastery_v21', 'cogat_mastery_v20'];
 
-<script>
-// ─────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=rand(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; };
-const uniq = arr => [...new Set(arr.map(String))];
-const announce = msg => { const el=$('liveRegion'); if(el) el.textContent=msg; };
-const focusEl = sel => setTimeout(()=>{ const el=document.querySelector(sel); if(el){el.setAttribute('tabindex','-1');el.focus();} },60);
+    // ─────────────────────────────────────────────
+    //  HELPERS
+    // ─────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+    const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = rand(0, i);
+        [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const uniq = arr => [...new Set(arr.map(String))];
+    const announce = msg => { const el = $('liveRegion'); if (el) el.textContent = msg; };
+    const focusEl = sel => setTimeout(() => { const el = document.querySelector(sel); if (el) { el.setAttribute(
+          'tabindex', '-1');
+        el.focus(); } }, 60);
 
-// ─────────────────────────────────────────────
-//  THEME
-// ─────────────────────────────────────────────
-let dark = false;
-function initTheme() {
-  try { dark = localStorage.getItem('cogat_theme')==='dark'; } catch(e){}
-  applyTheme();
-}
-function toggleTheme() {
-  dark = !dark;
-  applyTheme();
-  try { localStorage.setItem('cogat_theme', dark?'dark':'light'); } catch(e){}
-}
-function applyTheme() {
-  document.body.classList.toggle('dark', dark);
-  const btn = $('themeBtn');
-  if(btn){ btn.textContent = dark ? '☀️ Light' : '🌙 Dark'; btn.setAttribute('aria-pressed', dark); }
-}
+    // ─────────────────────────────────────────────
+    //  CHOICE HELPER — builds a picture choice object with emoji
+    // ─────────────────────────────────────────────
+    function pic(text, emoji) {
+      return { text, emoji: emoji || '❓' };
+    }
 
-// ─────────────────────────────────────────────
-//  MASTERY STATE
-// ─────────────────────────────────────────────
-let mastery = {};
-function loadMastery() { try { mastery = JSON.parse(localStorage.getItem('cogat_mastery_v16')||'{}'); } catch(e){} updateMasteryCount(); }
-function saveMastery() { try { localStorage.setItem('cogat_mastery_v16', JSON.stringify(mastery)); } catch(e){} }
-function isMastered(id) { return !!mastery[id]; }
-function setMastered(id) { mastery[id]=true; saveMastery(); updateMasteryCount(); }
-function updateMasteryCount() { const el=$('masteredCount'); if(el) el.textContent=Object.values(mastery).filter(Boolean).length; }
-
-// ─────────────────────────────────────────────
-//  PAPER FOLDING SVG HELPER
-// ─────────────────────────────────────────────
-function makePaperSVG(punches, foldDir) {
-  // foldDir: 'bottom' or 'right'
-  const W=260, H=180, r=8;
-  const foldLine = foldDir==='bottom' ? H/2 : W/2;
-  // punch positions (on the folded half that's visible after fold)
-  const punchPositions = [];
-  if(foldDir==='bottom') {
-    for(let i=0;i<punches;i++) punchPositions.push({x: 60+i*60, y: H*0.75});
-  } else {
-    for(let i=0;i<punches;i++) punchPositions.push({x: W*0.75, y: 50+i*50});
-  }
-  const foldLine1 = foldDir==='bottom'
-    ? `<line x1="0" y1="${foldLine}" x2="${W}" y2="${foldLine}" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6,4"/>`
-    : `<line x1="${foldLine}" y1="0" x2="${foldLine}" y2="${H}" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6,4"/>`;
-  const foldLabel = foldDir==='bottom'
-    ? `<text x="${W/2}" y="${foldLine-6}" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="800">FOLD</text>`
-    : `<text x="${foldLine+6}" y="18" font-size="11" fill="#7c3aed" font-weight="800">FOLD</text>`;
-  const circles = punchPositions.map(p=>`
-    <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#e91e8c" opacity="0.85"/>
-    <text x="${p.x}" y="${p.y+4}" text-anchor="middle" font-size="10" fill="white" font-weight="900">✂</text>
-  `).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:280px;border-radius:12px;background:#f0eaff;border:2px solid #ddd5f8;">
-    <rect x="2" y="2" width="${W-4}" height="${H-4}" rx="8" fill="#faf7ff" stroke="#c4b5fd" stroke-width="1.5"/>
-    <rect x="${foldDir==='bottom'?2:foldLine}" y="${foldDir==='bottom'?foldLine:2}" width="${foldDir==='bottom'?W-4:W/2-2}" height="${foldDir==='bottom'?H/2-2:H-4}" rx="4" fill="#ede5ff" opacity="0.5"/>
-    ${foldLine1}${foldLabel}${circles}
-    <text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#7c6fa0" font-weight="700">Paper folded — holes punched through</text>
-  </svg>`;
-}
-
-// ─────────────────────────────────────────────
-//  QUESTION GENERATORS — VERBAL BATTERY
-// ─────────────────────────────────────────────
-
-// 1. PICTURE ANALOGIES (all 20 analogy logic types from PDF)
-const analogyPairs = [
-  // Part:Whole
-  { q:'🚗 Wheel  →  🚗 Car\n🍕 Slice  →  ?', ans:'🍕 Pizza', wrong:['🥘 Bowl','🍞 Bread','🧀 Cheese'], rule:'Part → Whole (the slice is part of the pizza)' },
-  { q:'🌸 Petal  →  🌻 Flower\n🌲 Branch  →  ?', ans:'🌲 Tree', wrong:['🍃 Leaf','🌾 Grass','🪨 Rock'], rule:'Part → Whole' },
-  // Animal:Home
-  { q:'🐦 Bird  →  🪺 Nest\n🐟 Fish  →  ?', ans:'🌊 Ocean', wrong:['🌿 Bush','🏠 House','🦴 Bone'], rule:'Animal → Its Home' },
-  { q:'🐝 Bee  →  🍯 Beehive\n🐜 Ant  →  ?', ans:'🏔️ Anthill', wrong:['🌸 Flower','🌿 Leaf','🍎 Apple'], rule:'Animal → Its Home' },
-  // Animal:Food
-  { q:'🐯 Tiger  →  🥩 Meat\n🐇 Rabbit  →  ?', ans:'🥕 Carrot', wrong:['🍖 Bone','🧀 Cheese','🍖 Meat'], rule:'Animal → Its Food' },
-  { q:'🐘 Elephant  →  🌿 Plants\n🐻 Bear  →  ?', ans:'🍯 Honey', wrong:['🥩 Meat','🐟 Fish','🌽 Corn'], rule:'Animal → Its Food' },
-  // Animal:Covering
-  { q:'🐟 Fish  →  🐟 Scales\n🐦 Bird  →  ?', ans:'🪶 Feathers', wrong:['🦷 Teeth','💧 Water','🌿 Leaves'], rule:'Animal → Its Covering' },
-  { q:'🐻 Bear  →  🧶 Fur\n🐢 Turtle  →  ?', ans:'🛡️ Shell', wrong:['🪶 Feathers','💧 Water','🌿 Scales'], rule:'Animal → Its Covering' },
-  // Baby:Adult
-  { q:'🐣 Chick  →  🐔 Hen\n🐸 Tadpole  →  ?', ans:'🐸 Frog', wrong:['🐟 Fish','🦎 Lizard','🐊 Crocodile'], rule:'Baby → Adult' },
-  { q:'🐱 Kitten  →  🐱 Cat\n🐶 Puppy  →  ?', ans:'🐕 Dog', wrong:['🐺 Wolf','🦊 Fox','🐯 Tiger'], rule:'Baby → Adult' },
-  // Object:Its Use
-  { q:'🥄 Spoon  →  🍲 Soup\n🍴 Fork  →  ?', ans:'🥗 Salad', wrong:['🍵 Tea','🧃 Juice','💧 Water'], rule:'Tool → What You Use It For' },
-  { q:'🔑 Key  →  🚪 Door\n🪣 Bucket  →  ?', ans:'💧 Water', wrong:['🔥 Fire','🌬️ Wind','🌱 Plant'], rule:'Tool → What It Carries/Opens' },
-  // Object:Where Found
-  { q:'☀️ Sun  →  🌤️ Sky\n🐠 Fish  →  ?', ans:'🌊 Ocean', wrong:['🌿 Forest','🏔️ Mountain','🌾 Field'], rule:'Object → Where It Is Found' },
-  { q:'📚 Book  →  📚 Library\n🍎 Apple  →  ?', ans:'🌳 Tree', wrong:['🏪 Store','🏠 Home','🌊 Ocean'], rule:'Object → Where It Comes From' },
-  // Tool:Worker
-  { q:'🎨 Paintbrush  →  🎨 Artist\n🔬 Microscope  →  ?', ans:'🔬 Scientist', wrong:['👨‍🍳 Chef','👨‍🚒 Fireman','👨‍⚕️ Doctor'], rule:'Tool → The Worker Who Uses It' },
-  { q:'🩺 Stethoscope  →  👨‍⚕️ Doctor\n✂️ Scissors  →  ?', ans:'💇 Barber', wrong:['👨‍🎤 Singer','👨‍🍳 Chef','🎨 Artist'], rule:'Tool → The Worker Who Uses It' },
-  // Object:Container
-  { q:'🌸 Flower  →  🪴 Vase\n💧 Water  →  ?', ans:'🪣 Bucket', wrong:['🍵 Cup','🍶 Pot','🌊 Ocean'], rule:'Object → Its Container' },
-  // Similar:Similar
-  { q:'🦃 Turkey  →  🦜 Parrot\n🐜 Ant  →  ?', ans:'🪲 Beetle', wrong:['🐟 Fish','🐸 Frog','🦊 Fox'], rule:'Same Category (both are insects / both are birds)' },
-  // Food:Source
-  { q:'🍯 Honey  →  🐝 Bee\n🥛 Milk  →  ?', ans:'🐄 Cow', wrong:['🐔 Chicken','🌻 Sunflower','🌿 Plant'], rule:'Food → Where It Comes From' },
-  // Object:Action
-  { q:'🎤 Microphone  →  🗣️ Talk\n🔭 Telescope  →  ?', ans:'👁️ See', wrong:['👂 Hear','✋ Touch','👃 Smell'], rule:'Object → What You Do With It' },
-];
-
-function makePictureAnalogy() {
-  const item = analogyPairs[rand(0, analogyPairs.length-1)];
-  const choices = shuffle(uniq([item.ans, ...item.wrong]).slice(0,4));
-  return {
-    type: 'picture-analogies',
-    text: `🗣️ ANALOGY:\n\n${item.q}`,
-    choices,
-    correct: item.ans,
-    explanation: `✅ Rule: ${item.rule}`,
-    steps: ['🔍 Look at the top pair — what is the connection?', `📏 Rule: ${item.rule}`, `✅ Apply same rule to bottom: ${item.ans}`]
-  };
-}
-
-// 2. SENTENCE COMPLETION (read-aloud style)
-const sentenceItems = [
-  { sentence: 'Max sees something floating in the water. Which one does Max see?', choices: ['🪨 Rock','⚽ Ball','🔨 Hammer','🪙 Coin'], correct:'⚽ Ball', why:'A ball floats — rocks, hammers, and coins sink.' },
-  { sentence: 'Anya wants to find something that lives underground. Which one does Anya find?', choices: ['🦅 Eagle','🐛 Worm','🐦 Robin','🦋 Butterfly'], correct:'🐛 Worm', why:'Worms live underground.' },
-  { sentence: 'Sophie is looking for something that gives us light. Which does she pick?', choices: ['🪨 Rock','🌙 Moon','💡 Lightbulb','🪵 Log'], correct:'💡 Lightbulb', why:'A lightbulb gives us light.' },
-  { sentence: 'Alex needs something you use to keep yourself dry in the rain. Which one?', choices: ['☂️ Umbrella','🌂 Parasol','🧢 Cap','🕶️ Sunglasses'], correct:'☂️ Umbrella', why:'An umbrella keeps you dry in the rain.' },
-  { sentence: 'Freddie wants to find something that has exactly four legs. Which one?', choices: ['🐦 Bird','🐛 Caterpillar','🐕 Dog','🐍 Snake'], correct:'🐕 Dog', why:'Dogs have exactly four legs.' },
-  { sentence: 'May is looking for something made of wood. Which one?', choices: ['🪑 Chair','🪨 Rock','🧊 Ice','🍃 Leaf'], correct:'🪑 Chair', why:'Chairs are usually made of wood.' },
-  { sentence: 'Max sees something that can fly but is NOT a bird. Which one?', choices: ['🐧 Penguin','🦋 Butterfly','🐕 Dog','🐟 Fish'], correct:'🦋 Butterfly', why:'Butterflies can fly — they are insects, not birds.' },
-  { sentence: 'Sophie wants something cold to eat on a hot day. Which one?', choices: ['🍕 Pizza','🍜 Soup','🍦 Ice cream','🥐 Croissant'], correct:'🍦 Ice cream', why:'Ice cream is cold.' },
-  { sentence: 'Which of these is something you wear on your feet?', choices: ['🧤 Gloves','👒 Hat','👟 Sneaker','🧣 Scarf'], correct:'👟 Sneaker', why:'You wear sneakers on your feet.' },
-  { sentence: 'Alex is looking for an animal that lives in water AND on land. Which one?', choices: ['🦅 Eagle','🐸 Frog','🐕 Dog','🐇 Rabbit'], correct:'🐸 Frog', why:'Frogs live both in water and on land — they are amphibians.' },
-  { sentence: 'Anya wants something that melts when it gets hot. Which one?', choices: ['🧊 Ice','🪨 Rock','🌿 Leaf','🪵 Wood'], correct:'🧊 Ice', why:'Ice melts when it gets hot.' },
-  { sentence: 'Which of these is used for cutting?', choices: ['📏 Ruler','✂️ Scissors','🖊️ Pen','📎 Clip'], correct:'✂️ Scissors', why:'Scissors are used for cutting.' },
-];
-
-function makeSentenceCompletion() {
-  const item = sentenceItems[rand(0, sentenceItems.length-1)];
-  const choices = shuffle([...item.choices]);
-  return {
-    type: 'sentence-completion',
-    sentence: item.sentence,
-    choices,
-    correct: item.correct,
-    explanation: item.why,
-    steps: ['👂 Listen to the whole sentence carefully.', '🧹 Eliminate choices that do NOT fit.', `✅ ${item.correct} — ${item.why}`]
-  };
-}
-
-// 3. PICTURE CLASSIFICATION (from PDF categories)
-const classificationSets = [
-  { cat:'eating utensils', items:['🥄 Spoon','🍴 Fork','🔪 Knife','🥢 Chopsticks'], non:['🪣 Bucket','✂️ Scissors','🔑 Key','📏 Ruler'] },
-  { cat:'found in a kitchen', items:['🧊 Fridge','🍳 Pan','🥣 Bowl','🫕 Pot'], non:['🛏️ Bed','🚿 Shower','🛋️ Sofa','🪞 Mirror'] },
-  { cat:'red things', items:['🍎 Apple','🌹 Rose','🚗 Red Car','🍓 Strawberry'], non:['🍋 Lemon','🫐 Blueberry','🥝 Kiwi','🥦 Broccoli'] },
-  { cat:'cold things', items:['🧊 Ice','❄️ Snowflake','🍦 Ice Cream','🥶 Frozen'], non:['☀️ Sun','🔥 Fire','🌶️ Pepper','🍵 Tea'] },
-  { cat:'animal homes', items:['🪺 Nest','🏠 Kennel','🌊 Aquarium','🐝 Beehive'], non:['🚗 Car','📚 Library','🌲 Tree','🎒 Backpack'] },
-  { cat:'cats (felines)', items:['🐱 Cat','🐯 Tiger','🦁 Lion','🐆 Cheetah'], non:['🐘 Elephant','🦓 Zebra','🦒 Giraffe','🐺 Wolf'] },
-  { cat:'water habitats', items:['🌊 Ocean','🏞️ River','🌿 Pond','🏔️ Lake'], non:['🏜️ Desert','🗻 Mountain','🏠 House','🌲 Forest'] },
-  { cat:'baked foods', items:['🎂 Cake','🍞 Bread','🥐 Croissant','🍩 Donut'], non:['🍦 Ice Cream','🍎 Apple','🥗 Salad','🧃 Juice'] },
-  { cat:'root vegetables', items:['🥕 Carrot','🥔 Potato','🧅 Onion','🌱 Radish'], non:['🍎 Apple','🍌 Banana','🍇 Grapes','🍓 Strawberry'] },
-  { cat:'community helpers', items:['👨‍⚕️ Doctor','👨‍🚒 Firefighter','👮 Police','👩‍🏫 Teacher'], non:['🧟 Zombie','🧙 Wizard','🎃 Ghost','🤖 Robot'] },
-  { cat:'things worn on the head', items:['👒 Hat','🎩 Top Hat','⛑️ Helmet','👑 Crown'], non:['🧤 Gloves','👟 Shoes','🧣 Scarf','👗 Dress'] },
-  { cat:'travel on water', items:['⛵ Sailboat','🚢 Ship','🛶 Canoe','⛴️ Ferry'], non:['🚗 Car','✈️ Airplane','🚂 Train','🚲 Bicycle'] },
-  { cat:'musical instruments', items:['🎹 Piano','🎸 Guitar','🥁 Drums','🎺 Trumpet'], non:['🔊 Speaker','🎧 Headphones','📻 Radio','📢 Megaphone'] },
-  { cat:'things in the solar system', items:['🌍 Earth','☀️ Sun','🌙 Moon','⭐ Star'], non:['🐟 Fish','🌲 Tree','🏠 House','🚗 Car'] },
-  { cat:'sports equipment', items:['⚽ Soccer Ball','🏀 Basketball','🎾 Tennis Racket','🏏 Cricket Bat'], non:['📚 Book','🎹 Piano','🍕 Pizza','🪣 Bucket'] },
-];
-
-function makePictureClassification() {
-  const set = classificationSets[rand(0, classificationSets.length-1)];
-  const sh = shuffle([...set.items]);
-  const grp = sh.slice(0,3);
-  const correct = sh[3];
-  const wrongs = shuffle([...set.non]).slice(0,3);
-  const choices = shuffle(uniq([correct, ...wrongs]));
-  return {
-    type: 'picture-classification',
-    text: `🗣️ CLASSIFY:\n\n${grp.join('  ·  ')}\n\nAll of these are ${set.cat}.\nWhich one also belongs?`,
-    choices,
-    correct,
-    explanation: `✅ ${correct} is also a ${set.cat.replace(/s$/,'')}.`,
-    steps: [`👨‍👩‍👧‍👦 Name the family: all are "${set.cat}"`, `🔍 Which answer choice is also a ${set.cat.replace(/s$/,'')}?`, `✅ ${correct}!`]
-  };
-}
-
-// ─────────────────────────────────────────────
-//  QUESTION GENERATORS — NONVERBAL BATTERY
-// ─────────────────────────────────────────────
-
-// 4. FIGURE ANALOGIES — 9 rule types from PDF
-const figRules = [
-  // 1. Color change
-  () => { const s=['⬛','🔳','⬜']; const [a,b]=shuffle(s).slice(0,2); const shapes=['■','▲','●','★'];const sh=shapes[rand(0,3)];
-    const rule='Color changes (dark → light or filled → empty)';
-    const ans=b; const wrongs=[s.find(x=>x!==a&&x!==b)||'🔲','◻','▪'];
-    return {q:`[${sh} = ${a}] → [${sh} = ${b}]\n[${sh} = ${a}] → ?`, ans:b, wrongs:wrongs.slice(0,3), rule}; },
-  // 2. Size change
-  () => { const sizes=[['🔹','🔷'],['🔸','🔶'],['▴','▲'],['•','●']]; const [s,b]=sizes[rand(0,sizes.length-1)];
-    const rule='Size changes (small → big)';
-    return {q:`[${s} small] → [${b} big]\n[${s} small] → ?`, ans:`${b} big`, wrongs:[`${s} big`,`${b} small`,`${b} ${b}`], rule}; },
-  // 3. Rotation (from PDF list)
-  () => { const pairs=[['▲','▼'],['◀','▶'],['⬆','⬇'],['↖','↘']]; const [a,b]=pairs[rand(0,pairs.length-1)];
-    const n=rand(2,4); const rule=`Rotation — shape flips direction`;
-    return {q:`[${a.repeat(n)}] → [${b.repeat(n)}]\n[${a.repeat(n+1)}] → ?`, ans:b.repeat(n+1), wrongs:[a.repeat(n+1),b.repeat(n),b.repeat(n+2)], rule}; },
-  // 4. Color Reversal
-  () => { const rule='Color Reversal — filled ↔ empty';
-    return {q:`[⬛⬜] → [⬜⬛]\n[🔷◇] → ?`, ans:'◇🔷', wrongs:['🔷◇','◇◇','🔷🔷'], rule}; },
-  // 5. Amount
-  () => { const sh=['★','●','■','♦'][rand(0,3)]; const n=rand(1,3); const add=rand(1,2);
-    const rule=`Amount increases by ${add}`;
-    return {q:`[${sh.repeat(n)}] → [${sh.repeat(n+add)}]\n[${sh.repeat(n+1)}] → ?`, ans:sh.repeat(n+1+add), wrongs:[sh.repeat(n+add),sh.repeat(n+1),sh.repeat(n+2+add)], rule}; },
-  // 6. Flip / Mirror
-  () => { const pairs=[['◁','▷'],['△','▽'],['⬅','➡'],['↑','↓']]; const [a,b]=pairs[rand(0,pairs.length-1)];
-    const n=rand(2,3); const rule='Flip / Mirror image';
-    return {q:`[${a.repeat(n)}] → [${b.repeat(n)}]\n[${a.repeat(n-1)}] → ?`, ans:b.repeat(n-1), wrongs:[a.repeat(n-1),b.repeat(n),b.repeat(n+1)], rule}; },
-  // 7. Whole:Part
-  () => { const rule='Whole → Part (a piece is shown)';
-    return {q:`[🔷 full diamond] → [🔹 half diamond]\n[⬛ full square] → ?`, ans:'▪ half square', wrongs:['⬛ full square','◻ empty square','⬜ white square'], rule}; },
-  // 8. Number of Sides
-  () => { const shapes=[['triangle','3'],['square','4'],['pentagon','5'],['hexagon','6']];
-    const [s1,n1]=shapes[rand(0,shapes.length-1)];
-    const [s2,n2]=shapes.find(([s])=>s!==s1)||['hexagon','6'];
-    const rule='Number of sides changes';
-    return {q:`[${s1} = ${n1} sides] → [${s2} = ${n2} sides]\n[square = 4 sides] → ?`, ans:`hexagon = 6 sides`, wrongs:['triangle = 3 sides','pentagon = 5 sides','octagon = 8 sides'], rule}; },
-  // 9. Two Changes: Rotation + Color
-  () => { const pairs=[['▲','▼'],['◀','▶']]; const [a,b]=pairs[rand(0,pairs.length-1)];
-    const n=rand(2,3); const rule='TWO changes at once: shape rotates AND color changes';
-    return {q:`[⬛${a.repeat(n)}] → [⬜${b.repeat(n)}]\n[⬛${a.repeat(n+1)}] → ?`, ans:`⬜${b.repeat(n+1)}`, wrongs:[`⬛${b.repeat(n+1)}`,`⬜${a.repeat(n+1)}`,`⬜${b.repeat(n)}`], rule}; },
-];
-
-function makeFigureAnalogy() {
-  const ruleFn = figRules[rand(0, figRules.length-1)];
-  const {q,ans,wrongs,rule} = ruleFn();
-  const choices = shuffle(uniq([ans,...wrongs]).slice(0,4));
-  return {
-    type:'figure-analogies',
-    text:`🔷 FIGURE ANALOGY:\n\n${q}\n\n(Find the rule — apply it to the bottom!)`,
-    choices, correct:ans,
-    explanation:`✅ Rule: ${rule}`,
-    steps:[`🔍 Look at what changed from left → right in the TOP row.`,`📏 Rule: ${rule}`,`✅ Apply same rule to bottom: ${ans}`]
-  };
-}
-
-// 5. FIGURE CLASSIFICATION — shape properties
-const figClassSets = [
-  { desc:'all triangles', items:['▲ tall triangle','△ small triangle','▼ flipped triangle','◁ sideways triangle'], non:['■ square','● circle','⬡ hexagon','◇ diamond'] },
-  { desc:'all filled (dark) shapes', items:['⬛ filled square','● filled circle','▲ filled triangle','♦ filled diamond'], non:['□ empty square','○ empty circle','△ empty triangle','◇ empty diamond'] },
-  { desc:'all shapes with 4 sides', items:['■ square','▬ rectangle','◇ diamond','▱ parallelogram'], non:['▲ triangle','⬡ hexagon','● circle','⭐ star'] },
-  { desc:'all circles or round shapes', items:['● big circle','• small circle','⊙ ring','◎ double circle'], non:['▲ triangle','■ square','◇ diamond','⬡ hexagon'] },
-  { desc:'all arrows pointing right', items:['→ thin arrow','⇒ double arrow','➡ bold arrow','▶ play arrow'], non:['← left arrow','↑ up arrow','↓ down arrow','↙ diagonal arrow'] },
-  { desc:'all shapes with more than 4 sides', items:['⬠ pentagon','⬡ hexagon','⭐ star','🔷 octagon'], non:['▲ triangle','■ square','◇ diamond','• circle'] },
-];
-
-function makeFigureClassification() {
-  const set = figClassSets[rand(0,figClassSets.length-1)];
-  const sh = shuffle([...set.items]);
-  const grp = sh.slice(0,3); const correct = sh[3];
-  const choices = shuffle(uniq([correct,...shuffle([...set.non]).slice(0,3)]));
-  return {
-    type:'figure-classification',
-    text:`🔷 FIGURE CLASSIFY:\n\n${grp.join('  ·  ')}\n\nAll of these are ${set.desc}.\nWhich one also belongs?`,
-    choices, correct,
-    explanation:`✅ ${correct} — it is also ${set.desc}.`,
-    steps:[`🎨 What do the three shapes have in common? They are all "${set.desc}".`,`🔍 Find the answer that is also ${set.desc}.`,`✅ ${correct}!`]
-  };
-}
-
-// 6. PAPER FOLDING
-const foldScenarios = [
-  {punches:1,dir:'bottom', qText:'Paper folded once (bottom up). 1 hole punched through both layers. Unfold — how many holes?', ans:'2 holes', wrong:['1 hole','3 holes','4 holes'], svg:true},
-  {punches:2,dir:'bottom', qText:'Paper folded once (bottom up). 2 holes punched through both layers. Unfold — how many holes?', ans:'4 holes', wrong:['2 holes','3 holes','6 holes'], svg:true},
-  {punches:3,dir:'bottom', qText:'Paper folded once (bottom up). 3 holes punched through both layers. Unfold — how many holes?', ans:'6 holes', wrong:['3 holes','5 holes','9 holes'], svg:true},
-  {punches:1,dir:'right', qText:'Paper folded once (right side over left). 1 hole punched. Unfold — how many holes?', ans:'2 holes', wrong:['1 hole','3 holes','4 holes'], svg:true},
-  {punches:2,dir:'right', qText:'Paper folded once (right side over left). 2 holes punched. Unfold — how many holes?', ans:'4 holes', wrong:['2 holes','3 holes','8 holes'], svg:true},
-  // Folded TWICE
-  {punches:1,dir:'bottom', qText:'Paper folded TWICE (2 folds = 4 layers). 1 hole punched through ALL layers. Unfold — how many holes?', ans:'4 holes', wrong:['2 holes','3 holes','6 holes'], svg:false},
-  {punches:2,dir:'bottom', qText:'Paper folded TWICE (4 layers). 2 holes punched. Unfold — how many holes?', ans:'8 holes', wrong:['4 holes','6 holes','16 holes'], svg:false},
-];
-
-function makePaperFolding() {
-  const sc = foldScenarios[rand(0,foldScenarios.length-1)];
-  const choices = shuffle(uniq([sc.ans,...sc.wrong]).slice(0,4));
-  const punches = sc.punches; const isDouble = sc.qText.includes('TWICE');
-  const layers = isDouble ? 4 : 2;
-  return {
-    type:'paper-folding',
-    qText: sc.qText,
-    svgHTML: sc.svg ? makePaperSVG(sc.punches, sc.dir) : null,
-    choices, correct: sc.ans,
-    explanation:`📁 ${isDouble?'2 folds = 4':'1 fold = 2'} layers. Each punch goes through ALL ${layers} layers! ${punches} × ${layers} = ${punches*layers} holes.`,
-    steps:[`📁 Count the layers: ${isDouble?'fold once = 2, fold again = 4':'fold once = 2'} layers`,`✂️ Each punch goes through ALL ${layers} layers`,`🔢 ${punches} punch${punches>1?'es':''} × ${layers} layers = ${punches*layers} holes`]
-  };
-}
-
-// ─────────────────────────────────────────────
-//  QUESTION GENERATORS — QUANTITATIVE BATTERY
-// ─────────────────────────────────────────────
-
-// 7. NUMBER ANALOGIES (from PDF — add/subtract/double/halve/triple/divide)
-function makeNumberAnalogy() {
-  const ops = [
-    { name:'add', fn:(a,diff)=>a+diff, desc:'adds' },
-    { name:'subtract', fn:(a,diff)=>a-diff, desc:'subtracts' },
-    { name:'double', fn:(a)=>a*2, desc:'doubles' },
-    { name:'halve', fn:(a)=>a/2, desc:'halves' },
-    { name:'triple', fn:(a)=>a*3, desc:'triples' },
-  ];
-  let op, a1, a2, b1, b2, diff;
-  let tries=0;
-  do {
-    op = ops[rand(0,ops.length-1)];
-    diff = rand(2,6);
-    if(op.name==='add') { a1=rand(3,9); a2=a1+diff; b1=rand(3,9); b2=b1+diff; }
-    else if(op.name==='subtract') { a2=rand(3,9); a1=a2+diff; b2=rand(3,9); b1=b2+diff; }
-    else if(op.name==='double') { a1=rand(2,8); a2=a1*2; b1=rand(2,8); b2=b1*2; }
-    else if(op.name==='halve') { a2=rand(1,6); a1=a2*2; b2=rand(1,6); b1=b2*2; }
-    else { a1=rand(1,4); a2=a1*3; b1=rand(1,4); b2=b1*3; }
-    tries++;
-  } while(b2!==Math.floor(b2) && tries<20);
-  b2=Math.floor(b2);
-  const choices = shuffle(uniq([b2,b2+1,b2-1,b2+2].map(String)));
-  return {
-    type:'number-analogies',
-    text:`🔢 NUMBER ANALOGY:\n\nTop: ${a1} → ${a2}  (rule: ${op.desc}${op.name==='add'?` ${diff}`:op.name==='subtract'?` ${diff}`:op.name==='triple'?'s':op.name==='halve'?'s':'s'})\nBottom: ${b1} → ?`,
-    choices, correct:String(b2),
-    explanation:`Top: ${a1} → ${a2}. Apply same rule to bottom: ${b1} ${op.name==='add'?`+ ${diff}`:op.name==='subtract'?`− ${diff}`:op.name==='double'?'× 2':op.name==='halve'?'÷ 2':'× 3'} = ${b2}`,
-    steps:[`📏 Find the rule: ${a1} → ${a2} (${op.name})`,`🦘 Apply to bottom: ${b1} → ${b2}`,`✅ Answer: ${b2}`]
-  };
-}
-
-// 8. NUMBER SERIES — ALL patterns from PDF
-function makeNumberSeries() {
-  const patterns = [
-    // simple: +1
-    ()=>{ const s=rand(1,8); const seq=[s,s+1,s+2,s+3,s+4]; return {seq,next:s+5,desc:'+1 each time'}; },
-    // simple: +2
-    ()=>{ const s=rand(1,8); const seq=[s,s+2,s+4,s+6,s+8]; return {seq,next:s+10,desc:'+2 each time'}; },
-    // simple: -1
-    ()=>{ const s=rand(10,18); const seq=[s,s-1,s-2,s-3,s-4]; return {seq,next:s-5,desc:'-1 each time'}; },
-    // simple: -2
-    ()=>{ const s=rand(12,20); const seq=[s,s-2,s-4,s-6,s-8]; return {seq,next:s-10,desc:'-2 each time'}; },
-    // A-B-A-B (alternating two values)
-    ()=>{ const a=rand(3,7),b=rand(8,14); const seq=[a,b,a,b,a]; return {seq,next:b,desc:'A-B-A-B pattern (alternates between two numbers)'}; },
-    // A-A-B-B-C-C
-    ()=>{ const s=rand(1,5); const seq=[s,s,s+1,s+1,s+2,s+2].slice(0,5); return {seq,next:seq[5]??s+3,desc:'A-A-B-B-C-C pattern'}; },
-    // A-B-C-zero-C-B-A (palindrome)
-    ()=>{ const a=rand(1,4),b=rand(5,8),c=rand(9,12); const seq=[a,b,c,0,c,b]; return {seq,next:a,desc:'A-B-C-0-C-B-A palindrome pattern'}; },
-    // hop -1,-2,-1,-2
-    ()=>{ const s=rand(12,20); const seq=[s,s-1,s-3,s-4,s-6]; return {seq,next:s-7,desc:'hops alternate: -1, -2, -1, -2'}; },
-    // hop +1,+2,+1,+2
-    ()=>{ const s=rand(2,8); const seq=[s,s+1,s+3,s+4,s+6]; return {seq,next:s+7,desc:'hops alternate: +1, +2, +1, +2'}; },
-    // two interleaved sequences
-    ()=>{ const a=rand(1,5),b=rand(10,15),da=rand(1,2),db=rand(1,2);
-      const seq=[a,b,a+da,b+db,a+da*2]; return {seq,next:b+db*2,desc:`two interleaved sequences (odd positions +${da}, even positions +${db})`}; },
-  ];
-  const pat = patterns[rand(0,patterns.length-1)]();
-  const {seq,next,desc}=pat;
-  const choices = shuffle(uniq([next,next+1,next-1,next+2].map(String)));
-  return {
-    type:'number-series',
-    text:`🔢 NUMBER SERIES:\n\nAbacus pattern: ${seq.join(' · ')} · ___\n\nWhat number comes next?`,
-    choices, correct:String(next),
-    explanation:`Pattern: ${desc}. Next number: ${next}`,
-    steps:[`🦘 Look at the hops between numbers: ${seq.slice(0,-1).map((v,i)=>`${seq[i+1]-v>0?'+':''}${seq[i+1]-v}`).join(', ')}`,`📏 Pattern: ${desc}`,`✅ Next: ${next}`]
-  };
-}
-
-// 9. NUMBER PUZZLES
-function makeNumberPuzzle() {
-  const types = [
-    // a + b + ? = total
-    ()=>{ const a=rand(3,9),b=rand(2,7),miss=rand(2,8); const total=a+b+miss;
-      return {text:`🧩 ${total} = ${a} + ${b} + ?`,correct:miss,wrong:[miss+1,miss-1,miss+2],steps:[`➕ ${a} + ${b} = ${a+b}`,`❓ ${total} − ${a+b} = ${miss}`]}; },
-    // a + ? = total (simpler)
-    ()=>{ const a=rand(5,12),miss=rand(3,9); const total=a+miss;
-      return {text:`🧩 ${total} = ${a} + ?`,correct:miss,wrong:[miss+1,miss-1,miss+2],steps:[`❓ ${total} − ${a} = ${miss}`]}; },
-    // ? + b = total
-    ()=>{ const b=rand(4,10),miss=rand(3,8); const total=b+miss;
-      return {text:`🧩 ${total} = ? + ${b}`,correct:miss,wrong:[miss+1,miss-1,miss+2],steps:[`❓ ${total} − ${b} = ${miss}`]}; },
-    // a - ? = result (subtraction)
-    ()=>{ const miss=rand(2,7),result=rand(3,8); const a=result+miss;
-      return {text:`🧩 ${a} − ? = ${result}`,correct:miss,wrong:[miss+1,miss-1,miss+2],steps:[`❓ ${a} − ${result} = ${miss}`]}; },
-    // a + b + c + ? = total (harder)
-    ()=>{ const a=rand(2,6),b=rand(2,5),c=rand(1,4),miss=rand(1,5); const total=a+b+c+miss;
-      return {text:`🧩 ${total} = ${a} + ${b} + ${c} + ?`,correct:miss,wrong:[miss+1,miss-1,miss+2],steps:[`➕ ${a}+${b}+${c} = ${a+b+c}`,`❓ ${total}−${a+b+c} = ${miss}`]}; },
-  ];
-  const t = types[rand(0,types.length-1)]();
-  const choices = shuffle(uniq([t.correct,...t.wrong].map(String)).slice(0,4));
-  return {
-    type:'number-puzzles',
-    text:t.text,
-    choices, correct:String(t.correct),
-    explanation:`${t.steps.join(' → ')}. Answer: ${t.correct}`,
-    steps:t.steps.concat([`✅ Answer: ${t.correct}`])
-  };
-}
-
-// ─────────────────────────────────────────────
-//  SUBTEST DEFINITIONS
-// ─────────────────────────────────────────────
-const SUBTESTS = [
-  // Verbal
-  { id:'pic-analogies', name:'Picture Analogies', battery:'Verbal 🗣️', icon:'🗣️', desc:'Animal homes, food, baby→adult, tool→worker & more (20 logic types)', quizN:5, examN:12, gen:makePictureAnalogy,
-    tipTitle:'Come up with a RULE first!',
-    tip:'Before looking at choices, say the rule out loud: "Tire is PART OF car, so leaf is PART OF ___"',
-    example:'"Tire → Car" means tire is PART OF car. "Leaf → ?" Apply rule: leaf is PART OF a Tree 🌲',
-    testTips:['Come up with the rule BEFORE looking at answer choices','The logic is reversible — "Part:Whole" works as "Whole:Part" too','If two answers seem to fit, look for a more specific rule','All 4 choices will look related — pick the BEST one']
-  },
-  { id:'sentence-comp', name:'Sentence Completion', battery:'Verbal 🗣️', icon:'👂', desc:'Listen to a question read aloud, then choose the picture answer', quizN:5, examN:12, gen:makeSentenceCompletion,
-    tipTitle:'Listen to the WHOLE sentence!',
-    tip:'The question is read aloud once — listen all the way to the end before choosing. Eliminate wrong answers!',
-    example:'Question: "Max sees something floating in water" → Rock sinks, hammer sinks, coin sinks — Ball ⚽ floats! ✅',
-    testTips:['Listen from START to FINISH — do not stop listening early!','Eliminate choices that obviously do NOT fit','Always guess — no points taken away for wrong answers','Look at ALL 4 choices before picking']
-  },
-  { id:'pic-classification', name:'Picture Classification', battery:'Verbal 🗣️', icon:'🖼️', desc:'Three pictures share a rule — find the fourth that belongs', quizN:5, examN:12, gen:makePictureClassification,
-    tipTitle:'Name the FAMILY first!',
-    tip:'Look at all three pictures — what do they have in common? Say it out loud: "They are all ___!"',
-    example:'"Fork · Spoon · Knife" → They are all EATING UTENSILS → Chopsticks 🥢 also belong!',
-    testTips:['Come up with the "family name" before looking at choices','If one rule fits all choices, try to find a MORE SPECIFIC rule','Topics include: animal types, clothing, transportation, food types, community helpers & more']
-  },
-  // Nonverbal
-  { id:'fig-analogies', name:'Figure Analogies', battery:'Nonverbal 🔷', icon:'🔷', desc:'Shapes follow a rule (color, size, rotation, amount, flip & more)', quizN:5, examN:12, gen:makeFigureAnalogy,
-    tipTitle:'Look for 1 change, then 2 changes!',
-    tip:'9 possible rules: Color · Size · Rotation · Color Reversal · Amount · Flip/Mirror · Whole:Part · Sides · TWO changes at once',
-    example:'"▲▲ → ▼▼▼" means: shape flipped AND count went from 2 to 3. Two changes!',
-    testTips:['Start by asking: did the SHAPE change? did the NUMBER change? did the COLOR change?','Easier questions have 1 change — harder ones have 2 changes simultaneously','Check ALL four answer choices before picking'],
-    ruleList:['Color (dark→light)','Size (small→big)','Rotation (e.g. 90° turn)','Color Reversal (flip dark/light)','Amount (add or remove shapes)','Flip/Mirror image','Whole:Part (full→half)','Number of Sides (triangle→square)','Two Changes at Once']
-  },
-  { id:'fig-classification', name:'Figure Classification', battery:'Nonverbal 🔷', icon:'🔵', desc:'Three shapes share a property — find the fourth', quizN:5, examN:10, gen:makeFigureClassification,
-    tipTitle:'Ask detective questions!',
-    tip:'How many SIDES? Are they FILLED or EMPTY? What DIRECTION? Are they DIVIDED?',
-    example:'"▲ △ ▼" — all are triangles (3 sides). Find the next triangle!',
-    testTips:['Ask: how many sides? filled or empty? facing which direction? divided how?','If 3 shapes all have the same property, that\'s the rule','A more specific rule is better if two choices seem to work']
-  },
-  { id:'paper-folding', name:'Paper Folding', battery:'Nonverbal 🔷', icon:'📄', desc:'Paper folded & holes punched — how many holes when unfolded?', quizN:5, examN:10, gen:makePaperFolding,
-    tipTitle:'Count the layers!',
-    tip:'1 fold = 2 layers. 2 folds = 4 layers. Each punch goes through ALL layers! Punches × Layers = Total Holes.',
-    example:'Paper folded once → 2 layers. Punch 1 hole → 1 × 2 = 2 holes when unfolded.',
-    testTips:['Try it with real paper and a hole puncher to build the skill!','Count: how many folds? That tells you how many layers.','Each punch goes through ALL layers — multiply!','Pay attention to WHERE on the paper the holes are']
-  },
-  // Quantitative
-  { id:'num-analogies', name:'Number Analogies', battery:'Quantitative 🔢', icon:'🔢', desc:'Top pair shows a math rule — apply the same rule to the bottom', quizN:5, examN:12, gen:makeNumberAnalogy,
-    tipTitle:'Find the math rule!',
-    tip:'Possible rules: +number, −number, ×2 (double), ÷2 (halve), ×3 (triple). Find it on top, apply below.',
-    example:'12→6 (halved). So 8→? Apply "halve" rule: 8÷2 = 4 ✅',
-    testTips:['If adding/subtracting doesn\'t work, try doubling, halving, or tripling!','The rule on top is ALWAYS the same rule for the bottom','Check your answer by going back to verify the top pair']
-  },
-  { id:'num-series', name:'Number Series', battery:'Quantitative 🔢', icon:'📊', desc:'Abacus bead patterns — find the missing number in the sequence', quizN:5, examN:12, gen:makeNumberSeries,
-    tipTitle:'Watch the HOPS between numbers!',
-    tip:'Write down the jump between each pair: +1, −2, +3... Look for a repeating pattern in the jumps!',
-    example:'10, 9, 7, 6, 4 → hops: −1, −2, −1, −2... Next hop is −1 → 4−1 = 3 ✅',
-    testTips:['Write the "hops" between each number first','The hop itself may form a pattern (alternating, repeating)','Some sequences have TWO interleaved patterns','Watch for A-B-A-B where the same number repeats every other position']
-  },
-  { id:'num-puzzles', name:'Number Puzzles', battery:'Quantitative 🔢', icon:'🧩', desc:'Fill in the missing number so both sides of the = sign are equal', quizN:5, examN:10, gen:makeNumberPuzzle,
-    tipTitle:'Add what you see — find what\'s missing!',
-    tip:'Add up the numbers you CAN see. Then figure out what\'s needed to reach the total.',
-    example:'23 = 9 + 7 + ? → First: 9+7=16. Then: 23−16 = 7. Answer is 7! ✅',
-    testTips:['Both sides of the = must have the SAME value','Add the numbers you know first, then subtract from total','Check your answer by plugging it back in!','Practice basic addition and subtraction facts at home']
-  },
-];
-
-// ─────────────────────────────────────────────
-//  RENDER HOME
-// ─────────────────────────────────────────────
-function renderHome() {
-  $('detailView').classList.add('hidden');
-  $('homeView').classList.remove('hidden');
-  updateMasteryCount();
-
-  const batteries = ['Verbal 🗣️','Nonverbal 🔷','Quantitative 🔢'];
-  const list = $('subtestList');
-  list.innerHTML = batteries.map(bat => {
-    const subs = SUBTESTS.filter(s=>s.battery===bat);
-    return `<div class="battery-section">
-      <div class="battery-label">${bat}</div>
-      <div class="subtest-grid">${subs.map(renderCard).join('')}</div>
-    </div>`;
-  }).join('');
-
-  list.querySelectorAll('.subtest-card').forEach(card => {
-    const open = ()=>openSubtest(card.dataset.id);
-    card.addEventListener('click', open);
-    card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();open();} });
-  });
-  announce('CogAT Detective Academy home — choose a game!');
-}
-
-function renderCard(st) {
-  const done = isMastered(st.id);
-  return `<div class="subtest-card" data-id="${st.id}" role="button" tabindex="0" aria-label="Play ${st.name}">
-    <div class="sc-top">
-      <div class="sc-icon">${st.icon}</div>
-      <div class="sc-status ${done?'status-mastered':'status-ready'}">${done?'✅ MASTERED':'🎮 PLAY'}</div>
-    </div>
-    <div class="sc-name">${st.name}</div>
-    <div class="sc-desc">${st.desc}</div>
-    <div class="sc-bar"><div class="sc-bar-fill" style="width:${done?100:0}%"></div></div>
-  </div>`;
-}
-
-// ─────────────────────────────────────────────
-//  STUDY VIEW
-// ─────────────────────────────────────────────
-let currentST = null;
-
-function openSubtest(id) {
-  currentST = SUBTESTS.find(s=>s.id===id);
-  if(!currentST) return;
-  $('homeView').classList.add('hidden');
-  $('detailView').classList.remove('hidden');
-  renderStudy();
-  announce(`Opened ${currentST.name} study guide`);
-}
-
-function renderStudy() {
-  const st = currentST;
-  const ruleList = st.ruleList ? `<div class="strategy-grid">${st.ruleList.map((r,i)=>`<div class="strategy-card"><span class="s-num">${i+1}</span>${r}</div>`).join('')}</div>` : '';
-
-  $('detailView').innerHTML = `
-    <div class="panel">
-      <div class="panel-head">
-        <h2>${st.icon} ${st.name} · Study Guide</h2>
-        <button class="back-btn" id="backBtn">← Back</button>
-      </div>
-      <div class="study-content">
-        <div class="kid-tip">🎯 <strong>${st.tipTitle}</strong><br>${st.tip}</div>
-        <div class="example-box">✨ <strong>Example:</strong> ${st.example}</div>
-        ${ruleList}
-        <div class="test-tips-section">
-          <h4>🕵️ Detective Tips:</h4>
-          <div class="tip-list">${st.testTips.map((t,i)=>`<div class="tip-item"><div class="tip-dot">${i+1}</div><span>${t}</span></div>`).join('')}</div>
-        </div>
-      </div>
-      <div class="btn-group">
-        <button class="btn-primary" id="quizBtn">🎮 Practice Quiz (${st.quizN} questions)</button>
-        <button class="btn-primary btn-green" id="examBtn">🏆 Mastery Exam (${st.examN} questions)</button>
-      </div>
-    </div>`;
-
-  $('backBtn').onclick = renderHome;
-  $('quizBtn').onclick = ()=>startSession('quiz');
-  $('examBtn').onclick = ()=>startSession('exam');
-  focusEl('#backBtn');
-}
-
-// ─────────────────────────────────────────────
-//  SESSION (quiz or exam)
-// ─────────────────────────────────────────────
-let session = null;
-
-function startSession(mode) {
-  const n = mode==='quiz' ? currentST.quizN : currentST.examN;
-  const questions = Array.from({length:n}, ()=>currentST.gen());
-  session = { mode, questions, idx:0, score:0, answers:[] };
-  renderQuestion();
-  announce(`Starting ${mode} with ${n} questions`);
-}
-
-function renderQuestion() {
-  const {mode,questions,idx,score}=session;
-  const q=questions[idx];
-  const total=questions.length;
-  const pct=Math.round((idx/total)*100);
-
-  let content='';
-
-  if(q.type==='sentence-completion') {
-    content=`
-      <div class="listening-cue">
-        <div class="listen-icon">👂</div>
-        <div>
-          <div class="listen-label">Listen carefully — read this question aloud:</div>
-          <div class="listen-text">"${q.sentence}"</div>
-          <button class="speak-btn" id="speakBtn">🔊 Read Aloud</button>
-        </div>
-      </div>
-      <div class="q-text">Pick the picture that answers the question:</div>`;
-  } else if(q.type==='paper-folding') {
-    content=`<div class="q-text">${q.qText}</div>`;
-    if(q.svgHTML) content+=`<div class="paper-visual">${q.svgHTML}</div>`;
-  } else {
-    content=`<div class="q-text">${q.text}</div>`;
-  }
-
-  $('detailView').innerHTML=`
-    <div class="panel">
-      <div class="panel-head">
-        <h2>${mode==='quiz'?'🎮 Practice Quiz':'🏆 Mastery Exam'} · ${currentST.name}</h2>
-        <button class="back-btn" id="exitBtn">✕ Exit</button>
-      </div>
-      <div class="q-meta">Question ${idx+1} of ${total} · ⭐ Score: ${score}/${idx}</div>
-      <div class="q-progress"><div class="q-progress-fill" style="width:${pct}%"></div></div>
-      ${content}
-      <div class="choices-grid" id="choicesGrid"></div>
-      <div id="feedbackArea"></div>
-      <button class="btn-primary hidden" id="nextBtn">${idx+1<total?'Next Question →':'See Results 🏆'}</button>
-    </div>`;
-
-  $('exitBtn').onclick=renderHome;
-  if(q.type==='sentence-completion') {
-    const sb=$('speakBtn');
-    if(sb) sb.onclick=()=>{ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(q.sentence); u.rate=0.85; speechSynthesis.speak(u); } };
-  }
-
-  const grid=$('choicesGrid');
-  q.choices.forEach(ch=>{
-    const btn=document.createElement('button');
-    btn.className='choice-btn'; btn.textContent=ch;
-    btn.setAttribute('aria-label',`Choose ${ch}`);
-    btn.onclick=()=>handleAnswer(ch,btn);
-    grid.appendChild(btn);
-  });
-  $('nextBtn').onclick=advanceSession;
-  focusEl('#choicesGrid .choice-btn');
-}
-
-function handleAnswer(selected, btn) {
-  if(session.locked) return;
-  session.locked=true;
-  const q=session.questions[session.idx];
-  const correct=selected===q.correct;
-  if(correct) session.score++;
-  session.answers.push({correct,selected,correctAnswer:q.correct});
-
-  document.querySelectorAll('.choice-btn').forEach(b=>{
-    b.disabled=true;
-    if(b.textContent===q.correct) b.classList.add('correct');
-    else if(b===btn&&!correct) b.classList.add('wrong');
-  });
-
-  const fb=$('feedbackArea');
-  fb.innerHTML=`<div class="feedback ${correct?'correct-fb':'wrong-fb'}">
-    ${correct?'✅ Correct! ':'❌ Not quite. '} ${q.explanation}
-    ${!correct?`<br><button class="tutor-btn" id="tutorBtn">🦉 Show me step-by-step</button>`:''}
-  </div>`;
-
-  if(!correct) {
-    $('tutorBtn')?.addEventListener('click',()=>{
-      if(!fb.querySelector('.tutor-panel')) {
-        fb.insertAdjacentHTML('beforeend',`<div class="tutor-panel">🦉 <strong>Step-by-step:</strong><br><br>${q.steps.map(s=>`📌 ${s}`).join('<br><br>')}</div>`);
-        $('tutorBtn').style.display='none';
+    // ─────────────────────────────────────────────
+    //  ENSURE EXACTLY 4 DISTINCT CHOICES — FIXED for math/paper folding
+    // ─────────────────────────────────────────────
+    function ensureFourChoices(choices, fallback) {
+      let result = uniq(choices);
+      let attempts = 0;
+      while (result.length < 4 && attempts < 20) {
+        const extra = `${fallback}${result.length + 1}`;
+        if (!result.includes(extra)) result.push(extra);
+        attempts++;
       }
+      return shuffle(result.slice(0, 4));
+    }
+
+    // ─────────────────────────────────────────────
+    //  PROCEDURAL SVG SHAPE GENERATOR (Nonverbal)
+    // ─────────────────────────────────────────────
+    function renderProceduralShape(type, fill, color, rotation, size) {
+      size = size || 80;
+      const center = size / 2;
+      const r = size * 0.42;
+      let points = '';
+      let shapeTag = '';
+
+      if (type === 'triangle') {
+        const pts = [
+          [center, 10],
+          [center - r, size - 10],
+          [center + r, size - 10]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'square') {
+        const s = r * 0.8;
+        const pts = [
+          [center - s, center - s],
+          [center + s, center - s],
+          [center + s, center + s],
+          [center - s, center + s]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'circle') {
+        shapeTag =
+          `<circle cx="${center}" cy="${center}" r="${r * 0.7}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4"/>`;
+      } else if (type === 'diamond') {
+        const s = r * 0.7;
+        const pts = [
+          [center, center - s],
+          [center + s, center],
+          [center, center + s],
+          [center - s, center]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'star') {
+        const outerR = r * 0.85;
+        const innerR = outerR * 0.4;
+        const pts = [];
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+          const rad = i % 2 === 0 ? outerR : innerR;
+          pts.push([center + rad * Math.cos(angle), center + rad * Math.sin(angle)]);
+        }
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'arrow-up') {
+        const pts = [
+          [center, 10],
+          [center - r * 0.6, center + 10],
+          [center - r * 0.3, center + 10],
+          [center - r * 0.3, size - 10],
+          [center + r * 0.3, size - 10],
+          [center + r * 0.3, center + 10],
+          [center + r * 0.6, center + 10]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'arrow-down') {
+        const pts = [
+          [center, size - 10],
+          [center - r * 0.6, center - 10],
+          [center - r * 0.3, center - 10],
+          [center - r * 0.3, 10],
+          [center + r * 0.3, 10],
+          [center + r * 0.3, center - 10],
+          [center + r * 0.6, center - 10]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'arrow-left') {
+        const pts = [
+          [10, center],
+          [center - 10, center - r * 0.6],
+          [center - 10, center - r * 0.3],
+          [size - 10, center - r * 0.3],
+          [size - 10, center + r * 0.3],
+          [center - 10, center + r * 0.3],
+          [center - 10, center + r * 0.6]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'arrow-right') {
+        const pts = [
+          [size - 10, center],
+          [center + 10, center - r * 0.6],
+          [center + 10, center - r * 0.3],
+          [10, center - r * 0.3],
+          [10, center + r * 0.3],
+          [center + 10, center + r * 0.3],
+          [center + 10, center + r * 0.6]
+        ];
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'pentagon') {
+        const pts = [];
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+          const rad = r * 0.75;
+          pts.push([center + rad * Math.cos(angle), center + rad * Math.sin(angle)]);
+        }
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      } else if (type === 'hexagon') {
+        const pts = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+          const rad = r * 0.7;
+          pts.push([center + rad * Math.cos(angle), center + rad * Math.sin(angle)]);
+        }
+        points = pts.map(p => p.join(',')).join(' ');
+        shapeTag = `<polygon points="${points}" fill="${fill === 'solid' ? color : 'none'}" stroke="${color}" stroke-width="4" stroke-linejoin="round" transform="rotate(${rotation} ${center} ${center})"/>`;
+      }
+
+      return `<svg viewBox="0 0 ${size} ${size}" class="vector-figure" style="width:${size}px;height:${size}px;">${shapeTag}</svg>`;
+    }
+
+    // ─────────────────────────────────────────────
+    //  SVG PAPER FOLDING
+    // ─────────────────────────────────────────────
+    function makePaperFoldingSVG(punches, folds, foldDirection) {
+      const W = 280,
+        H = 200;
+      const layers = Math.pow(2, folds);
+      const foldY = H * 0.48;
+      const holeSpacing = Math.min(60, (W - 40) / (punches + 1));
+      const holes = [];
+      for (let i = 0; i < punches; i++) {
+        holes.push({ x: 30 + (i + 1) * holeSpacing, y: foldY + 30 + i * 4 });
+      }
+
+      let circles = holes.map(h => `
+        <circle cx="${h.x}" cy="${h.y}" r="10" fill="#e91e8c" opacity="0.7" stroke="#c2185b" stroke-width="2"/>
+        <text x="${h.x}" y="${h.y + 4}" text-anchor="middle" font-size="11" fill="white" font-weight="900">✂</text>
+      `).join('');
+
+      let mirrorCircles = holes.map(h => `
+        <circle cx="${h.x}" cy="${foldY + (foldY - h.y) + 10}" r="10" fill="#e91e8c" opacity="0.4" stroke="#c2185b" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="${h.x}" y="${foldY + (foldY - h.y) + 14}" text-anchor="middle" font-size="9" fill="#e91e8c" opacity="0.6" font-weight="700">?</text>
+      `).join('');
+
+      return `
+        <div class="paper-visual">
+          <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;border-radius:16px;background:#f0eaff;border:2px solid #ddd5f8;width:100%;height:auto;">
+            <rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="10" fill="#faf7ff" stroke="#c4b5fd" stroke-width="2"/>
+            <line x1="10" y1="${foldY}" x2="${W - 10}" y2="${foldY}" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="8,5" opacity="0.8"/>
+            <text x="${W / 2}" y="${foldY - 10}" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="900">⬆ FOLD</text>
+            <rect x="8" y="8" width="${W - 16}" height="${foldY - 10}" rx="6" fill="#ede5ff" opacity="0.4"/>
+            ${circles}
+            ${mirrorCircles}
+            <text x="10" y="${H - 10}" font-size="10" fill="#7c6fa0" font-weight="700">${folds} fold${folds > 1 ? 's' : ''} · ${layers} layer${layers > 1 ? 's' : ''} · ${punches} punch${punches > 1 ? 'es' : ''} → ${punches * layers} holes total</text>
+            <text x="${W - 10}" y="${H - 10}" text-anchor="end" font-size="10" fill="#7c3aed" font-weight="800">folded ${folds} time${folds > 1 ? 's' : ''}</text>
+          </svg>
+          <p style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-top:6px;">💡 Each fold DOUBLES the layers: ${folds} fold${folds > 1 ? 's' : ''} = ${layers} layers</p>
+        </div>
+      `;
+    }
+
+    // ─────────────────────────────────────────────
+    //  THEME
+    // ─────────────────────────────────────────────
+    let dark = false;
+
+    function initTheme() {
+      try { dark = localStorage.getItem('cogat_theme') === 'dark'; } catch (e) {}
+      applyTheme();
+    }
+
+    function toggleTheme() {
+      dark = !dark;
+      applyTheme();
+      try { localStorage.setItem('cogat_theme', dark ? 'dark' : 'light'); } catch (e) {}
+    }
+
+    function applyTheme() {
+      document.body.classList.toggle('dark', dark);
+      const btn = $('themeBtn');
+      if (btn) { btn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+        btn.setAttribute('aria-pressed', dark); }
+    }
+
+    // ─────────────────────────────────────────────
+    //  MASTERY STATE
+    // ─────────────────────────────────────────────
+    let mastery = {};
+
+    function loadMastery() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          mastery = JSON.parse(raw);
+        } else {
+          let migrated = false;
+          for (const key of OLD_KEYS) {
+            const old = localStorage.getItem(key);
+            if (old) {
+              mastery = JSON.parse(old);
+              localStorage.removeItem(key);
+              migrated = true;
+              break;
+            }
+          }
+          if (migrated) saveMastery();
+        }
+      } catch (e) { mastery = {}; }
+      updateMasteryCount();
+    }
+
+    function saveMastery() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mastery)); } catch (e) {} }
+
+    function isMastered(id) { return !!mastery[id]; }
+
+    function setMastered(id) { mastery[id] = true;
+      saveMastery();
+      updateMasteryCount(); }
+
+    function updateMasteryCount() { const el = $('masteredCount'); if (el) el.textContent = Object.values(mastery).filter(
+        Boolean).length; }
+
+    // ─────────────────────────────────────────────
+    //  PICTURE ANALOGIES — All emoji-based
+    // ─────────────────────────────────────────────
+    const analogyItems = [
+      { q: 'Wheel → Car\nSlice → ?', ans: 'Pizza', ansEmoji: '🍕',
+        wrong: ['Bowl', 'Bread', 'Cheese'], wrongEmojis: ['🥣', '🍞', '🧀'], rule: 'Part → Whole' },
+
+      { q: 'Petal → Flower\nBranch → ?', ans: 'Tree', ansEmoji: '🌳',
+        wrong: ['Leaf', 'Grass', 'Rock'], wrongEmojis: ['🍃', '🌾', '🪨'], rule: 'Part → Whole' },
+
+      { q: 'Bird → Nest\nFish → ?', ans: 'Ocean', ansEmoji: '🌊',
+        wrong: ['Bush', 'House', 'Bone'], wrongEmojis: ['🌿', '🏠', '🦴'], rule: 'Animal → Its Home' },
+
+      { q: 'Bee → Hive\nAnt → ?', ans: 'Anthill', ansEmoji: '🏔️',
+        wrong: ['Flower', 'Leaf', 'Apple'], wrongEmojis: ['🌸', '🍃', '🍎'], rule: 'Animal → Its Home' },
+
+      { q: 'Tiger → Meat\nRabbit → ?', ans: 'Carrot', ansEmoji: '🥕',
+        wrong: ['Bone', 'Cheese', 'Fish'], wrongEmojis: ['🦴', '🧀', '🐟'], rule: 'Animal → Its Food' },
+
+      { q: 'Elephant → Plants\nBear → ?', ans: 'Honey', ansEmoji: '🍯',
+        wrong: ['Meat', 'Fish', 'Corn'], wrongEmojis: ['🥩', '🐟', '🌽'], rule: 'Animal → Its Food' },
+
+      { q: 'Fish → Scales\nBird → ?', ans: 'Feathers', ansEmoji: '🪶',
+        wrong: ['Teeth', 'Water', 'Leaves'], wrongEmojis: ['🦷', '💧', '🍃'], rule: 'Animal → Its Covering' },
+
+      { q: 'Bear → Fur\nTurtle → ?', ans: 'Shell', ansEmoji: '🐚',
+        wrong: ['Feathers', 'Water', 'Scales'], wrongEmojis: ['🪶', '💧', '🐟'], rule: 'Animal → Its Covering' },
+
+      { q: 'Chick → Hen\nTadpole → ?', ans: 'Frog', ansEmoji: '🐸',
+        wrong: ['Fish', 'Lizard', 'Crocodile'], wrongEmojis: ['🐟', '🦎', '🐊'], rule: 'Baby → Adult' },
+
+      { q: 'Kitten → Cat\nPuppy → ?', ans: 'Dog', ansEmoji: '🐕',
+        wrong: ['Wolf', 'Fox', 'Tiger'], wrongEmojis: ['🐺', '🦊', '🐯'], rule: 'Baby → Adult' },
+
+      { q: 'Spoon → Soup\nFork → ?', ans: 'Salad', ansEmoji: '🥗',
+        wrong: ['Tea', 'Juice', 'Water'], wrongEmojis: ['🍵', '🧃', '💧'], rule: 'Tool → What You Use It For' },
+
+      { q: 'Key → Door\nBucket → ?', ans: 'Water', ansEmoji: '💧',
+        wrong: ['Fire', 'Wind', 'Plant'], wrongEmojis: ['🔥', '💨', '🌱'], rule: 'Tool → What It Carries' },
+
+      { q: 'Sun → Sky\nFish → ?', ans: 'Ocean', ansEmoji: '🌊',
+        wrong: ['Forest', 'Mountain', 'Field'], wrongEmojis: ['🌲', '🏔️', '🌾'], rule: 'Object → Where It Is Found' },
+
+      { q: 'Book → Library\nApple → ?', ans: 'Tree', ansEmoji: '🌳',
+        wrong: ['Store', 'Home', 'Ocean'], wrongEmojis: ['🏪', '🏠', '🌊'], rule: 'Object → Where It Comes From' },
+
+      { q: 'Paintbrush → Artist\nMicroscope → ?', ans: 'Scientist', ansEmoji: '🔬',
+        wrong: ['Chef', 'Fireman', 'Doctor'], wrongEmojis: ['👨‍🍳', '👨‍🚒', '👨‍⚕️'], rule: 'Tool → The Worker Who Uses It' },
+
+      { q: 'Stethoscope → Doctor\nScissors → ?', ans: 'Barber', ansEmoji: '💇',
+        wrong: ['Singer', 'Chef', 'Artist'], wrongEmojis: ['🎤', '👨‍🍳', '🎨'], rule: 'Tool → The Worker Who Uses It' },
+
+      { q: 'Flower → Vase\nWater → ?', ans: 'Bucket', ansEmoji: '🪣',
+        wrong: ['Cup', 'Pot', 'Ocean'], wrongEmojis: ['🥤', '🫕', '🌊'], rule: 'Object → Its Container' },
+
+      { q: 'Turkey → Parrot\nAnt → ?', ans: 'Beetle', ansEmoji: '🐞',
+        wrong: ['Fish', 'Frog', 'Fox'], wrongEmojis: ['🐟', '🐸', '🦊'], rule: 'Same Category' },
+
+      { q: 'Honey → Bee\nMilk → ?', ans: 'Cow', ansEmoji: '🐄',
+        wrong: ['Chicken', 'Sunflower', 'Plant'], wrongEmojis: ['🐔', '🌻', '🌱'], rule: 'Food → Where It Comes From' },
+
+      { q: 'Microphone → Talk\nTelescope → ?', ans: 'See', ansEmoji: '👁️',
+        wrong: ['Hear', 'Touch', 'Smell'], wrongEmojis: ['👂', '✋', '👃'], rule: 'Object → What You Do With It' },
+    ];
+
+    function makePictureAnalogy() {
+      const item = analogyItems[rand(0, analogyItems.length - 1)];
+      const correctChoice = pic(item.ans, item.ansEmoji);
+      const wrongChoices = item.wrong.map((text, i) => pic(text, item.wrongEmojis[i]));
+      const choices = shuffle([correctChoice, ...wrongChoices]);
+      while (choices.length < 4) {
+        choices.push(pic(`Option ${choices.length + 1}`, '❓'));
+      }
+      return {
+        type: 'picture-analogies',
+        text: `🗣️ ANALOGY:\n\n${item.q}`,
+        choices: choices.slice(0, 4),
+        correct: item.ans,
+        explanation: `✅ Rule: ${item.rule}`,
+        steps: ['🔍 Look at the top pair — what is the connection?', `📏 Rule: ${item.rule}`,
+          `✅ Apply same rule to bottom: ${item.ans}`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  SENTENCE COMPLETION
+    // ─────────────────────────────────────────────
+    const sentenceItems = [
+      { sentence: 'Max sees something floating in the water. Which one does Max see?', choices: ['Rock', 'Ball', 'Hammer',
+          'Coin'
+        ], choiceEmojis: ['🪨', '⚽', '🔨', '🪙'], correct: 'Ball', correctEmoji: '⚽',
+        why: 'A ball floats — rocks, hammers, and coins sink.' },
+      { sentence: 'Anya wants to find something that lives underground. Which one does Anya find?', choices: ['Eagle',
+          'Worm', 'Robin', 'Butterfly'
+        ], choiceEmojis: ['🦅', '🐛', '🐦', '🦋'], correct: 'Worm', correctEmoji: '🐛',
+        why: 'Worms live underground.' },
+      { sentence: 'Sophie is looking for something that gives us light. Which does she pick?', choices: ['Rock', 'Moon',
+          'Lightbulb', 'Log'
+        ], choiceEmojis: ['🪨', '🌙', '💡', '🪵'], correct: 'Lightbulb', correctEmoji: '💡',
+        why: 'A lightbulb gives us light.' },
+      { sentence: 'Alex needs something you use to keep yourself dry in the rain. Which one?', choices: ['Umbrella',
+          'Parasol', 'Cap', 'Sunglasses'
+        ], choiceEmojis: ['☂️', '🌂', '🧢', '🕶️'], correct: 'Umbrella', correctEmoji: '☂️',
+        why: 'An umbrella keeps you dry in the rain.' },
+      { sentence: 'Freddie wants to find something that has exactly four legs. Which one?', choices: ['Bird', 'Caterpillar',
+          'Dog', 'Snake'
+        ], choiceEmojis: ['🐦', '🐛', '🐕', '🐍'], correct: 'Dog', correctEmoji: '🐕',
+        why: 'Dogs have exactly four legs.' },
+      { sentence: 'May is looking for something made of wood. Which one?', choices: ['Chair', 'Rock', 'Ice', 'Leaf'],
+        choiceEmojis: ['🪑', '🪨', '🧊', '🍃'], correct: 'Chair', correctEmoji: '🪑',
+        why: 'Chairs are usually made of wood.' },
+      { sentence: 'Max sees something that can fly but is NOT a bird. Which one?', choices: ['Penguin', 'Butterfly', 'Dog',
+          'Fish'
+        ], choiceEmojis: ['🐧', '🦋', '🐕', '🐟'], correct: 'Butterfly', correctEmoji: '🦋',
+        why: 'Butterflies can fly — they are insects, not birds.' },
+      { sentence: 'Sophie wants something cold to eat on a hot day. Which one?', choices: ['Pizza', 'Soup', 'Ice cream',
+          'Croissant'
+        ], choiceEmojis: ['🍕', '🍜', '🍦', '🥐'], correct: 'Ice cream', correctEmoji: '🍦',
+        why: 'Ice cream is cold.' },
+      { sentence: 'Which of these is something you wear on your feet?', choices: ['Gloves', 'Hat', 'Sneaker', 'Scarf'],
+        choiceEmojis: ['🧤', '👒', '👟', '🧣'], correct: 'Sneaker', correctEmoji: '👟',
+        why: 'You wear sneakers on your feet.' },
+      { sentence: 'Alex is looking for an animal that lives in water AND on land. Which one?', choices: ['Eagle', 'Frog',
+          'Dog', 'Rabbit'
+        ], choiceEmojis: ['🦅', '🐸', '🐕', '🐇'], correct: 'Frog', correctEmoji: '🐸',
+        why: 'Frogs live both in water and on land — they are amphibians.' },
+      { sentence: 'Anya wants something that melts when it gets hot. Which one?', choices: ['Ice', 'Rock', 'Leaf', 'Wood'],
+        choiceEmojis: ['🧊', '🪨', '🍃', '🪵'], correct: 'Ice', correctEmoji: '🧊',
+        why: 'Ice melts when it gets hot.' },
+      { sentence: 'Which of these is used for cutting?', choices: ['Ruler', 'Scissors', 'Pen', 'Clip'],
+        choiceEmojis: ['📏', '✂️', '🖊️', '📎'], correct: 'Scissors', correctEmoji: '✂️',
+        why: 'Scissors are used for cutting.' },
+    ];
+
+    function makeSentenceCompletion() {
+      const item = sentenceItems[rand(0, sentenceItems.length - 1)];
+      const choices = item.choices.map((text, i) => pic(text, item.choiceEmojis[i]));
+      return {
+        type: 'sentence-completion',
+        sentence: item.sentence,
+        choices: shuffle(choices),
+        correct: item.correct,
+        explanation: item.why,
+        steps: ['👂 Listen to the whole sentence carefully.', '🧹 Eliminate choices that do NOT fit.',
+          `✅ ${item.correct} — ${item.why}`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  PICTURE CLASSIFICATION
+    // ─────────────────────────────────────────────
+    const classSets = [
+      { cat: 'eating utensils', items: ['Spoon', 'Fork', 'Knife', 'Chopsticks'], emojis: ['🥄', '🍴', '🔪', '🥢'],
+        non: ['Bucket', 'Scissors', 'Key', 'Ruler'], nonEmojis: ['🪣', '✂️', '🔑', '📏'] },
+      { cat: 'found in a kitchen', items: ['Fridge', 'Pan', 'Bowl', 'Pot'], emojis: ['🧊', '🍳', '🥣', '🫕'],
+        non: ['Bed', 'Shower', 'Sofa', 'Mirror'], nonEmojis: ['🛏️', '🚿', '🛋️', '🪞'] },
+      { cat: 'red things', items: ['Apple', 'Rose', 'Car', 'Strawberry'], emojis: ['🍎', '🌹', '🚗', '🍓'],
+        non: ['Lemon', 'Blueberry', 'Kiwi', 'Broccoli'], nonEmojis: ['🍋', '🫐', '🥝', '🥦'] },
+      { cat: 'cold things', items: ['Ice', 'Snowflake', 'Ice cream', 'Frozen'], emojis: ['🧊', '❄️', '🍦', '🥶'],
+        non: ['Sun', 'Fire', 'Pepper', 'Tea'], nonEmojis: ['☀️', '🔥', '🌶️', '🍵'] },
+      { cat: 'animal homes', items: ['Nest', 'Kennel', 'Aquarium', 'Hive'], emojis: ['🪺', '🏠', '🐠', '🐝'],
+        non: ['Car', 'Library', 'Tree', 'Backpack'], nonEmojis: ['🚗', '📚', '🌳', '🎒'] },
+      { cat: 'cats (felines)', items: ['Cat', 'Tiger', 'Lion', 'Cheetah'], emojis: ['🐱', '🐯', '🦁', '🐆'],
+        non: ['Elephant', 'Zebra', 'Giraffe', 'Wolf'], nonEmojis: ['🐘', '🦓', '🦒', '🐺'] },
+      { cat: 'water habitats', items: ['Ocean', 'River', 'Pond', 'Lake'], emojis: ['🌊', '🏞️', '🌿', '🏔️'],
+        non: ['Desert', 'Mountain', 'House', 'Forest'], nonEmojis: ['🏜️', '🗻', '🏠', '🌲'] },
+      { cat: 'baked foods', items: ['Cake', 'Bread', 'Croissant', 'Donut'], emojis: ['🎂', '🍞', '🥐', '🍩'],
+        non: ['Ice cream', 'Apple', 'Salad', 'Juice'], nonEmojis: ['🍦', '🍎', '🥗', '🧃'] },
+      { cat: 'root vegetables', items: ['Carrot', 'Potato', 'Onion', 'Radish'], emojis: ['🥕', '🥔', '🧅', '🌱'],
+        non: ['Apple', 'Banana', 'Grapes', 'Strawberry'], nonEmojis: ['🍎', '🍌', '🍇', '🍓'] },
+      { cat: 'community helpers', items: ['Doctor', 'Firefighter', 'Police', 'Teacher'],
+        emojis: ['👨‍⚕️', '👨‍🚒', '👮', '👩‍🏫'], non: ['Zombie', 'Wizard', 'Ghost', 'Robot'],
+        nonEmojis: ['🧟', '🧙', '👻', '🤖'] },
+      { cat: 'things worn on the head', items: ['Hat', 'Top Hat', 'Helmet', 'Crown'], emojis: ['👒', '🎩', '⛑️', '👑'],
+        non: ['Gloves', 'Shoes', 'Scarf', 'Dress'], nonEmojis: ['🧤', '👟', '🧣', '👗'] },
+      { cat: 'musical instruments', items: ['Piano', 'Guitar', 'Drums', 'Trumpet'], emojis: ['🎹', '🎸', '🥁', '🎺'],
+        non: ['Speaker', 'Headphones', 'Radio', 'Megaphone'], nonEmojis: ['🔊', '🎧', '📻', '📢'] },
+    ];
+
+    function makePictureClassification() {
+      const set = classSets[rand(0, classSets.length - 1)];
+      const allItems = set.items.map((text, i) => pic(text, set.emojis[i]));
+      const sh = shuffle([...allItems]);
+      const grp = sh.slice(0, 3);
+      const correct = sh[3] || sh[0];
+      const wrongs = set.non.map((text, i) => pic(text, set.nonEmojis[i]));
+      const choices = shuffle([correct, ...wrongs.slice(0, 3)]);
+      return {
+        type: 'picture-classification',
+        text: `🗣️ CLASSIFY:\n\n${grp.map(i => i.text).join('  ·  ')}\n\nAll of these are ${set.cat}.\nWhich one also belongs?`,
+        choices: choices.slice(0, 4),
+        correct: correct.text,
+        explanation: `✅ ${correct.text} is also a ${set.cat.replace(/s$/, '')}.`,
+        steps: [`👨‍👩‍👧‍👦 Name the family: all are "${set.cat}"`,
+          `🔍 Which answer choice is also a ${set.cat.replace(/s$/, '')}?`, `✅ ${correct.text}!`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  FIGURE ANALOGIES — SVG-based
+    // ─────────────────────────────────────────────
+    function makeFigureAnalogy() {
+      const shapeTypes = ['triangle', 'square', 'circle', 'diamond', 'star', 'pentagon', 'hexagon'];
+      const colors = ['#e91e8c', '#7c3aed', '#22c55e', '#f5c518', '#3b82f6', '#ff6b35'];
+
+      const fromShape = shapeTypes[rand(0, shapeTypes.length - 1)];
+      const toShape = shapeTypes[rand(0, shapeTypes.length - 1)];
+      const fromColor = colors[rand(0, colors.length - 1)];
+      const toColor = colors[rand(0, colors.length - 1)];
+      const rotation = [0, 45, 90, 135, 180][rand(0, 4)];
+
+      const svgFrom = renderProceduralShape(fromShape, 'solid', fromColor, 0, 70);
+      const svgTo = renderProceduralShape(toShape, 'solid', toColor, rotation, 70);
+      const svgBottom = renderProceduralShape(fromShape, 'solid', fromColor, 0, 70);
+      const svgAnswer = renderProceduralShape(toShape, 'solid', toColor, rotation, 70);
+
+      const wrongShapes = shuffle(shapeTypes.filter(s => s !== toShape)).slice(0, 3);
+      const wrongColors = shuffle(colors.filter(c => c !== toColor)).slice(0, 3);
+      const wrongRotations = [0, 45, 90, 180].filter(r => r !== rotation);
+
+      const wrongs = [
+        renderProceduralShape(wrongShapes[0] || 'square', 'solid', toColor, rotation, 70),
+        renderProceduralShape(toShape, 'solid', wrongColors[0] || '#000', rotation, 70),
+        renderProceduralShape(toShape, 'solid', toColor, wrongRotations[0] || 0, 70),
+      ];
+
+      const choices = shuffle([svgAnswer, ...wrongs]);
+
+      return {
+        type: 'figure-analogies',
+        text: `🔷 FIGURE ANALOGY:\n\n${svgFrom}  →  ${svgTo}\n\n${svgBottom}  →  ?\n\n(Find the rule — apply it to the bottom!)`,
+        choices: choices,
+        correct: svgAnswer,
+        explanation: `✅ Rule: ${fromShape} → ${toShape}, color changes, and rotates ${rotation}°`,
+        steps: [`🔍 The shape changed from ${fromShape} to ${toShape}.`,
+          `🎨 The color changed.`, `🔄 The shape rotated ${rotation}°.`, `✅ Apply all three changes to the bottom.`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  FIGURE CLASSIFICATION — SVG-based
+    // ─────────────────────────────────────────────
+    function makeFigureClassification() {
+      const shapeTypes = ['triangle', 'square', 'circle', 'diamond', 'star', 'pentagon', 'hexagon'];
+      const colors = ['#e91e8c', '#7c3aed', '#22c55e', '#f5c518', '#3b82f6', '#ff6b35'];
+
+      const chosenShape = shapeTypes[rand(0, shapeTypes.length - 1)];
+      const chosenColor = colors[rand(0, colors.length - 1)];
+
+      const group = shuffle(shapeTypes.filter(s => s !== chosenShape)).slice(0, 3);
+      const svgGroup = group.map(s => renderProceduralShape(s, 'solid', chosenColor, 0, 60)).join(' ');
+
+      const correctSvg = renderProceduralShape(chosenShape, 'solid', chosenColor, 0, 60);
+      const wrongSvgs = shuffle(shapeTypes.filter(s => s !== chosenShape)).slice(0, 3)
+        .map(s => renderProceduralShape(s, 'solid', chosenColor, 0, 60));
+
+      const choices = shuffle([correctSvg, ...wrongSvgs]);
+
+      return {
+        type: 'figure-classification',
+        text: `🔷 FIGURE CLASSIFY:\n\n${svgGroup}\n\nAll of these are the same SHAPE TYPE.\nWhich one also belongs?`,
+        choices: choices,
+        correct: correctSvg,
+        explanation: `✅ All shapes are ${chosenShape}s!`,
+        steps: [`🎨 What do they have in common? They are all ${chosenShape}s.`,
+          `🔍 Find the answer that is also a ${chosenShape}.`, `✅ ${chosenShape}!`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  PAPER FOLDING
+    // ─────────────────────────────────────────────
+    const foldScenarios = [
+      { punches: 1, folds: 1, dir: 'bottom',
+        qText: 'Paper folded once (bottom up). 1 hole punched through both layers. Unfold — how many holes?' },
+      { punches: 2, folds: 1, dir: 'bottom',
+        qText: 'Paper folded once (bottom up). 2 holes punched through both layers. Unfold — how many holes?' },
+      { punches: 3, folds: 1, dir: 'bottom',
+        qText: 'Paper folded once (bottom up). 3 holes punched through both layers. Unfold — how many holes?' },
+      { punches: 1, folds: 2, dir: 'bottom',
+        qText: 'Paper folded TWICE (2 folds = 4 layers). 1 hole punched. Unfold — how many holes?' },
+      { punches: 2, folds: 2, dir: 'bottom',
+        qText: 'Paper folded TWICE (4 layers). 2 holes punched. Unfold — how many holes?' },
+      { punches: 1, folds: 1, dir: 'right',
+        qText: 'Paper folded once (right side over left). 1 hole punched. Unfold — how many holes?' },
+      { punches: 2, folds: 1, dir: 'right',
+        qText: 'Paper folded once (right side over left). 2 holes punched. Unfold — how many holes?' },
+    ];
+
+    function makePaperFolding() {
+      const sc = foldScenarios[rand(0, foldScenarios.length - 1)];
+      const layers = Math.pow(2, sc.folds);
+      const total = sc.punches * layers;
+      const correct = `${total} holes`;
+      const wrongs = [`${total - 1} holes`, `${sc.punches} holes`, `${total + 1} holes`];
+      const choices = ensureFourChoices([correct, ...wrongs], '0');
+
+      return {
+        type: 'paper-folding',
+        qText: sc.qText,
+        folds: sc.folds,
+        punches: sc.punches,
+        svgHTML: makePaperFoldingSVG(sc.punches, sc.folds, sc.dir),
+        choices: choices,
+        correct: correct,
+        explanation: `📁 ${sc.folds} fold${sc.folds > 1 ? 's' : ''} = ${layers} layers. ${sc.punches} × ${layers} = ${total}`,
+        steps: [`📁 Count the layers: ${sc.folds} fold${sc.folds > 1 ? 's' : ''} = ${layers} layers`,
+          `✂️ Each punch goes through ALL ${layers} layers`, `🔢 ${sc.punches} × ${layers} = ${total}`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  NUMBER ANALOGIES
+    // ─────────────────────────────────────────────
+    function makeNumberAnalogy() {
+      const ops = [
+        () => { const d = rand(2, 5); const a1 = rand(4, 10); const a2 = a1 + d; const b1 = rand(4, 10); const b2 = b1 + d;
+          return { rule: `+${d}`, a1, a2, b1, b2, desc: `add ${d}` }; },
+        () => { const d = rand(2, 5); const a2 = rand(4, 10); const a1 = a2 + d; const b2 = rand(4, 10); const b1 = b2 + d;
+          return { rule: `-${d}`, a1, a2, b1, b2, desc: `subtract ${d}` }; },
+        () => { const d = [2, 3, 4][rand(0, 2)]; const a1 = rand(2, 6); const a2 = a1 * d; const b1 = rand(2, 6);
+          const b2 = b1 * d; return { rule: `×${d}`, a1, a2, b1, b2, desc: `multiply by ${d}` }; },
+        () => { const d = [2, 3, 4][rand(0, 2)]; const a2 = rand(2, 5); const a1 = a2 * d; const b2 = rand(2, 5);
+          const b1 = b2 * d; return { rule: `÷${d}`, a1, a2, b1, b2, desc: `divide by ${d}` }; },
+        () => { const s1 = rand(2, 3); const s2 = [2, 3][rand(0, 1)]; const a1 = rand(2, 5); const a2 = (a1 + s1) * s2;
+          const b1 = rand(2, 5); const b2 = (b1 + s1) * s2;
+          return { rule: `+${s1} then ×${s2}`, a1, a2, b1, b2, desc: `add ${s1}, then multiply by ${s2}` }; },
+        () => { const s1 = [2, 3][rand(0, 1)]; const s2 = rand(1, 3); const a1 = rand(2, 4); const a2 = (a1 * s1) + s2;
+          const b1 = rand(2, 4); const b2 = (b1 * s1) + s2;
+          return { rule: `×${s1} then +${s2}`, a1, a2, b1, b2, desc: `multiply by ${s1}, then add ${s2}` }; },
+      ];
+
+      const op = ops[rand(0, ops.length - 1)]();
+      const { rule, a1, a2, b1, b2, desc } = op;
+      const choices = ensureFourChoices([String(b2), String(b2 + 1), String(b2 - 1), String(b2 + 2)], '0');
+      return {
+        type: 'number-analogies',
+        text: `🔢 NUMBER ANALOGY:\n\nTop: ${a1} → ${a2}  (rule: ${desc})\nBottom: ${b1} → ?`,
+        choices: choices,
+        correct: String(b2),
+        explanation: `Top: ${a1} → ${a2}. Apply to bottom: ${b1} → ${b2} (${rule})`,
+        steps: [`📏 Find the rule: ${a1} → ${a2} (${desc})`, `🦘 Apply to bottom: ${b1} → ${b2}`, `✅ Answer: ${b2}`]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  NUMBER SERIES
+    // ─────────────────────────────────────────────
+    function makeNumberSeries() {
+      const patterns = [
+        () => { const s = rand(1, 8); return { seq: [s, s + 1, s + 2, s + 3, s + 4], next: s + 5, desc: '+1 each time' }; },
+        () => { const s = rand(1, 8); return { seq: [s, s + 2, s + 4, s + 6, s + 8], next: s + 10, desc: '+2 each time' }; },
+        () => { const s = rand(12, 20); return { seq: [s, s - 1, s - 2, s - 3, s - 4], next: s - 5,
+          desc: '-1 each time' }; },
+        () => { const s = rand(12, 20); return { seq: [s, s - 2, s - 4, s - 6, s - 8], next: s - 10,
+          desc: '-2 each time' }; },
+        () => { const a = rand(3, 7),
+            b = rand(8, 14); return { seq: [a, b, a, b, a], next: b, desc: 'alternates between two numbers' }; },
+        () => { const s = rand(1, 5); return { seq: [s, s, s + 1, s + 1, s + 2], next: s + 3,
+          desc: 'A-A-B-B-C-C pattern' }; },
+        () => { const s = rand(12, 20); return { seq: [s, s - 1, s - 3, s - 4, s - 6], next: s - 7,
+          desc: 'hops: -1, -2, -1, -2' }; },
+        () => { const s = rand(2, 8); return { seq: [s, s + 1, s + 3, s + 4, s + 6], next: s + 7,
+          desc: 'hops: +1, +2, +1, +2' }; },
+        () => { const a = rand(1, 5),
+            b = rand(10, 15),
+            da = rand(1, 2),
+            db = rand(1, 2);
+          return { seq: [a, b, a + da, b + db, a + da * 2], next: b + db * 2,
+            desc: `two interleaved sequences (odd +${da}, even +${db})` }; },
+        () => { const a = rand(2, 5),
+            b = rand(6, 9),
+            c = rand(10, 13),
+            x = rand(0, 2);
+          return { seq: [a, x, b, x, c], next: x, desc: `alternating with constant ${x}` }; },
+        () => { const s = rand(2, 5); return { seq: [0, 1, 0, 2, 0], next: 3, desc: '0,1,0,2,0,3,0,4...' }; },
+        () => { const s = rand(1, 3); return { seq: [s, s + 1, s + 3, s + 6, s + 10], next: s + 15,
+          desc: 'increasing increments: +1, +2, +3, +4, +5...' }; },
+      ];
+      const pat = patterns[rand(0, patterns.length - 1)]();
+      const { seq, next, desc } = pat;
+      const choices = ensureFourChoices([String(next), String(next + 1), String(next - 1), String(next + 2)], '0');
+      return {
+        type: 'number-series',
+        text: `🔢 NUMBER SERIES:\n\n${seq.join(' · ')} · ___\n\nWhat number comes next?`,
+        choices: choices,
+        correct: String(next),
+        explanation: `Pattern: ${desc}. Next: ${next}`,
+        steps: [`🦘 Look at the hops: ${seq.slice(0, -1).map((v, i) => `${seq[i + 1] - v > 0 ? '+' : ''}${seq[i + 1] - v}`).join(', ')}`,
+          `📏 Pattern: ${desc}`, `✅ Next: ${next}`
+        ]
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  NUMBER PUZZLES
+    // ─────────────────────────────────────────────
+    function makeNumberPuzzle() {
+      const types = [
+        () => { const a = rand(3, 9),
+            b = rand(2, 7),
+            miss = rand(2, 8); const total = a + b + miss;
+          return { text: `🧩 ${total} = ${a} + ${b} + ?`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`➕ ${a}+${b}=${a+b}`, `❓ ${total}−${a+b}=${miss}`] }; },
+        () => { const a = rand(5, 12),
+            miss = rand(3, 9); const total = a + miss;
+          return { text: `🧩 ${total} = ${a} + ?`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`❓ ${total}−${a}=${miss}`] }; },
+        () => { const b = rand(4, 10),
+            miss = rand(3, 8); const total = b + miss;
+          return { text: `🧩 ${total} = ? + ${b}`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`❓ ${total}−${b}=${miss}`] }; },
+        () => { const miss = rand(2, 7),
+            result = rand(3, 8); const a = result + miss;
+          return { text: `🧩 ${a} − ? = ${result}`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`❓ ${a}−${result}=${miss}`] }; },
+        () => { const a = rand(2, 6),
+            b = rand(2, 5),
+            c = rand(1, 4),
+            miss = rand(1, 5); const total = a + b + c + miss;
+          return { text: `🧩 ${total} = ${a} + ${b} + ${c} + ?`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`➕ ${a}+${b}+${c}=${a+b+c}`, `❓ ${total}−${a+b+c}=${miss}`] }; },
+        () => { const miss = rand(3, 9),
+            result = rand(2, 6); const a = miss - result;
+          return { text: `🧩 ? − ${result} = ${a}`, correct: miss, wrong: [miss + 1, miss - 1, miss + 2],
+            steps: [`❓ ${a}+${result}=${miss}`] }; },
+      ];
+      const t = types[rand(0, types.length - 1)]();
+      const choices = ensureFourChoices([String(t.correct), ...t.wrong.map(String)], '0');
+      return {
+        type: 'number-puzzles',
+        text: t.text,
+        choices: choices,
+        correct: String(t.correct),
+        explanation: `${t.steps.join(' → ')}. Answer: ${t.correct}`,
+        steps: t.steps.concat([`✅ Answer: ${t.correct}`])
+      };
+    }
+
+    // ─────────────────────────────────────────────
+    //  SUBTEST DEFINITIONS
+    // ─────────────────────────────────────────────
+    const SUBTESTS = [
+      { id: 'pic-analogies', name: 'Picture Analogies', battery: 'Verbal 🗣️', icon: '🗣️',
+        desc: 'Part:Whole, Animal:Food, Baby:Adult, Tool:Worker & more', quizN: 5, examN: 12, gen: makePictureAnalogy,
+        tipTitle: 'Come up with a RULE first!',
+        tip: 'Before looking at choices, say the rule: "Tire is PART OF car, so leaf is PART OF ___"',
+        example: '"Tire → Car" means tire is PART OF car. "Leaf → ?" → Leaf is PART OF a Tree 🌲',
+        testTips: ['Come up with the rule BEFORE looking at answer choices',
+          'The logic is reversible — "Part:Whole" works as "Whole:Part" too', 'If two answers fit, look for a more specific rule'
+        ] },
+      { id: 'sentence-comp', name: 'Sentence Completion', battery: 'Verbal 🗣️', icon: '👂',
+        desc: 'Listen to a question read aloud, pick the picture answer', quizN: 5, examN: 12, gen: makeSentenceCompletion,
+        tipTitle: 'Listen to the WHOLE sentence!',
+        tip: 'The question is read aloud once — listen to the end before choosing.',
+        example: '"Max sees something floating" → Rock sinks, hammer sinks, coin sinks — Ball floats! ✅',
+        testTips: ['Listen from START to FINISH', 'Eliminate obvious wrong answers', 'Always guess — no penalty for wrong answers'] },
+      { id: 'pic-classification', name: 'Picture Classification', battery: 'Verbal 🗣️', icon: '🖼️',
+        desc: 'Three pictures share a rule — find the fourth', quizN: 5, examN: 12, gen: makePictureClassification,
+        tipTitle: 'Name the FAMILY first!',
+        tip: 'What do they have in common? Say it: "They are all ___!"',
+        example: '"Fork · Spoon · Knife" → Eating Utensils → Chopsticks 🥢 belong!',
+        testTips: ['Name the "family" before looking at choices', 'If one rule fits all, find a MORE SPECIFIC rule'] },
+      { id: 'fig-analogies', name: 'Figure Analogies', battery: 'Nonverbal 🔷', icon: '🔷',
+        desc: '9 rule types: Color, Size, Rotation, Amount, Flip, Sides & more', quizN: 5, examN: 12,
+        gen: makeFigureAnalogy,
+        tipTitle: 'Look for 1 change, then 2 changes!',
+        tip: 'Possible rules: Color · Size · Rotation · Color Reversal · Amount · Flip/Mirror · Whole:Part · Sides · TWO changes at once',
+        example: '"▲▲ → ▼▼▼" means: shape flipped AND count 2→3. Two changes!',
+        testTips: ['Did the SHAPE change? the NUMBER? the COLOR?',
+          'Easier = 1 change — harder = 2 changes simultaneously'
+        ] },
+      { id: 'fig-classification', name: 'Figure Classification', battery: 'Nonverbal 🔷', icon: '🔵',
+        desc: 'Three shapes share a property — find the fourth', quizN: 5, examN: 10, gen: makeFigureClassification,
+        tipTitle: 'Ask detective questions!',
+        tip: 'How many SIDES? FILLED or EMPTY? What DIRECTION?',
+        example: '"▲ △ ▼" — all triangles (3 sides). Find the next triangle!',
+        testTips: ['Ask: how many sides? filled or empty? facing which direction?'] },
+      { id: 'paper-folding', name: 'Paper Folding', battery: 'Nonverbal 🔷', icon: '📄',
+        desc: 'Paper folded & holes punched — see the SVG diagram!', quizN: 5, examN: 10, gen: makePaperFolding,
+        tipTitle: 'Count the layers!',
+        tip: '1 fold = 2 layers. 2 folds = 4 layers. Each punch goes through ALL layers!',
+        example: '1 fold (2 layers) × 1 punch = 2 holes when unfolded',
+        testTips: ['Try with real paper and a hole puncher!', 'Each fold DOUBLES the layers',
+          'Multiply: punches × layers = total holes'
+        ] },
+      { id: 'num-analogies', name: 'Number Analogies', battery: 'Quantitative 🔢', icon: '🔢',
+        desc: 'Add, subtract, multiply, divide — even two-step rules!', quizN: 5, examN: 12, gen: makeNumberAnalogy,
+        tipTitle: 'Find the math rule!',
+        tip: 'Possible: +, −, ×2, ÷2, ×3, + then ×, × then +. Find it on top, apply below.',
+        example: '12→6 (halved). So 8→4 ✅',
+        testTips: ['If +/− doesn\'t work, try ×, ÷, or two-step rules!'] },
+      { id: 'num-series', name: 'Number Series', battery: 'Quantitative 🔢', icon: '📊',
+        desc: '12 pattern types — find the missing number', quizN: 5, examN: 12, gen: makeNumberSeries,
+        tipTitle: 'Watch the HOPS between numbers!',
+        tip: 'Write the jump between each pair: +1, −2, +3... Look for a repeating pattern!',
+        example: '10, 9, 7, 6, 4 → hops: −1, −2, −1, −2 → next −1 = 3 ✅',
+        testTips: ['Write the "hops" first', 'The hops themselves form a pattern'] },
+      { id: 'num-puzzles', name: 'Number Puzzles', battery: 'Quantitative 🔢', icon: '🧩',
+        desc: 'Fill in the missing number — 6 puzzle types', quizN: 5, examN: 10, gen: makeNumberPuzzle,
+        tipTitle: 'Add what you see — find what\'s missing!',
+        tip: 'Add the numbers you CAN see. Then figure out what\'s needed to reach the total.',
+        example: '23 = 9 + 7 + ? → 9+7=16, 23−16=7 ✅',
+        testTips: ['Both sides must be EQUAL', 'Add known numbers, subtract from total'] },
+    ];
+
+    // ─────────────────────────────────────────────
+    //  RENDER FUNCTIONS
+    // ─────────────────────────────────────────────
+    function renderHome() {
+      $('detailView').classList.add('hidden');
+      $('homeView').classList.remove('hidden');
+      updateMasteryCount();
+
+      const batteries = ['Verbal 🗣️', 'Nonverbal 🔷', 'Quantitative 🔢'];
+      const list = $('subtestList');
+      list.innerHTML = batteries.map(bat => {
+        const subs = SUBTESTS.filter(s => s.battery === bat);
+        return `<div class="battery-section">
+          <div class="battery-label">${bat}</div>
+          <div class="subtest-grid">${subs.map(renderCard).join('')}</div>
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.subtest-card').forEach(card => {
+        const open = () => openSubtest(card.dataset.id);
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault();
+            open(); } });
+      });
+
+      announce('CogAT Detective Academy — choose a game!');
+    }
+
+    function renderCard(st) {
+      const done = isMastered(st.id);
+      return `<div class="subtest-card" data-id="${st.id}" role="button" tabindex="0" aria-label="Play ${st.name}">
+        <div class="sc-top">
+          <div class="sc-icon">${st.icon}</div>
+          <div class="sc-status ${done ? 'status-mastered' : 'status-ready'}">${done ? '✅ MASTERED' : '🎮 PLAY'}</div>
+        </div>
+        <div class="sc-name">${st.name}</div>
+        <div class="sc-desc">${st.desc}</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:${done ? 100 : 0}%"></div></div>
+      </div>`;
+    }
+
+    let currentST = null;
+
+    function openSubtest(id) {
+      currentST = SUBTESTS.find(s => s.id === id);
+      if (!currentST) return;
+      $('homeView').classList.add('hidden');
+      $('detailView').classList.remove('hidden');
+      renderStudy();
+      announce(`Opened ${currentST.name}`);
+    }
+
+    function renderStudy() {
+      const st = currentST;
+      const ruleList = st.ruleList ? `<div class="strategy-grid">${st.ruleList.map((r, i) =>
+        `<div class="strategy-card"><span class="s-num">${i + 1}</span>${r}</div>`).join('')}</div>` : '';
+
+      $('detailView').innerHTML = `
+        <div class="panel">
+          <div class="panel-head">
+            <h2>${st.icon} ${st.name} · Study Guide</h2>
+            <button class="back-btn" id="backBtn">← Back</button>
+          </div>
+          <div class="study-content">
+            <div class="kid-tip">🎯 <strong>${st.tipTitle}</strong><br>${st.tip}</div>
+            <div class="example-box">✨ <strong>Example:</strong> ${st.example}</div>
+            ${ruleList}
+            <div class="test-tips-section">
+              <div style="margin-top:12px;"><strong>🕵️ Detective Tips:</strong></div>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">${st.testTips.map((t, i) =>
+        `<div style="display:flex;align-items:flex-start;gap:8px;font-weight:700;font-size:0.85rem;"><span style="background:var(--pink);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;">${i + 1}</span>${t}</div>`
+        ).join('')}</div>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn-primary" id="quizBtn">🎮 Quiz (${st.quizN})</button>
+            <button class="btn-primary btn-green" id="examBtn">🏆 Exam (${st.examN})</button>
+          </div>
+        </div>`;
+
+      $('backBtn').onclick = renderHome;
+      $('quizBtn').onclick = () => startSession('quiz');
+      $('examBtn').onclick = () => startSession('exam');
+      focusEl('#backBtn');
+    }
+
+    // ─────────────────────────────────────────────
+    //  SESSION ENGINE
+    // ─────────────────────────────────────────────
+    let session = null;
+
+    function startSession(mode) {
+      const n = mode === 'quiz' ? currentST.quizN : currentST.examN;
+      const questions = Array.from({ length: n }, () => currentST.gen());
+      session = { mode, questions, idx: 0, score: 0, answers: [], locked: false };
+      renderQuestion();
+      announce(`Starting ${mode} with ${n} questions`);
+    }
+
+    function renderQuestion() {
+      const { mode, questions, idx, score } = session;
+      const q = questions[idx];
+      const total = questions.length;
+
+      let content = '';
+
+      if (q.type === 'sentence-completion') {
+        content = `
+          <div class="listening-cue">
+            <div class="listen-icon">👂</div>
+            <div>
+              <div class="listen-label">Listen carefully — read this question aloud:</div>
+              <div class="listen-text">"${q.sentence}"</div>
+              <button class="speak-btn" id="speakBtn">🔊 Read Aloud</button>
+            </div>
+          </div>
+          <div class="q-text">Pick the picture that answers the question:</div>`;
+      } else if (q.type === 'paper-folding') {
+        content = `<div class="q-text">${q.qText}</div>${q.svgHTML || ''}`;
+      } else if (q.type === 'figure-analogies' || q.type === 'figure-classification') {
+        content = `<div class="q-text" style="text-align:center;font-size:1.1rem;line-height:2.2;">${q.text}</div>`;
+      } else {
+        content = `<div class="q-text">${q.text}</div>`;
+      }
+
+      $('detailView').innerHTML = `
+        <div class="panel">
+          <div class="panel-head">
+            <h2>${mode === 'quiz' ? '🎮 Quiz' : '🏆 Exam'} · ${currentST.name}</h2>
+            <button class="back-btn" id="exitBtn">✕ Exit</button>
+          </div>
+          <div class="q-meta">Q${idx + 1}/${total} · ⭐ ${score}/${idx}</div>
+          <div class="q-progress"><div class="q-progress-fill" style="width:${Math.round((idx / total) * 100)}%"></div></div>
+          ${content}
+          <div class="choices-grid" id="choicesGrid"></div>
+          <div id="feedbackArea"></div>
+          <button class="btn-primary hidden" id="nextBtn">${idx + 1 < total ? 'Next →' : 'Results 🏆'}</button>
+        </div>`;
+
+      $('exitBtn').onclick = renderHome;
+
+      if (q.type === 'sentence-completion') {
+        const sb = $('speakBtn');
+        if (sb) sb.onclick = () => { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(q
+              .sentence);
+            u.rate = 0.85;
+            speechSynthesis.speak(u); } };
+      }
+
+      const grid = $('choicesGrid');
+      q.choices.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+
+        // Handle different choice types
+        if (typeof ch === 'string' && ch.startsWith('<svg')) {
+          // SVG choice (Figure Analogies/Classification)
+          btn.innerHTML = ch;
+          btn.dataset.value = ch;
+        } else if (typeof ch === 'object' && ch.emoji) {
+          // Emoji-based choice (Verbal subtests)
+          btn.innerHTML = `<span class="pic-icon">${ch.emoji}</span><span class="choice-label">${ch.text}</span>`;
+          btn.dataset.value = ch.text;
+        } else {
+          // Plain text (Quantitative and Paper Folding)
+          btn.textContent = ch;
+          btn.dataset.value = ch;
+        }
+
+        btn.onclick = () => handleAnswer(ch, btn);
+        grid.appendChild(btn);
+      });
+
+      $('nextBtn').onclick = advanceSession;
+      focusEl('#choicesGrid .choice-btn');
+    }
+
+    function handleAnswer(selected, btn) {
+      if (session.locked) return;
+      session.locked = true;
+      const q = session.questions[session.idx];
+
+      // Get the value for comparison
+      let selectedValue = selected;
+      if (typeof selected === 'object' && selected.text) selectedValue = selected.text;
+      if (typeof selected === 'object' && selected.emoji) selectedValue = selected.text;
+
+      let correctValue = q.correct;
+      if (typeof q.correct === 'object' && q.correct.text) correctValue = q.correct.text;
+
+      // For SVG-based questions
+      if (typeof selected === 'string' && selected.startsWith('<svg')) {
+        selectedValue = selected;
+        correctValue = q.correct;
+      }
+
+      const correct = selectedValue === correctValue;
+      if (correct) session.score++;
+      session.answers.push({ correct, selected: selectedValue, correctAnswer: correctValue });
+
+      document.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        let bValue = b.dataset.value || b.textContent;
+        if (b.innerHTML.includes('<svg') && b.innerHTML.trim().startsWith('<svg')) {
+          bValue = b.innerHTML;
+        }
+        if (bValue === correctValue) b.classList.add('correct');
+        else if (b === btn && !correct) b.classList.add('wrong');
+      });
+
+      const fb = $('feedbackArea');
+      fb.innerHTML = `<div class="feedback ${correct ? 'correct-fb' : 'wrong-fb'}">
+        ${correct ? '✅ Correct! ' : '❌ Not quite. '} ${q.explanation}
+        ${!correct ? `<br><button class="tutor-btn" id="tutorBtn">🦉 Show step-by-step</button>` : ''}
+      </div>`;
+
+      if (!correct) {
+        $('tutorBtn')?.addEventListener('click', () => {
+          if (!fb.querySelector('.tutor-panel')) {
+            fb.insertAdjacentHTML('beforeend',
+              `<div class="tutor-panel">🦉 <strong>Step-by-step:</strong><br><br>${q.steps.map(s => `📌 ${s}`).join('<br><br>')}</div>`
+              );
+            $('tutorBtn').style.display = 'none';
+          }
+        });
+      }
+      $('nextBtn').classList.remove('hidden');
+      setTimeout(() => { $('nextBtn')?.focus(); }, 50);
+      announce(correct ? `Correct!` : `Incorrect. ${q.explanation}`);
+    }
+
+    function advanceSession() {
+      session.locked = false;
+      session.idx++;
+      if (session.idx < session.questions.length) renderQuestion();
+      else finishSession();
+    }
+
+    function finishSession() {
+      const { mode, score, questions } = session;
+      const total = questions.length;
+      const pct = Math.round((score / total) * 100);
+      const pass = pct >= PASS_THRESHOLD;
+      const gifted = pct >= GIFTED_THRESHOLD;
+
+      if (mode === 'exam' && pass) setMastered(currentST.id);
+
+      const trophy = pass ? '🏆' : '📚';
+      const title = pass ? (mode === 'exam' ? `MASTERED! ${score}/${total}` : `Quiz Passed! ${score}/${total}`) :
+        `Score: ${score}/${total}`;
+      const msg = pass ? (mode === 'exam' ? `Outstanding! You mastered ${currentST.name}! 🎉` :
+        `Great! Now try the Mastery Exam!`) : `Need ${PASS_THRESHOLD}% to pass.`;
+
+      $('detailView').innerHTML = `
+        <div class="results-card ${pass ? 'pass' : 'fail'}">
+          <div class="r-trophy">${trophy}</div>
+          <div class="r-title">${title}</div>
+          ${gifted && pass ? `<div class="gifted-badge">⭐ GIFTED READY (95%+)!</div>` : ''}
+          <div class="r-msg">${msg}<br><br><strong>${score}/${total} (${pct}%)</strong></div>
+          <div class="r-actions">
+            ${pass && mode === 'quiz' ? `<button class="btn-primary btn-green" id="examBtn">🏆 Try Exam</button>` : ''}
+            ${!pass ? `<button class="btn-primary" id="retryBtn">🔄 Try Again</button>` : ''}
+            <button class="btn-primary" id="studyBtn">📖 Study</button>
+            <button class="back-btn" id="homeBtn">🏠 Home</button>
+          </div>
+        </div>`;
+
+      $('homeBtn').onclick = renderHome;
+      $('studyBtn').onclick = renderStudy;
+      $('retryBtn')?.addEventListener('click', () => startSession(mode));
+      $('examBtn')?.addEventListener('click', () => startSession('exam'));
+
+      if (mode === 'exam' && pass) { launchConfetti();
+        showMasteryFlash(); }
+      announce(pass ? `${mode === 'exam' ? 'Mastered' : 'Quiz passed'}: ${score}/${total}` : `Score: ${score}/${total}`);
+    }
+
+    // ─────────────────────────────────────────────
+    //  MASTERY FLASH + CONFETTI
+    // ─────────────────────────────────────────────
+    function showMasteryFlash() {
+      const div = document.createElement('div');
+      div.className = 'mastery-overlay';
+      div.innerHTML = `<div class="mastery-box">
+        <div style="font-size:4rem">🏆</div>
+        <h2>MASTERED!</h2>
+        <p>${currentST.name} complete!</p>
+        <button class="btn-primary" id="flashClose">Continue 🚀</button>
+      </div>`;
+      document.body.appendChild(div);
+      const timer = setTimeout(() => div.remove(), 5000);
+      $('flashClose').onclick = () => { clearTimeout(timer);
+        div.remove(); };
+      setTimeout(() => $('flashClose')?.focus(), 60);
+    }
+
+    function launchConfetti() {
+      const colors = ['#e91e8c', '#f5c518', '#7c3aed', '#22c55e', '#3b82f6', '#ff6b35'];
+      for (let i = 0; i < CONFETTI_COUNT; i++) setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.cssText =
+          `left:${Math.random() * 100}vw;background:${colors[rand(0, colors.length - 1)]};
+          width:${6 + Math.random() * 8}px;height:${6 + Math.random() * 8}px;
+          border-radius:${Math.random() > .5 ? '50%' : '3px'};
+          animation-duration:${1.5 + Math.random() * 2}s;`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3500);
+      }, i * 20);
+    }
+
+    // ─────────────────────────────────────────────
+    //  INIT
+    // ─────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadMastery();
+      $('themeBtn').addEventListener('click', toggleTheme);
+      renderHome();
     });
-  }
-  $('nextBtn').classList.remove('hidden');
-  setTimeout(()=>{ $('nextBtn')?.focus(); },50);
-  announce(correct?`Correct! ${q.explanation}`:`Incorrect. ${q.explanation}`);
-}
-
-function advanceSession() {
-  session.locked=false;
-  session.idx++;
-  if(session.idx<session.questions.length) renderQuestion();
-  else finishSession();
-}
-
-function finishSession() {
-  const {mode,score,questions,answers}=session;
-  const total=questions.length;
-  const pct=Math.round((score/total)*100);
-  const pass=pct>=80;
-  const gifted=pct>=95;
-
-  if(mode==='exam'&&pass) setMastered(currentST.id);
-
-  const trophy=pass?'🏆':'📚';
-  const title=pass?(mode==='exam'?`MASTERED! ${score}/${total}`:`Quiz Passed! ${score}/${total}`):`Score: ${score}/${total}`;
-  const msg=pass
-    ? (mode==='exam'?`Outstanding! You mastered ${currentST.name}! 🎉`:`Great work! Now try the Mastery Exam to earn your trophy!`)
-    : `You need 80% to pass. Review the study guide and try again!`;
-
-  $('detailView').innerHTML=`
-    <div class="results-card ${pass?'pass':'fail'}">
-      <div class="r-trophy">${trophy}</div>
-      <div class="r-title">${title}</div>
-      ${gifted&&pass?`<div class="gifted-badge">⭐ GIFTED READY (95%+)!</div>`:''}
-      <div class="r-msg">${msg}<br><br>
-        ${total>0?`<strong>Correct: ${score}/${total} (${pct}%)</strong><br>Need 80% to pass · 95%+ = Gifted Ready`:''}</div>
-      <div class="r-actions">
-        ${pass&&mode==='quiz'?`<button class="btn-primary btn-green" id="examBtn">🏆 Try Mastery Exam</button>`:''}
-        ${!pass?`<button class="btn-primary" id="retryBtn">🔄 Try Again</button>`:''}
-        <button class="btn-primary" id="studyBtn">📖 Study Guide</button>
-        <button class="back-btn" id="homeBtn">🏠 Home</button>
-      </div>
-    </div>`;
-
-  $('homeBtn').onclick=renderHome;
-  $('studyBtn').onclick=renderStudy;
-  $('retryBtn')?.addEventListener('click',()=>startSession(mode));
-  $('examBtn')?.addEventListener('click',()=>startSession('exam'));
-
-  if(mode==='exam'&&pass) { launchConfetti(); showMasteryFlash(); }
-  announce(pass?`${mode==='exam'?'Mastered':'Quiz passed'}: ${score} out of ${total}`:`Score: ${score} of ${total}. Keep practicing!`);
-}
-
-// ─────────────────────────────────────────────
-//  MASTERY FLASH + CONFETTI
-// ─────────────────────────────────────────────
-function showMasteryFlash() {
-  const div=document.createElement('div'); div.className='mastery-overlay';
-  div.innerHTML=`<div class="mastery-box">
-    <div style="font-size:4rem">🏆</div>
-    <h2>MASTERED!</h2>
-    <p>${currentST.name} complete!<br>Keep going — you're a detective! 🔎</p>
-    <button class="btn-primary" id="flashClose">Continue 🚀</button>
-  </div>`;
-  document.body.appendChild(div);
-  const timer=setTimeout(()=>div.remove(),5000);
-  $('flashClose').onclick=()=>{ clearTimeout(timer); div.remove(); };
-  setTimeout(()=>$('flashClose')?.focus(),60);
-}
-
-function launchConfetti() {
-  const colors=['#e91e8c','#f5c518','#7c3aed','#22c55e','#3b82f6','#ff6b35'];
-  for(let i=0;i<80;i++) setTimeout(()=>{
-    const c=document.createElement('div'); c.className='confetti';
-    c.style.cssText=`left:${Math.random()*100}vw;background:${colors[rand(0,colors.length-1)]};
-      width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
-      border-radius:${Math.random()>.5?'50%':'3px'};
-      animation-duration:${1.5+Math.random()*2}s;`;
-    document.body.appendChild(c); setTimeout(()=>c.remove(),3500);
-  },i*20);
-}
-
-// ─────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  initTheme();
-  loadMastery();
-  $('themeBtn').addEventListener('click',toggleTheme);
-  renderHome();
-});
-</script>
+  </script>
 </body>
 </html>
