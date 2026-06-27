@@ -167,11 +167,12 @@
     function ensureFourChoices(choices, fallback){ let result=uniq(choices); let a=0; while(result.length<4 && a<20){ const extra=`${fallback}${result.length+1}`; if(!result.includes(extra)) result.push(extra); a++; } return shuffle(result.slice(0,4)); }
 
     // ============================================================
-    //  SVG SHAPE HELPER
+    //  SVG SHAPE HELPER — FIXED: All types handled explicitly
     // ============================================================
     function svgShape(type, fill, stroke, size, extra) {
       size = size || 70; const c = size/2; const r = size*0.38;
       let d = '';
+
       if(type==='circle') d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`;
       else if(type==='square') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='triangle') { const pts = [`${c},${c-r}`,`${c-r*0.7},${c+r*0.7}`,`${c+r*0.7},${c+r*0.7}`]; d = `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
@@ -181,27 +182,40 @@
       else if(type==='star') { const pts=[]; for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2-Math.PI/2; const rad=i%2===0?r*0.8:r*0.35; pts.push(`${c+rad*Math.cos(a)},${c+rad*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='arrow-up') { const pts=[`${c},${c-r}`,`${c-r*0.6},${c+r*0.2}`,`${c-r*0.3},${c+r*0.2}`,`${c-r*0.3},${c+r*0.9}`,`${c+r*0.3},${c+r*0.9}`,`${c+r*0.3},${c+r*0.2}`,`${c+r*0.6},${c+r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='arrow-down') { const pts=[`${c},${c+r}`,`${c-r*0.6},${c-r*0.2}`,`${c-r*0.3},${c-r*0.2}`,`${c-r*0.3},${c-r*0.9}`,`${c+r*0.3},${c-r*0.9}`,`${c+r*0.3},${c-r*0.2}`,`${c+r*0.6},${c-r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
-      else if(type==='divided-square') { const s=r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="white" stroke-width="2.5"/>`; }
-      else if(type==='divided-circle') { d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="white" stroke-width="2.5"/>`; }
+      
+      // NEW: Explicit handling for divided shapes
+      else if(type==='divided-square') { 
+        const s = r*0.8; 
+        d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="white" stroke-width="2.5"/>`; 
+      }
+      else if(type==='divided-circle') { 
+        d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="white" stroke-width="2.5"/>`; 
+      }
+      
+      // NEW: Internal lines for Figure Analogies
       else if(type==='with-lines') {
         const s = r*0.8;
         d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>
              <line x1="${c-s}" y1="${c}" x2="${c+s}" y2="${c}" stroke="white" stroke-width="2"/>
              <line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="white" stroke-width="2"/>`;
       }
+      
+      // NEW: Nested shapes
       else if(type==='nested') {
         const outer = extra?.outer || 'circle';
         const inner = extra?.inner || 'square';
-        const oSize = size;
-        const o = svgShape(outer, fill, stroke, oSize).replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
-        const iSize = size * 0.5;
-        const iOffset = (size - iSize) / 2;
-        const innerSvg = svgShape(inner, '#ffffff', stroke || fill, iSize)
-          .replace(/<svg[^>]*>/, `<svg viewBox="0 0 ${iSize} ${iSize}" x="${iOffset}" y="${iOffset}">`)
-          .replace(/<\/svg>/, '</svg>');
-        const innerContent = innerSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
-        d = `${o}${innerContent}`;
+        // Render outer shape
+        const outerSvg = svgShape(outer, fill, stroke, size);
+        // Render inner shape (smaller)
+        const innerSvg = svgShape(inner, '#ffffff', stroke || fill, size * 0.5);
+        // Combine: strip SVG tags and embed inner inside outer
+        const oContent = outerSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
+        const iContent = innerSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
+        // Center the inner shape
+        const offset = size * 0.25;
+        d = `${oContent}<g transform="translate(${offset}, ${offset}) scale(0.5)">${iContent}</g>`;
       }
+
       return `<svg viewBox="0 0 ${size} ${size}" class="vector-figure" style="width:${size}px;height:${size}px;">${d}</svg>`;
     }
 
@@ -351,31 +365,26 @@
     }
 
     // ============================================================
-    //  DIVIDED SHAPES — FIXED: only ONE correct answer
+    //  DIVIDED SHAPES — FIXED: Only one correct answer
     // ============================================================
     function makeDividedShapes() {
       const colors = ['#e91e8c', '#7c3aed', '#22c55e', '#f5c518', '#3b82f6', '#ff6b35'];
       const shapeTypes = ['square', 'circle'];
       
-      // Pick a random shape and color for the correct answer
       const correctShape = shapeTypes[rand(0, shapeTypes.length-1)];
       const color = colors[rand(0, colors.length-1)];
       
-      // The correct answer: a divided shape
       const correct = svgShape(`divided-${correctShape}`, color, color, 70);
       
-      // WRONG: Plain shapes (NOT divided) - these are the ONLY wrong answers
       const wrongs = [
-        svgShape('square', color, color, 70),   // plain square
-        svgShape('circle', color, color, 70),   // plain circle
-        svgShape('triangle', color, color, 70)  // plain triangle
+        svgShape('square', color, color, 70),
+        svgShape('circle', color, color, 70),
+        svgShape('triangle', color, color, 70)
       ];
       
-      // Shuffle and pick 3 wrongs
       const shuffledWrongs = shuffle(wrongs).slice(0, 3);
       const choices = shuffle([correct, ...shuffledWrongs]);
       
-      // Generate example shapes for the question (all divided)
       const ex1 = svgShape('divided-square', colors[0], colors[0], 60);
       const ex2 = svgShape('divided-circle', colors[1], colors[1], 60);
       const ex3 = svgShape('divided-square', colors[2], colors[2], 60);
