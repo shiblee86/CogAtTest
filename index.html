@@ -154,8 +154,8 @@
     const PASS_THRESHOLD = 80;
     const GIFTED_THRESHOLD = 95;
     const CONFETTI_COUNT = 70;
-    const STORAGE_KEY = 'cogat_mastery_v25';
-    const OLD_KEYS = ['cogat_mastery_v24', 'cogat_mastery_v23'];
+    const STORAGE_KEY = 'cogat_mastery_v26';
+    const OLD_KEYS = ['cogat_mastery_v25', 'cogat_mastery_v24'];
 
     const $ = id => document.getElementById(id);
     const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
@@ -167,7 +167,7 @@
     function ensureFourChoices(choices, fallback){ let result=uniq(choices); let a=0; while(result.length<4 && a<20){ const extra=`${fallback}${result.length+1}`; if(!result.includes(extra)) result.push(extra); a++; } return shuffle(result.slice(0,4)); }
 
     // ============================================================
-    //  SVG SHAPE HELPER — FIXED: All types handled explicitly
+    //  SVG SHAPE HELPER
     // ============================================================
     function svgShape(type, fill, stroke, size, extra) {
       size = size || 70; const c = size/2; const r = size*0.38;
@@ -180,10 +180,14 @@
       else if(type==='pentagon') { const pts=[]; for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.7*Math.cos(a)},${c+r*0.7*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='hexagon') { const pts=[]; for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.65*Math.cos(a)},${c+r*0.65*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='star') { const pts=[]; for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2-Math.PI/2; const rad=i%2===0?r*0.8:r*0.35; pts.push(`${c+rad*Math.cos(a)},${c+rad*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
+      
+      // Arrow shapes (used for rotation)
       else if(type==='arrow-up') { const pts=[`${c},${c-r}`,`${c-r*0.6},${c+r*0.2}`,`${c-r*0.3},${c+r*0.2}`,`${c-r*0.3},${c+r*0.9}`,`${c+r*0.3},${c+r*0.9}`,`${c+r*0.3},${c+r*0.2}`,`${c+r*0.6},${c+r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       else if(type==='arrow-down') { const pts=[`${c},${c+r}`,`${c-r*0.6},${c-r*0.2}`,`${c-r*0.3},${c-r*0.2}`,`${c-r*0.3},${c-r*0.9}`,`${c+r*0.3},${c-r*0.9}`,`${c+r*0.3},${c-r*0.2}`,`${c+r*0.6},${c-r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
+      else if(type==='arrow-left') { const pts=[`${c-r},${c}`,`${c+r*0.2},${c-r*0.6}`,`${c+r*0.2},${c-r*0.3}`,`${c+r*0.9},${c-r*0.3}`,`${c+r*0.9},${c+r*0.3}`,`${c+r*0.2},${c+r*0.3}`,`${c+r*0.2},${c+r*0.6}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
+      else if(type==='arrow-right') { const pts=[`${c+r},${c}`,`${c-r*0.2},${c-r*0.6}`,`${c-r*0.2},${c-r*0.3}`,`${c-r*0.9},${c-r*0.3}`,`${c-r*0.9},${c+r*0.3}`,`${c-r*0.2},${c+r*0.3}`,`${c-r*0.2},${c+r*0.6}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>`; }
       
-      // NEW: Explicit handling for divided shapes
+      // Divided shapes
       else if(type==='divided-square') { 
         const s = r*0.8; 
         d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="white" stroke-width="2.5"/>`; 
@@ -192,7 +196,7 @@
         d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/><line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="white" stroke-width="2.5"/>`; 
       }
       
-      // NEW: Internal lines for Figure Analogies
+      // Internal lines for Figure Analogies
       else if(type==='with-lines') {
         const s = r*0.8;
         d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke||fill}" stroke-width="2"/>
@@ -200,18 +204,14 @@
              <line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="white" stroke-width="2"/>`;
       }
       
-      // NEW: Nested shapes
+      // Nested shapes
       else if(type==='nested') {
         const outer = extra?.outer || 'circle';
         const inner = extra?.inner || 'square';
-        // Render outer shape
         const outerSvg = svgShape(outer, fill, stroke, size);
-        // Render inner shape (smaller)
         const innerSvg = svgShape(inner, '#ffffff', stroke || fill, size * 0.5);
-        // Combine: strip SVG tags and embed inner inside outer
         const oContent = outerSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
         const iContent = innerSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
-        // Center the inner shape
         const offset = size * 0.25;
         d = `${oContent}<g transform="translate(${offset}, ${offset}) scale(0.5)">${iContent}</g>`;
       }
@@ -365,7 +365,7 @@
     }
 
     // ============================================================
-    //  DIVIDED SHAPES — FIXED: Only one correct answer
+    //  DIVIDED SHAPES
     // ============================================================
     function makeDividedShapes() {
       const colors = ['#e91e8c', '#7c3aed', '#22c55e', '#f5c518', '#3b82f6', '#ff6b35'];
@@ -439,22 +439,54 @@
       };
     }
 
+    // ============================================================
+    //  ROTATING SHAPES — FIXED: actual rotation, not shape type change
+    // ============================================================
     function makeRotatingShapes() {
-      const shapes = ['arrow-up', 'arrow-down', 'triangle', 'diamond'];
-      const from = shapes[rand(0, shapes.length-1)];
-      const to = shapes[rand(0, shapes.length-1)];
+      // These shapes have clear directional orientation
+      const shapeTypes = ['arrow-up', 'arrow-down', 'arrow-left', 'arrow-right'];
+      
+      // Pick a starting shape
+      const from = shapeTypes[rand(0, shapeTypes.length-1)];
+      
+      // Pick a rotation amount (90°, 180°, 270°)
+      const rotations = [90, 180, 270];
+      const rotation = rotations[rand(0, rotations.length-1)];
+      
+      // Determine the target shape based on rotation
+      const arrowMap = {
+        'arrow-up': ['arrow-right', 'arrow-down', 'arrow-left'],
+        'arrow-right': ['arrow-down', 'arrow-left', 'arrow-up'],
+        'arrow-down': ['arrow-left', 'arrow-up', 'arrow-right'],
+        'arrow-left': ['arrow-up', 'arrow-right', 'arrow-down']
+      };
+      const rotIndex = rotations.indexOf(rotation);
+      const to = arrowMap[from][rotIndex];
+      
       const color = ['#e91e8c', '#7c3aed', '#22c55e', '#f5c518', '#3b82f6', '#ff6b35'][rand(0,5)];
+      
       const svgFrom = svgShape(from, color, color, 60);
       const svgTo = svgShape(to, color, color, 60);
       const svgBottom = svgShape(from, color, color, 60);
       const svgAnswer = svgShape(to, color, color, 60);
+      
+      // Wrong answers: wrong rotation direction or wrong shape
       const wrongs = [
-        svgShape(from, color, color, 60),
-        svgShape(shapes[rand(0, shapes.length-1)], color, color, 60),
-        svgShape(shapes[rand(0, shapes.length-1)], color, color, 60)
+        svgShape(from, color, color, 60),  // no rotation
+        svgShape(arrowMap[from][(rotIndex + 1) % 3], color, color, 60), // wrong direction
+        svgShape(['triangle', 'square', 'diamond'][rand(0,2)], color, color, 60) // different shape
       ];
+      
       const choices = shuffle([svgAnswer, ...wrongs]);
-      return { type:'figure-analogies', text:`🔷 What is the rule? ${from} → ${to}\n\n${svgFrom}  →  ${svgTo}\n\n${svgBottom}  →  ?`, choices, correct:svgAnswer, explanation:`✅ Rule: The shape changed from ${from} to ${to}.`, steps:[`🔍 The top row shows: ${from} → ${to}`, `✅ Apply the same change: ${from} → ${to}`] };
+      
+      return {
+        type: 'figure-analogies',
+        text: `🔷 What is the rule? ${from} rotates ${rotation}° → ${to}\n\n${svgFrom}  →  ${svgTo}\n\n${svgBottom}  →  ?`,
+        choices: choices,
+        correct: svgAnswer,
+        explanation: `✅ Rule: The shape rotated ${rotation}° (${from} → ${to}).`,
+        steps: [`🔍 The arrow rotated ${rotation}° to point ${to}`, `✅ Apply the same rotation to the bottom shape.`]
+      };
     }
 
     // ============================================================
@@ -522,7 +554,7 @@
       { id:'paper-folding', name:'Paper Folding', battery:'Nonverbal 🔷', icon:'📄', desc:'Paper folded & holes punched — see the SVG diagram!', quizN:5, examN:10, gen:makePaperFolding, tipTitle:'Count the layers!', tip:'1 fold = 2 layers. 2 folds = 4 layers. Each punch goes through ALL layers!', example:'1 fold (2 layers) × 1 punch = 2 holes when unfolded', testTips:['Try with real paper!','Each fold DOUBLES the layers'] },
       { id:'divided-shapes', name:'Divided Shapes', battery:'Nonverbal 🔷', icon:'🔪', desc:'Identify shapes divided by lines or patterns', quizN:5, examN:10, gen:makeDividedShapes, tipTitle:'Look for the division!', tip:'Are they cut in half? Is the line vertical or diagonal?', example:'A square divided in half vertically → look for the line!', testTips:['Look for a line dividing the shape','The division can be vertical, horizontal, or diagonal'] },
       { id:'nested-shapes', name:'Nested Shapes', battery:'Nonverbal 🔷', icon:'🔄', desc:'Identify shapes with smaller shapes inside them', quizN:5, examN:10, gen:makeNestedShapes, tipTitle:'Look INSIDE!', tip:'Does the shape have a smaller shape inside it?', example:'A circle with a square inside → look for the inner shape!', testTips:['Look for a shape inside another shape','The inner shape can be different from the outer shape'] },
-      { id:'rotating-shapes', name:'Rotating Shapes', battery:'Nonverbal 🔷', icon:'🔄', desc:'Identify how shapes rotate or change direction', quizN:5, examN:10, gen:makeRotatingShapes, tipTitle:'Follow the direction!', tip:'Look at which way the shape is pointing — did it turn?', example:'Arrow up → Arrow down (rotated 180°)', testTips:['Look at the DIRECTION the shape points','Some shapes rotate 90°, 180°, or 270°'] },
+      { id:'rotating-shapes', name:'Rotating Shapes', battery:'Nonverbal 🔷', icon:'🔄', desc:'Identify how shapes rotate or change direction', quizN:5, examN:10, gen:makeRotatingShapes, tipTitle:'Follow the direction!', tip:'Look at which way the shape is pointing — did it turn?', example:'Arrow up → Arrow right (rotated 90° clockwise)', testTips:['Look at the DIRECTION the shape points','The shape type stays the same, only the direction changes'] },
       { id:'num-analogies', name:'Number Analogies', battery:'Quantitative 🔢', icon:'🔢', desc:'Add, subtract, multiply, divide — even two-step rules!', quizN:5, examN:12, gen:makeNumberAnalogy, tipTitle:'Find the math rule!', tip:'Possible: +, −, ×2, ÷2, ×3, + then ×, × then +.', example:'12→6 (halved). So 8→4 ✅', testTips:['If +/− doesn\'t work, try ×, ÷, or two-step rules!'] },
       { id:'num-series', name:'Number Series', battery:'Quantitative 🔢', icon:'📊', desc:'12 pattern types — find the missing number', quizN:5, examN:12, gen:makeNumberSeries, tipTitle:'Watch the HOPS between numbers!', tip:'Write the jump between each pair: +1, −2, +3... Look for a repeating pattern!', example:'10, 9, 7, 6, 4 → hops: −1, −2, −1, −2 → next −1 = 3 ✅', testTips:['Write the "hops" first','The hops themselves form a pattern'] },
       { id:'num-puzzles', name:'Number Puzzles', battery:'Quantitative 🔢', icon:'🧩', desc:'Fill in the missing number — 6 puzzle types', quizN:5, examN:10, gen:makeNumberPuzzle, tipTitle:'Add what you see — find what\'s missing!', tip:'Add the numbers you CAN see. Then figure out what\'s needed to reach the total.', example:'23 = 9 + 7 + ? → 9+7=16, 23−16=7 ✅', testTips:['Both sides must be EQUAL','Add known numbers, subtract from total'] },
