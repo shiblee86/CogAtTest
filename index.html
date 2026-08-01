@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Safia's CogAT Detective Academy · Precision Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <!-- twemoji: renders emoji as actual color image graphics instead of relying on
-       the OS's font for emoji glyphs. Some platforms (e.g. many Linux desktops)
-       don't ship a color emoji font and silently fall back to plain monochrome
-       outline glyphs, which is unreadable for a young child. This guarantees the
-       same colorful picture everywhere. -->
-  <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.3/dist/twemoji.min.js" integrity="sha384-Y5xukbGJwykbHHkTbLJykYLcBPFxrwipTbEh0puxhkz9CZ90raTPGe2Ks4vCxsYU" crossorigin="anonymous"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -228,18 +222,12 @@
   const announce = msg => { const el=$('liveRegion'); if(el) el.textContent=msg; };
   const focusEl = sel => setTimeout(()=>{ const el=document.querySelector(sel); if(el){el.setAttribute('tabindex','-1');el.focus();} },60);
 
-  // Converts any emoji characters within `root` into real color <img> graphics via
-  // twemoji, so appearance is identical across every OS/browser instead of depending
-  // on whatever (possibly missing) color emoji font the user's system has installed.
-  // Safe no-op if the CDN script hasn't loaded (offline, blocked) -- emoji just
-  // render as plain text in that fallback case, same as before.
-  function applyTwemoji(root) {
-    try {
-      if (typeof twemoji !== 'undefined') {
-        twemoji.parse(root || document.body, { folder: 'svg', ext: '.svg' });
-      }
-    } catch (e) { console.warn('twemoji parse skipped:', e); }
-  }
+  // NOTE: icon rendering for verbal-content pictures goes exclusively through the
+  // iconSVG() function below, which builds a precisely-sized <img> tag directly.
+  // A page-wide "scan every emoji character and swap it for an image" approach
+  // was tried and removed -- it also converted decorative UI emoji (headers,
+  // buttons, badges) into unsized images that rendered at huge default
+  // dimensions. iconSVG() is the only sanctioned path for emoji-as-picture.
 
   function ensureFour(choices, fallback) {
     let result = uniq(choices);
@@ -294,11 +282,27 @@
     const size = opts.size || 70;
     const stroke = opts.stroke || '#1a1a2e';
     const strokeWidth = opts.strokeWidth || 2;
-    const fill = opts.fill || 'none';
+    const rawFill = opts.fill || 'none';
     const rotation = opts.rotation || 0;
     const scale = opts.scale || 1;
     const reflect = opts.reflect || false;
     const dashed = opts.dashed || false;
+    // Texture/pattern fills (dots, stripes, checker) in addition to solid colors —
+    // the real test relies heavily on these, not just plain shading. Pattern IDs
+    // are DETERMINISTIC (derived from kind+color, not a global counter) so two
+    // calls that should look identical always produce byte-identical markup —
+    // this matters both for correct duplicate-choice detection and so multiple
+    // patterns with the same id on one page always mean the same visual pattern.
+    let fill = rawFill;
+    let defsMarkup = '';
+    if (rawFill === 'dots' || rawFill === 'stripes' || rawFill === 'checker') {
+      const patColor = (opts.patternColor || stroke).replace('#', '');
+      const patId = `pat_${rawFill}_${patColor}`;
+      if (rawFill === 'dots') defsMarkup = `<pattern id="${patId}" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="white"/><circle cx="3" cy="3" r="1.3" fill="#${patColor}"/></pattern>`;
+      else if (rawFill === 'stripes') defsMarkup = `<pattern id="${patId}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="white"/><rect width="3" height="6" fill="#${patColor}"/></pattern>`;
+      else if (rawFill === 'checker') defsMarkup = `<pattern id="${patId}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="white"/><rect width="4" height="4" fill="#${patColor}"/><rect x="4" y="4" width="4" height="4" fill="#${patColor}"/></pattern>`;
+      fill = `url(#${patId})`;
+    }
     const c = size/2;
     const r = size*0.35;
     let d = '';
@@ -328,13 +332,19 @@
     else if (type === 'flag') { const s = r*0.85; const pts = [`${c-s},${c-s}`,`${c+s},${c-s*0.35}`,`${c-s},${c+s*0.3}`,`${c-s},${c-s}`]; d = `<line x1="${c-s}" y1="${c-s}" x2="${c-s}" y2="${c+s}" stroke="${stroke}" stroke-width="${strokeWidth}"/><polygon points="${pts.join(' ')}" fill="${fill==='none'?opts.shadeColor||'#888':fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'lshape') { const s = r*0.75; const pts=[`${c-s},${c-s}`,`${c},${c-s}`,`${c},${c}`,`${c+s},${c}`,`${c+s},${c+s}`,`${c-s},${c+s}`]; d = `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
 
+    // Generic overlays that work on ANY base shape above (not just the two
+    // hardcoded 'divided-square'/'divided-circle' types) so questions can draw
+    // from the full shape pool instead of always looking the same.
+    if (opts.divided) d += `<line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+
     let transform = '';
     if (rotation) transform += `rotate(${rotation}, ${c}, ${c}) `;
     if (reflect) transform += `scale(-1, 1) translate(${-size}, 0) `;
     if (scale !== 1) transform += `scale(${scale}) translate(${c*(1-scale)}, ${c*(1-scale)}) `;
 
     const finalD = transform ? `<g transform="${transform}">${d}</g>` : d;
-    return `<svg viewBox="0 0 ${size} ${size}" class="vector-figure" style="width:${size}px;height:${size}px;display:block;margin:0 auto;" aria-hidden="true">${finalD}</svg>`;
+    const defsBlock = defsMarkup ? `<defs>${defsMarkup}</defs>` : '';
+    return `<svg viewBox="0 0 ${size} ${size}" class="vector-figure" style="width:${size}px;height:${size}px;display:block;margin:0 auto;" aria-hidden="true">${defsBlock}${finalD}</svg>`;
   }
 
   function renderMatrix(figures, cols) {
@@ -752,7 +762,9 @@
     'wheel': '⚙️',
     'worm': '🐛',
     'wrench': '🔧',
-    'help-circle': '❓'
+    'help-circle': '❓',
+    'bee': '🐝', 'ant': '🐜', 'honey': '🍯', 'cheese': '🧀',
+    'tulip': '🌷', 'branch': '🌿', 'hole': '🕳️', 'palette': '🎨'
   };
 
   function iconSVG(name, size) {
@@ -781,21 +793,18 @@
 
   // ---- PICTURE ANALOGIES ----
   const ANALOGY_PAIRS = [
-    {a:'Wheel',b:'Car',c:'Slice',d:'Pizza', rule:'Part → Whole', icons:['settings','car','pizza','pizza']},
-    {a:'Petal',b:'Flower',c:'Branch',d:'Tree', rule:'Part → Whole', icons:['flower','flower','tree','tree']},
+    {a:'Page',b:'Book',c:'Wheel',d:'Car', rule:'Part → Whole', icons:['file','book','settings','car']},
+    {a:'Petal',b:'Flower',c:'Branch',d:'Tree', rule:'Part → Whole', icons:['tulip','flower','branch','tree']},
     {a:'Key',b:'Lock',c:'Battery',d:'Toy', rule:'Part → Whole', icons:['key','lock','battery','toy']},
-    {a:'Page',b:'Book',c:'Note',d:'Song', rule:'Part → Whole', icons:['file','book','music','music']},
     {a:'Bird',b:'Nest',c:'Fish',d:'Ocean', rule:'Animal → Home', icons:['bird','home','fish','waves']},
-    {a:'Bee',b:'Hive',c:'Ant',d:'Hill', rule:'Animal → Home', icons:['bug','home','bug','mountain']},
-    {a:'Rabbit',b:'Burrow',c:'Fox',d:'Den', rule:'Animal → Home', icons:['rabbit','home','fox','home']},
+    {a:'Bee',b:'Hive',c:'Ant',d:'Hill', rule:'Animal → Home', icons:['bee','home','ant','mountain']},
+    {a:'Rabbit',b:'Burrow',c:'Fox',d:'Den', rule:'Animal → Home', icons:['rabbit','hole','fox','home']},
     {a:'Tiger',b:'Meat',c:'Rabbit',d:'Carrot', rule:'Animal → Food', icons:['tiger','beef','rabbit','carrot']},
-    {a:'Bear',b:'Honey',c:'Mouse',d:'Cheese', rule:'Animal → Food', icons:['bear','beef','mouse','beef']},
+    {a:'Bear',b:'Honey',c:'Mouse',d:'Cheese', rule:'Animal → Food', icons:['bear','honey','mouse','cheese']},
     {a:'Car',b:'Road',c:'Boat',d:'Water', rule:'Object → Location', icons:['car','road','boat','waves']},
     {a:'Train',b:'Tracks',c:'Plane',d:'Sky', rule:'Object → Location', icons:['train','road','plane','cloud']},
-    {a:'Doctor',b:'Stethoscope',c:'Chef',d:'Knife', rule:'Worker → Tool', icons:['user','heart','user','knife']},
-    {a:'Artist',b:'Brush',c:'Carpenter',d:'Hammer', rule:'Worker → Tool', icons:['user','paintbrush','user','hammer']},
+    {a:'Artist',b:'Brush',c:'Carpenter',d:'Hammer', rule:'Worker → Tool', icons:['palette','paintbrush','saw','hammer']},
     {a:'Hot',b:'Fire',c:'Cold',d:'Ice', rule:'Similar → Similar', icons:['sun','flame','snowflake','ice']},
-    {a:'Day',b:'Sun',c:'Night',d:'Moon', rule:'Similar → Similar', icons:['sun','sun','moon','moon']},
     {a:'Cup',b:'Water',c:'Basket',d:'Fruit', rule:'Container → Contents', icons:['beaker','droplet','shopping-basket','apple']},
   ];
 
@@ -898,7 +907,7 @@
   const FIGURE_TYPES = ['circle','square','triangle','diamond','pentagon','hexagon','star'];
 
   function makeFigureAnalogy() {
-    const types = ['rotate','reflect','shade','size','lines','diagonal','nested','halfshade'];
+    const types = ['rotate','reflect','shade','size','lines','diagonal','nested','halfshade','pattern','compound'];
     const t = pick(types);
     const baseShape = pick(FIGURE_TYPES);
     const color = '#1a1a2e';
@@ -1005,7 +1014,7 @@
         svgFigure('nested', {size:60, stroke:color, outer:'circle', inner:'triangle'}),
         svgFigure('diamond', {size:60, stroke:color}),
       ];
-    } else {
+    } else if (t === 'halfshade') {
       tl = svgFigure('half-shaded-square', {size:60, stroke:color, shadeColor:'#ccc'});
       tr = svgFigure('half-shaded-circle', {size:60, stroke:color, shadeColor:'#ccc'});
       bl = svgFigure('square', {size:60, stroke:color});
@@ -1017,6 +1026,39 @@
         svgFigure('square', {size:60, stroke:color}),
         svgFigure('half-shaded-circle', {size:60, stroke:color, shadeColor:'#ccc'}),
         svgFigure('circle', {size:60, stroke:color}),
+      ];
+    } else if (t === 'pattern') {
+      // Texture fill: empty outline gains a dot/stripe/checker pattern — the real
+      // test uses this constantly, not just plain solid shading.
+      const texture = pick(['dots','stripes','checker']);
+      tl = svgFigure(baseShape, {size:60, stroke:color, fill:'none'});
+      tr = svgFigure(baseShape, {size:60, stroke:color, fill:texture});
+      bl = svgFigure('pentagon', {size:60, stroke:color, fill:'none'});
+      br = svgFigure('pentagon', {size:60, stroke:color, fill:texture});
+      correct = br;
+      rule = `The shape gains a ${texture} pattern`;
+      steps = [`The shape changes from empty (outline only) to a ${texture} pattern.`, `Give the bottom shape that same ${texture} pattern.`];
+      wrongs = [
+        svgFigure('pentagon', {size:60, stroke:color, fill:'none'}),
+        svgFigure('pentagon', {size:60, stroke:color, fill:pick(['dots','stripes','checker'].filter(x=>x!==texture))}),
+        svgFigure('hexagon', {size:60, stroke:color, fill:texture}),
+      ];
+    } else {
+      // Compound: two attributes change at once (rotation + texture), matching
+      // the real test's harder items where more than one thing changes together.
+      const texture = pick(['dots','stripes','checker']);
+      const turn = pick([90,180,270]);
+      tl = svgFigure('flag', {size:60, stroke:color, rotation:0, fill:'none'});
+      tr = svgFigure('flag', {size:60, stroke:color, rotation:turn, fill:texture});
+      bl = svgFigure('lshape', {size:60, stroke:color, rotation:0, fill:'none'});
+      br = svgFigure('lshape', {size:60, stroke:color, rotation:turn, fill:texture});
+      correct = br;
+      rule = `The shape rotates ${turn}° AND gains a ${texture} pattern, both at once`;
+      steps = [`Two things change together: the shape rotates ${turn}°, and it gains a ${texture} pattern.`, `Apply BOTH changes to the bottom shape.`];
+      wrongs = [
+        svgFigure('lshape', {size:60, stroke:color, rotation:turn, fill:'none'}),
+        svgFigure('lshape', {size:60, stroke:color, rotation:0, fill:texture}),
+        svgFigure('lshape', {size:60, stroke:color, rotation:(turn+90)%360, fill:texture}),
       ];
     }
 
@@ -1042,20 +1084,182 @@
     return validateQuestion(q, 'fig-analogies');
   }
 
+  // Renders several copies of a shape as ONE composite figure, either loosely
+  // clustered together or stacked in a column of individual boxes — used by
+  // the count/arrangement question format below.
+  function clusterSVG(shapeType, count, mode, opts) {
+    opts = opts || {};
+    const stroke = opts.stroke || '#1a1a1a';
+    const fill = opts.fill || 'none';
+    const mini = 24;
+    const strip = (svg) => svg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
+    if (mode === 'cluster') {
+      const cols = 2;
+      const rows = Math.ceil(count / cols);
+      const W = cols * mini + 10, H = rows * mini + 10;
+      let inner = '';
+      for (let i = 0; i < count; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        const x = 5 + col * mini, y = 5 + row * mini;
+        inner += `<g transform="translate(${x},${y})">${strip(svgFigure(shapeType, {size: mini - 4, stroke, fill}))}</g>`;
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block;margin:0 auto;" aria-hidden="true">${inner}</svg>`;
+    }
+    const W = mini + 14, H = count * (mini + 6) + 6;
+    let inner = '';
+    for (let i = 0; i < count; i++) {
+      const y = 3 + i * (mini + 6);
+      inner += `<rect x="2" y="${y}" width="${W-4}" height="${mini+2}" fill="none" stroke="${stroke}" stroke-width="1" opacity="0.35"/>`;
+      inner += `<g transform="translate(7,${y+1})">${strip(svgFigure(shapeType, {size: mini - 2, stroke, fill}))}</g>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block;margin:0 auto;" aria-hidden="true">${inner}</svg>`;
+  }
+
+  // ---- FIGURE SERIES (3-panel progressive rule, predict the 4th) ----
+  // A different layout from the 2x2 analogy: three boxes are shown applying the
+  // SAME step of change again and again; the child predicts what panel 4 looks
+  // like by continuing the pattern.
+  function makeFigureSeriesProgressive() {
+    const stroke = '#1a1a1a';
+    const progressionTypes = ['shrink', 'rotate', 'pattern-cycle', 'sides-increase'];
+    const pt = pick(progressionTypes);
+    let panels = [], rule, steps;
+
+    if (pt === 'shrink') {
+      const shape = pick(FIGURE_TYPES);
+      const scales = [1, 0.78, 0.58, 0.4];
+      panels = scales.map(s => svgFigure(shape, {size:60, stroke, scale:s}));
+      rule = 'The shape gets smaller by the same amount in each panel.';
+      steps = ['Compare panel 1 to panel 2 — the shape shrinks by a set amount.', 'That same shrink happens again from panel 2 to panel 3, and again to panel 4.'];
+    } else if (pt === 'rotate') {
+      const step = pick([45, 90, 135]);
+      panels = [0,1,2,3].map(i => svgFigure('flag', {size:60, stroke, rotation:(i*step)%360, fill:'#888'}));
+      rule = `The shape rotates ${step}° further in each panel.`;
+      steps = [`Compare panel 1 to panel 2 — the shape turns ${step}°.`, `That same turn happens again each panel: panel 4 continues the rotation.`];
+    } else if (pt === 'pattern-cycle') {
+      const shape = pick(FIGURE_TYPES);
+      const fills = ['none','dots','stripes','checker'];
+      panels = fills.map(f => svgFigure(shape, {size:60, stroke, fill:f}));
+      rule = 'The pattern gets denser each panel: empty, then dots, then stripes, then checker.';
+      steps = ['Watch the fill pattern change from panel to panel: empty → dots → stripes.', 'The pattern keeps getting busier — panel 4 continues that progression to checker.'];
+    } else {
+      const seq = ['triangle','square','pentagon','hexagon'];
+      panels = seq.map(s => svgFigure(s, {size:60, stroke}));
+      rule = 'The shape gains one more side in each panel.';
+      steps = ['Count the sides: 3, then 4, then 5.', 'Each panel has one more side than the last — panel 4 continues to 6 sides.'];
+    }
+
+    const correct = panels[3];
+    let wrongs = [panels[1], panels[2]];
+    if (pt === 'shrink') {
+      const shape = panels[0]; // reuse same shape family via a slightly-off scale
+      wrongs.push(svgFigure(pick(FIGURE_TYPES), {size:60, stroke, scale:0.4}));
+    } else if (pt === 'rotate') {
+      wrongs.push(svgFigure('flag', {size:60, stroke, rotation:0, fill:'#888'}));
+    } else if (pt === 'pattern-cycle') {
+      wrongs.push(svgFigure(pick(FIGURE_TYPES), {size:60, stroke, fill:'checker'}));
+    } else {
+      wrongs.push(svgFigure('star', {size:60, stroke}));
+    }
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:60, stroke, dashed:true, rotation: rand(0,3)*30});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const rowHTML = renderMatrix(panels.slice(0,3), 3);
+    const q = {
+      type: 'figure-analogies',
+      text: `Look at how the pattern changes across these three panels, then pick what panel 4 would look like:\n\n${rowHTML}`,
+      choices, correct,
+      explanation: rule,
+      steps,
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-analogies');
+  }
+
+  // ---- SHAPE COUNT / ARRANGEMENT SERIES ----
+  // Tests count + shape-identity together: a loose cluster of N shapes is
+  // rearranged into a column of N boxes, one shape per box. The child must
+  // preserve BOTH the shape and the count when applying the same rule below.
+  function makeShapeCountSeries() {
+    const stroke = '#1a1a1a';
+    const shapeA = pick(FIGURE_TYPES);
+    let shapeB = pick(FIGURE_TYPES);
+    while (shapeB === shapeA) shapeB = pick(FIGURE_TYPES);
+    const countTop = rand(2,4);
+    const countBottom = rand(2,4);
+    const tl = clusterSVG(shapeA, countTop, 'cluster', {stroke});
+    const tr = clusterSVG(shapeA, countTop, 'column', {stroke});
+    const bl = clusterSVG(shapeB, countBottom, 'cluster', {stroke});
+    const correct = clusterSVG(shapeB, countBottom, 'column', {stroke});
+
+    let wrongCount = countBottom + (pick([1,-1]));
+    if (wrongCount < 2) wrongCount = 4;
+    if (wrongCount > 4) wrongCount = 2;
+    let wrongs = [
+      clusterSVG(shapeB, wrongCount, 'column', {stroke}),   // wrong count
+      clusterSVG(shapeA, countBottom, 'column', {stroke}),  // wrong shape (kept top's shape)
+      clusterSVG(shapeB, countBottom, 'cluster', {stroke}), // forgot to rearrange into a column
+    ];
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = clusterSVG(pick(FIGURE_TYPES), rand(2,4), pick(['column','cluster']), {stroke});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix([tl, tr, bl, '?'], 2);
+    const q = {
+      type: 'figure-analogies',
+      text: `Find the rule connecting the top row, then apply it to the bottom row:\n\n${matrixHTML}`,
+      choices, correct,
+      explanation: 'Each shape from the cluster gets its own box, stacked in a column — same shape, same count, just rearranged.',
+      steps: ['Count how many shapes are in the cluster, and notice which shape it is.', 'Each shape gets placed into its own box, stacked vertically.', 'Apply that to the bottom cluster: keep the same shape and the same count, arranged in a column.'],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-analogies');
+  }
+
+  // Mixes all three Figure Analogies formats together so a quiz/exam draws from
+  // the classic 2x2 analogy, the 3-panel progressive series, AND the
+  // count/arrangement format rather than only ever showing one shape.
+  function genFigureAnalogyPool() {
+    const r = Math.random();
+    if (r < 0.5) return makeFigureAnalogy();
+    if (r < 0.78) return makeFigureSeriesProgressive();
+    return makeShapeCountSeries();
+  }
+
   // ---- FIGURE CLASSIFICATION ----
+  // Session-scoped "shuffle bag": guarantees every rule type is used once before
+  // any rule repeats, instead of pure random picking (which -- even from 11
+  // options -- still visibly clusters/repeats within a 12-question exam).
+  let figClassRuleBag = [];
+  function nextRuleIndex(poolSize) {
+    if (figClassRuleBag.length === 0) figClassRuleBag = shuffle([...Array(poolSize).keys()]);
+    return figClassRuleBag.pop();
+  }
+
   function makeFigureClassification() {
     const rules = [
       () => { const s=pick(FIGURE_TYPES); return { desc:`All are ${s}s`, group:[s,s,s].map(x=>svgFigure(x,{size:55,stroke:'#1a1a2e'})), correct:svgFigure(s,{size:55,stroke:'#1a1a2e'}), wrongs:FIGURE_TYPES.filter(x=>x!==s).slice(0,3).map(x=>svgFigure(x,{size:55,stroke:'#1a1a2e'})), steps:[`They are all ${s}s.`, `Find the answer choice that is also a ${s}.`] }; },
       () => { return { desc:'All have 4 sides', group:['square','diamond','square'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), correct:svgFigure('diamond',{size:55,stroke:'#1a1a2e'}), wrongs:['triangle','circle','pentagon'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['Count the sides on each shape — they all have 4 sides.', 'Find the answer choice that also has 4 sides.'] }; },
-      () => { return { desc:'All are divided in half', group:['divided-square','divided-circle','divided-square'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), correct:svgFigure('divided-circle',{size:55,stroke:'#1a1a2e'}), wrongs:['square','circle','triangle'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a line dividing the shape exactly in half.', 'Find the answer choice that is also divided in half.'] }; },
+      () => { return { desc:'All are divided in half', group:shuffle(FIGURE_TYPES).slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',divided:true})), correct:svgFigure(pick(FIGURE_TYPES),{size:55,stroke:'#1a1a2e',divided:true}), wrongs:shuffle(FIGURE_TYPES).slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a line dividing the shape exactly in half.', 'Find the answer choice that is also divided in half.'] }; },
       () => { return { desc:'All have nested shapes', group:[
         svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'circle',inner:'square'}),
         svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'square',inner:'circle'}),
         svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'diamond',inner:'star'})
       ], correct:svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'star',inner:'diamond'}), wrongs:FIGURE_TYPES.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a smaller shape nested inside a larger one.', 'Find the answer choice that also has a shape nested inside it.'] }; },
-      () => { return { desc:'All are shaded', group:FIGURE_TYPES.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'#ccc'})), correct:svgFigure(pick(FIGURE_TYPES),{size:55,stroke:'#1a1a2e',fill:'#ccc'}), wrongs:FIGURE_TYPES.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They are all filled in with shading.', 'Find the answer choice that is also shaded.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are shaded', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'#ccc'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'#ccc'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They are all filled in with shading.', 'Find the answer choice that is also shaded.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a dot pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'dots'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'dots'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a dotted pattern filled in.', 'Find the answer choice that also has a dotted pattern.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a striped pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'stripes'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'stripes'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'checker'})), steps:['They all have a striped pattern filled in.', 'Find the answer choice that also has stripes.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a checkered pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'checker'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'checker'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'dots'})), steps:['They all have a checkered pattern filled in.', 'Find the answer choice that also has a checkered pattern.'] }; },
+      () => { return { desc:'All are triangles (3 sides)', group:['triangle','triangle','triangle'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',rotation:pick([0,60,120,180,240,300])})), correct:svgFigure('triangle',{size:55,stroke:'#1a1a2e',rotation:pick([0,90,180,270])}), wrongs:['square','pentagon','hexagon'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['Count the sides — they all have 3 sides (triangles).', 'Find the answer choice that also has 3 sides.'] }; },
+      () => { const big = shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are large', group:big.slice(0,3).map(s=>svgFigure(s,{size:65,stroke:'#1a1a2e'})), correct:svgFigure(big[3],{size:65,stroke:'#1a1a2e'}), wrongs:big.slice(0,3).map(s=>svgFigure(s,{size:35,stroke:'#1a1a2e'})), steps:['They are all drawn large.', 'Find the answer choice that is also large, not small.'] }; },
+      () => { const small = shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are small', group:small.slice(0,3).map(s=>svgFigure(s,{size:32,stroke:'#1a1a2e'})), correct:svgFigure(small[3],{size:32,stroke:'#1a1a2e'}), wrongs:small.slice(0,3).map(s=>svgFigure(s,{size:60,stroke:'#1a1a2e'})), steps:['They are all drawn small.', 'Find the answer choice that is also small, not large.'] }; },
     ];
-    const rule = pick(rules)();
+    const rule = rules[nextRuleIndex(rules.length)]();
     // Defense in depth: guard against any future rule producing a wrong option
     // identical to the correct answer.
     let safeWrongs = uniq(rule.wrongs.filter(w => w !== rule.correct));
@@ -1200,15 +1404,23 @@
 
   // ---- DIVIDED SHAPES ----
   function makeDividedShapes() {
-    const shapeTypes = ['square','circle'];
-    const correctShape = pick(shapeTypes);
-    const correct = svgFigure(`divided-${correctShape}`, {size:60, stroke:'#1a1a2e'});
-    const wrongs = [ svgFigure('square',{size:60,stroke:'#1a1a2e'}), svgFigure('circle',{size:60,stroke:'#1a1a2e'}), svgFigure('triangle',{size:60,stroke:'#1a1a2e'}) ];
-    const choices = shuffle([correct, ...wrongs]);
-    const ex1 = svgFigure('divided-square',{size:50,stroke:'#1a1a2e'});
-    const ex2 = svgFigure('divided-circle',{size:50,stroke:'#1a1a2e'});
-    const ex3 = svgFigure('divided-square',{size:50,stroke:'#1a1a2e'});
-    const matrixHTML = renderMatrix([ex1, ex2, ex3], 3);
+    const stroke = '#1a1a1a';
+    // Randomize which 3 shapes demonstrate "divided in half" each time --
+    // previously these were hardcoded (always square/circle/square), so every
+    // single question looked identical.
+    const exampleShapes = shuffle(FIGURE_TYPES).slice(0, 3);
+    const matrixExamples = exampleShapes.map(s => svgFigure(s, {size:50, stroke, divided:true}));
+    const correctShape = pick(FIGURE_TYPES);
+    const correct = svgFigure(correctShape, {size:60, stroke, divided:true});
+    let wrongs = shuffle(FIGURE_TYPES.filter(s => s !== correctShape)).slice(0,3)
+      .map(s => svgFigure(s, {size:60, stroke})); // same shapes, but NOT divided -- that's the trap
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:60, stroke, dashed:true});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix(matrixExamples, 3);
     const q = {
       type: 'figure-classification',
       text: `Which shape is divided in half, like these?\n\n${matrixHTML}`,
@@ -1239,10 +1451,19 @@
     }
     while (wrongs.length < 3) { const wOuter=pick(outer); const wInner=pick(inner); const wrong=svgFigure('nested',{size:60,stroke:'#1a1a2e',outer:wOuter,inner:wInner}); if(!wrongs.includes(wrong)) wrongs.push(wrong); }
     const choices = shuffle([correctSvg, ...wrongs]);
-    const ex1 = svgFigure('nested',{size:50,stroke:'#1a1a2e',outer:'circle',inner:'square'});
-    const ex2 = svgFigure('nested',{size:50,stroke:'#1a1a2e',outer:'square',inner:'circle'});
-    const ex3 = svgFigure('nested',{size:50,stroke:'#1a1a2e',outer:'diamond',inner:'star'});
-    const matrixHTML = renderMatrix([ex1, ex2, ex3], 3);
+    // Randomize which 3 outer/inner combos demonstrate the "nested" rule each
+    // time -- previously these were hardcoded to the same 3 combos always, so
+    // every question's example matrix looked identical.
+    let exampleCombos = [];
+    let exAttempts = 0;
+    while (exampleCombos.length < 3 && exAttempts < 50) {
+      exAttempts++;
+      const combo = { outer: pick(outer), inner: pick(inner) };
+      const key = `${combo.outer}-${combo.inner}`;
+      if (!exampleCombos.some(c => `${c.outer}-${c.inner}` === key)) exampleCombos.push(combo);
+    }
+    const matrixExamples = exampleCombos.map(c => svgFigure('nested', {size:50, stroke:'#1a1a2e', outer:c.outer, inner:c.inner}));
+    const matrixHTML = renderMatrix(matrixExamples, 3);
     const q = {
       type: 'figure-classification',
       text: `Which shape has a smaller shape inside it, like these?\n\n${matrixHTML}`,
@@ -1305,7 +1526,7 @@
     { id:'pic-analogies', name:'Picture Analogies', battery:'Verbal 🗣️', icon:'brain', desc:'Part:Whole, Animal:Home, Object:Location & more', quizN:5, examN:15, gen:makePictureAnalogy, tipTitle:'Come up with a RULE first!', tip:'Before looking at choices, say the rule: "Tire is PART OF car, so leaf is PART OF ___"', example:'"Tire → Car" means tire is PART OF car. "Leaf → ?" → Leaf is PART OF a Tree 🌲', testTips:['Come up with the rule BEFORE looking at choices','The logic is reversible'] },
     { id:'sentence-comp', name:'Sentence Completion', battery:'Verbal 🗣️', icon:'ear', desc:'Listen to a question read aloud, pick the picture answer', quizN:5, examN:12, gen:makeSentenceCompletion, tipTitle:'Listen to the WHOLE sentence!', tip:'The question is read aloud once — listen to the end before choosing.', example:'"Max sees something floating" → Rock sinks, hammer sinks, coin sinks — Ball floats! ✅', testTips:['Listen from START to FINISH','Eliminate obvious wrong answers'] },
     { id:'pic-classification', name:'Picture Classification', battery:'Verbal 🗣️', icon:'grid', desc:'Three pictures share a rule — find the fourth', quizN:5, examN:12, gen:makePictureClassification, tipTitle:'Name the FAMILY first!', tip:'What do they have in common? Say it: "They are all ___!"', example:'"Fork · Spoon · Knife" → Eating Utensils → Chopsticks 🥢 belong!', testTips:['Name the "family" before looking at choices','If one rule fits all, find a MORE SPECIFIC rule'] },
-    { id:'fig-analogies', name:'Figure Analogies', battery:'Nonverbal 🔷', icon:'move', desc:'Rotation, reflection, shading, size, lines & more', quizN:5, examN:15, gen:makeFigureAnalogy, tipTitle:'Look for what changed!', tip:'Did the shape rotate? Reflect? Get filled? Get bigger?', example:'Arrow up → Arrow right = 90° clockwise rotation', testTips:['Look for rotation, reflection, shading, size changes','Multiple transformations can happen at once'] },
+    { id:'fig-analogies', name:'Figure Analogies', battery:'Nonverbal 🔷', icon:'move', desc:'Rotation, patterns, size, compound changes, progressions & count', quizN:5, examN:15, gen:genFigureAnalogyPool, tipTitle:'Look for what changed!', tip:'Did the shape rotate? Get a pattern? Get bigger? Sometimes TWO things change at once.', example:'Arrow up → Arrow right = 90° clockwise rotation', testTips:['Look for rotation, texture, shading, size, and count changes','Multiple transformations can happen at once — check for compound changes'] },
     { id:'fig-classification', name:'Figure Classification', battery:'Nonverbal 🔷', icon:'layers', desc:'Sides, shading, division, nesting & more', quizN:5, examN:12, gen:makeFigureClassification, tipTitle:'Ask detective questions!', tip:'How many SIDES? FILLED or EMPTY? Nested? Divided?', example:'"▲ △ ▼" — all triangles (3 sides). Find the next triangle!', testTips:['Ask: how many sides? filled or empty? nested? divided?'] },
     { id:'paper-folding', name:'Paper Folding', battery:'Nonverbal 🔷', icon:'file', desc:'Paper folded & holes punched — animated SVG!', quizN:5, examN:10, gen:makePaperFolding, tipTitle:'Count the layers!', tip:'1 fold = 2 layers. 2 folds = 4 layers. Each punch goes through ALL layers!', example:'1 fold (2 layers) × 1 punch = 2 holes when unfolded', testTips:['Try with real paper!','Each fold DOUBLES the layers'] },
     { id:'divided-shapes', name:'Divided Shapes', battery:'Nonverbal 🔷', icon:'square', desc:'Identify shapes divided by lines or patterns', quizN:5, examN:10, gen:makeDividedShapes, tipTitle:'Look for the division!', tip:'Are they cut in half? Is the line vertical or diagonal?', example:'A square divided in half vertically → look for the line!', testTips:['Look for a line dividing the shape','The division can be vertical, horizontal, or diagonal'] },
@@ -1387,7 +1608,6 @@
       card.addEventListener('click', open);
       card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
-    applyTwemoji(document.getElementById('homeView'));
     announce('CogAT Detective Academy — choose a game!');
   }
 
@@ -1492,7 +1712,6 @@
     document.getElementById('examBtn').onclick = () => startSession('exam');
     const reviewBtn = document.getElementById('reviewBtn');
     if (reviewBtn) reviewBtn.onclick = () => startSession('review');
-    applyTwemoji(document.getElementById('detailView'));
     focusEl('#backBtn');
   }
 
@@ -1630,7 +1849,6 @@
       grid.appendChild(btn);
     });
     document.getElementById('nextBtn').onclick = advanceSession;
-    applyTwemoji(document.getElementById('detailView'));
     focusEl('#choicesGrid .choice-btn');
   }
 
@@ -1688,7 +1906,6 @@
           fb.insertAdjacentHTML('beforeend', `<div class="tutor-panel"><strong>Step-by-step:</strong><br><br>${q.steps.map(s => `• ${s}`).join('<br><br>')}</div>`);
           document.getElementById('tutorBtn').style.display = 'none';
           if (q.type === 'paper-folding' && q.foldMeta) playUnfoldAnimation(q.foldMeta);
-          applyTwemoji(fb);
         }
       });
     }
@@ -1700,7 +1917,6 @@
       if (slot) slot.innerHTML = `<button class="back-btn" id="pfUnfoldBtn" type="button">🔍 Unfold to See the Answer</button>`;
       document.getElementById('pfUnfoldBtn')?.addEventListener('click', () => playUnfoldAnimation(q.foldMeta));
     }
-    applyTwemoji(fb);
     document.getElementById('nextBtn').classList.remove('hidden');
     setTimeout(() => { document.getElementById('nextBtn')?.focus(); }, 50);
     announce(correct ? `Correct!` : `Incorrect. ${q.explanation}`);
@@ -1758,7 +1974,6 @@
     if (examBtn) examBtn.onclick = () => startSession('exam');
     const reviewBtn = document.getElementById('reviewBtn');
     if (reviewBtn) reviewBtn.onclick = () => startSession('review');
-    applyTwemoji(document.getElementById('detailView'));
     announce(pass ? `${mode === 'exam' ? 'Mastered' : 'Quiz passed'}: ${score}/${total}` : `Score: ${score}/${total}`);
   }
 
@@ -1770,7 +1985,6 @@
     div.setAttribute('aria-labelledby', 'masteryTitle');
     div.innerHTML = `<div class="mastery-box"><div style="font-size:3.5rem">🏆</div><h2 id="masteryTitle">MASTERED!</h2><p>${currentST.name} complete!</p><button class="btn-primary" id="flashClose">Continue 🚀</button></div>`;
     document.body.appendChild(div);
-    applyTwemoji(div);
     const timer = setTimeout(() => div.remove(), 5000);
     const close = () => { clearTimeout(timer); div.remove(); };
     document.getElementById('flashClose').onclick = close;
@@ -1798,8 +2012,6 @@
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
     loadState();
     renderHome();
-    applyTwemoji(document.querySelector('.header'));
-    applyTwemoji(document.getElementById('liveRegion'));
   });
 
   let dark = false;
@@ -1809,7 +2021,6 @@
     if (btn) {
       btn.textContent = dark ? '☀️ Light' : '🌙 Dark';
       btn.setAttribute('aria-pressed', dark);
-      applyTwemoji(btn);
     }
   }
   function toggleTheme() {
