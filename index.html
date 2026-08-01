@@ -108,6 +108,13 @@
     .vector-figure { display: block; margin: 0 auto; }
     .figure-matrix { display: grid; gap: 8px; justify-content: center; margin: 8px 0; }
     .figure-matrix .cell { border: 1px solid var(--panel-border); border-radius: 4px; padding: 6px; background: var(--choice-bg); display: flex; align-items: center; justify-content: center; min-width: 60px; min-height: 60px; }
+    .sudoku-grid { display: inline-block; border: 3px solid var(--text); border-radius: 6px; margin: 14px auto; background: var(--choice-bg); }
+    .sudoku-row { display: flex; }
+    .sudoku-cell { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--text); border: 1px solid var(--panel-border); }
+    .sudoku-thick-right { border-right: 3px solid var(--text); }
+    .sudoku-thick-bottom { border-bottom: 3px solid var(--text); }
+    .sudoku-blank { background: var(--tip-bg); color: var(--pink); border: 2px solid var(--gold) !important; font-size: 1.7rem; }
+    @media (max-width: 600px) { .sudoku-cell { width: 44px; height: 44px; font-size: 1.25rem; } }
     .paper-container { margin: 12px 0 16px; text-align: center; perspective: 800px; }
     .pf-hole { transition: opacity 0.45s ease; }
     .paper-container svg { max-width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow); background: #faf8f4; border: 2px solid var(--panel-border); }
@@ -1402,6 +1409,68 @@
     return validateQuestion(q, 'abacus-series');
   }
 
+  // ---- MINI SUDOKU (4x4, easy — exactly one blank cell) ----
+  // Generates a random valid 4x4 sudoku solution by applying symmetry-preserving
+  // transformations (digit relabeling, swaps within/between row & column bands,
+  // transpose) to one base grid, so each puzzle looks different. Only ONE cell
+  // is left blank, which keeps this genuinely easy for a 2nd grader: the missing
+  // number is always the one value 1-4 not yet present in that cell's row.
+  function generateSudokuGrid() {
+    let grid = [[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]];
+    const perm = shuffle([1,2,3,4]);
+    grid = grid.map(row => row.map(v => perm[v-1]));
+    if (Math.random()<0.5) { const t=grid[0]; grid[0]=grid[1]; grid[1]=t; }
+    if (Math.random()<0.5) { const t=grid[2]; grid[2]=grid[3]; grid[3]=t; }
+    if (Math.random()<0.5) { const t=[grid[0],grid[1]]; grid[0]=grid[2]; grid[1]=grid[3]; grid[2]=t[0]; grid[3]=t[1]; }
+    const swapCols = (c1,c2) => grid.forEach(row => { const t=row[c1]; row[c1]=row[c2]; row[c2]=t; });
+    if (Math.random()<0.5) swapCols(0,1);
+    if (Math.random()<0.5) swapCols(2,3);
+    if (Math.random()<0.5) grid.forEach(row => { const t0=row[0], t1=row[1]; row[0]=row[2]; row[1]=row[3]; row[2]=t0; row[3]=t1; });
+    if (Math.random()<0.5) {
+      const t = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      for (let r=0;r<4;r++) for (let c=0;c<4;c++) t[c][r]=grid[r][c];
+      grid = t;
+    }
+    return grid;
+  }
+
+  function renderSudokuGrid(grid, blankR, blankC) {
+    let html = '<div class="sudoku-grid">';
+    for (let r=0;r<4;r++) {
+      html += '<div class="sudoku-row">';
+      for (let c=0;c<4;c++) {
+        const isBlank = r===blankR && c===blankC;
+        const cls = ['sudoku-cell'];
+        if (isBlank) cls.push('sudoku-blank');
+        if (c===1) cls.push('sudoku-thick-right');
+        if (r===1) cls.push('sudoku-thick-bottom');
+        html += `<div class="${cls.join(' ')}">${isBlank ? '?' : grid[r][c]}</div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function makeSudoku() {
+    const grid = generateSudokuGrid();
+    const blankR = rand(0,3), blankC = rand(0,3);
+    const correct = grid[blankR][blankC];
+    const rowKnown = grid[blankR].filter((v,c) => c !== blankC);
+    const choices = shuffle([1,2,3,4].map(String));
+    const gridHTML = renderSudokuGrid(grid, blankR, blankC);
+    const q = {
+      type: 'sudoku',
+      text: `Every row, column, and 2\u00d72 box must have the numbers 1, 2, 3, and 4 — each exactly once. What goes in the "?"\n\n${gridHTML}`,
+      choices: choices,
+      correct: String(correct),
+      explanation: `The highlighted row already has ${rowKnown.join(', ')}. The missing number is ${correct}.`,
+      steps: [`Look at the row with the "?" — which numbers are already in it?`, `That row has ${rowKnown.join(', ')}, so 1, 2, 3, and 4 aren't all there yet.`, `The missing number is ${correct}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'sudoku');
+  }
+
   // ---- DIVIDED SHAPES ----
   function makeDividedShapes() {
     const stroke = '#1a1a1a';
@@ -1536,6 +1605,7 @@
     { id:'num-series', name:'Number Series', battery:'Quantitative 🔢', icon:'bar-chart', desc:'12 pattern types — find the missing number', quizN:5, examN:15, gen:makeNumberSeries, tipTitle:'Watch the HOPS between numbers!', tip:'Write the jump between each pair: +1, −2, +3... Look for a repeating pattern!', example:'10, 9, 7, 6, 4 → hops: −1, −2, −1, −2 → next −1 = 3 ✅', testTips:['Write the "hops" first','The hops themselves form a pattern'] },
     { id:'num-puzzles', name:'Number Puzzles', battery:'Quantitative 🔢', icon:'puzzle', desc:'Fill in the missing number — 6 puzzle types', quizN:5, examN:12, gen:makeNumberPuzzle, tipTitle:'Add what you see — find what\'s missing!', tip:'Add the numbers you CAN see. Then figure out what\'s needed to reach the total.', example:'23 = 9 + 7 + ? → 9+7=16, 23−16=7 ✅', testTips:['Both sides must be EQUAL','Add known numbers, subtract from total'] },
     { id:'abacus-series', name:'Abacus Series', battery:'Quantitative 🔢', icon:'grid', desc:'Count the beads and find the pattern!', quizN:5, examN:10, gen:makeAbacusSeries, tipTitle:'Count the BEADS!', tip:'Look at each rod and count how many beads. Then look for the pattern.', example:'1,2,3,4,5 → next is 6', testTips:['Count carefully!','Look at the pattern of numbers on each rod'] },
+    { id:'sudoku', name:'Mini Sudoku', battery:'Logic Games 🧩', icon:'grid', desc:'A 4×4 number puzzle — every row, column, and box needs 1, 2, 3, and 4', quizN:5, examN:10, gen:makeSudoku, tipTitle:"Check what's already there!", tip:"Look at the row with the '?' — see which of 1, 2, 3, 4 hasn't shown up yet.", example:'If a row already has 1, 3, 4 — the missing number must be 2!', testTips:['Check the row with the question mark first','Every number 1-4 appears exactly once in each row, column, and 2×2 box','No number ever repeats in the same row'] },
   ];
   document.getElementById('totalSubtests').innerText = SUBTESTS.length;
 
@@ -1597,7 +1667,7 @@
     document.getElementById('homeView').classList.remove('hidden');
     updateMasteryCount();
     renderMission();
-    const batteries = ['Verbal 🗣️', 'Nonverbal 🔷', 'Quantitative 🔢'];
+    const batteries = ['Verbal 🗣️', 'Nonverbal 🔷', 'Quantitative 🔢', 'Logic Games 🧩'];
     const list = document.getElementById('subtestList');
     list.innerHTML = batteries.map(bat => {
       const subs = SUBTESTS.filter(s => s.battery === bat);
@@ -1797,7 +1867,7 @@
       content = `<div class="listen-cue"><div class="listen-icon">👂</div><div><div class="listen-label">Listen carefully — read this question aloud:</div><div class="listen-text">"${q.sentence}"</div><button class="speak-btn" id="speakBtn">🔊 Read Aloud</button></div></div><div class="q-text">Pick the picture that answers the question:</div>`;
     } else if (q.type === 'paper-folding') {
       content = `<div class="q-text">${q.qText}</div>${q.svgHTML || ''}`;
-    } else if (q.type === 'figure-analogies' || q.type === 'figure-classification') {
+    } else if (q.type === 'figure-analogies' || q.type === 'figure-classification' || q.type === 'sudoku') {
       content = `<div class="q-text" style="text-align:center;font-size:0.95rem;line-height:2;">${q.text}</div>`;
     } else {
       content = `<div class="q-text">${q.text}</div>`;
