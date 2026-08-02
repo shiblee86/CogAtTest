@@ -1,0 +1,2183 @@
+  const TWEMOJI_READY = typeof twemoji !== 'undefined';
+  // ================================================================
+  //  STATE & STORAGE (FIXED: spread syntax)
+  // ================================================================
+  const STORAGE_KEY = 'cogat_precision_v5';
+  let state = {
+    mastery: {},
+    stats: { attempts: {}, correct: {}, wrong: {} },
+    badges: [],
+    mistakes: [],
+    dailyMission: null,
+    session: null,
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = { ...state, ...parsed };
+      }
+    } catch (e) { console.warn('State load error:', e); }
+    const today = new Date().toISOString().slice(0,10);
+    if (!state.dailyMission || state.dailyMission.date !== today) {
+      const shuffled = shuffle(SUBTESTS.map(s => s.id));
+      state.dailyMission = {
+        date: today,
+        subtestIds: shuffled.slice(0, 3),
+        completed: {}
+      };
+      saveState();
+    }
+    updateMasteryCount();
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn('Save error:', e); }
+  }
+
+  function updateMasteryCount() {
+    const el = document.getElementById('masteredCount');
+    if (el) {
+      const mastered = Object.values(state.mastery).filter(m => m && m.earned).length;
+      el.textContent = mastered;
+    }
+  }
+
+  // ================================================================
+  //  HELPERS (FIXED: spread syntax)
+  // ================================================================
+  const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const pick = arr => arr[rand(0, arr.length-1)];
+  const shuffle = arr => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = rand(0, i);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const uniq = arr => [...new Set(arr)];
+
+  // "Shuffle bag" index picker: guarantees every index 0..size-1 is used exactly
+  // once before any index repeats, instead of pure random picking — which, for
+  // a curated pool that's smaller than (or close to) a subtest's exam length,
+  // reliably produces the same item multiple times in one session (sometimes
+  // back-to-back). Also guards the seam between one full cycle and the next so
+  // a fresh reshuffle can't happen to place the just-shown item right back at
+  // the front.
+  function createShuffleBag(size) {
+    let bag = [];
+    let lastReturned = null;
+    return function next() {
+      if (bag.length === 0) {
+        bag = shuffle([...Array(size).keys()]);
+        if (size > 1 && bag[bag.length - 1] === lastReturned) {
+          const swapAt = rand(0, bag.length - 2);
+          [bag[bag.length - 1], bag[swapAt]] = [bag[swapAt], bag[bag.length - 1]];
+        }
+      }
+      lastReturned = bag.pop();
+      return lastReturned;
+    };
+  }
+
+  const $ = id => document.getElementById(id);
+  const announce = msg => { const el=$('liveRegion'); if(el) el.textContent=msg; };
+  const focusEl = sel => setTimeout(()=>{ const el=document.querySelector(sel); if(el){el.setAttribute('tabindex','-1');el.focus();} },60);
+
+  // NOTE: icon rendering for verbal-content pictures goes exclusively through the
+  // iconSVG() function below, which builds a precisely-sized <img> tag directly.
+  // A page-wide "scan every emoji character and swap it for an image" approach
+  // was tried and removed -- it also converted decorative UI emoji (headers,
+  // buttons, badges) into unsized images that rendered at huge default
+  // dimensions. iconSVG() is the only sanctioned path for emoji-as-picture.
+
+  function ensureFour(choices, fallback) {
+    let result = uniq(choices);
+    let a = 0;
+    while (result.length < 4 && a < 20) {
+      const extra = `${fallback}${result.length+1}`;
+      if (!result.includes(extra)) result.push(extra);
+      a++;
+    }
+    return shuffle(result.slice(0,4));
+  }
+
+  function pic(text, iconName) {
+    return { text, icon: iconName || 'help-circle' };
+  }
+
+  // ================================================================
+  //  QUESTION ID GENERATOR (content-based)
+  // ================================================================
+  function generateQuestionId(q) {
+    const str = JSON.stringify(q);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return `q_${hash}`;
+  }
+
+  // ================================================================
+  //  VALIDATION
+  // ================================================================
+  function validateQuestion(q, subtestId) {
+    if (!q.correct) throw new Error(`[${subtestId}] Missing correct answer`);
+    if (!q.choices || q.choices.length !== 4) throw new Error(`[${subtestId}] Must have 4 choices`);
+    const values = q.choices.map(c => typeof c === 'string' ? c : (c.text || c));
+    if (new Set(values).size !== 4) throw new Error(`[${subtestId}] Duplicate choices found`);
+    if (!values.includes(q.correct)) throw new Error(`[${subtestId}] Correct answer missing from choices`);
+    if (!q.explanation) throw new Error(`[${subtestId}] Missing explanation`);
+    if (!q.steps || q.steps.length < 2) throw new Error(`[${subtestId}] Missing steps`);
+    // Ensure ID is set
+    if (!q.id) q.id = generateQuestionId(q);
+    return q;
+  }
+
+  // ================================================================
+  //  SVG ENGINE
+  // ================================================================
+  function svgFigure(type, opts) {
+    opts = opts || {};
+    const size = opts.size || 70;
+    const stroke = opts.stroke || '#1a1a2e';
+    const strokeWidth = opts.strokeWidth || 2;
+    const rawFill = opts.fill || 'none';
+    const rotation = opts.rotation || 0;
+    const scale = opts.scale || 1;
+    const reflect = opts.reflect || false;
+    const dashed = opts.dashed || false;
+    // Texture/pattern fills (dots, stripes, checker) in addition to solid colors —
+    // the real test relies heavily on these, not just plain shading. Pattern IDs
+    // are DETERMINISTIC (derived from kind+color, not a global counter) so two
+    // calls that should look identical always produce byte-identical markup —
+    // this matters both for correct duplicate-choice detection and so multiple
+    // patterns with the same id on one page always mean the same visual pattern.
+    let fill = rawFill;
+    let defsMarkup = '';
+    if (rawFill === 'dots' || rawFill === 'stripes' || rawFill === 'checker') {
+      const patColor = (opts.patternColor || stroke).replace('#', '');
+      const patId = `pat_${rawFill}_${patColor}`;
+      if (rawFill === 'dots') defsMarkup = `<pattern id="${patId}" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="white"/><circle cx="3" cy="3" r="1.3" fill="#${patColor}"/></pattern>`;
+      else if (rawFill === 'stripes') defsMarkup = `<pattern id="${patId}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="white"/><rect width="3" height="6" fill="#${patColor}"/></pattern>`;
+      else if (rawFill === 'checker') defsMarkup = `<pattern id="${patId}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="white"/><rect width="4" height="4" fill="#${patColor}"/><rect x="4" y="4" width="4" height="4" fill="#${patColor}"/></pattern>`;
+      fill = `url(#${patId})`;
+    }
+    const c = size/2;
+    const r = size*0.35;
+    let d = '';
+    const dash = dashed ? `stroke-dasharray="${strokeWidth*2},${strokeWidth*2}"` : '';
+
+    if (type === 'circle') d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`;
+    else if (type === 'square') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'triangle') { const pts = [`${c},${c-r}`,`${c-r*0.7},${c+r*0.7}`,`${c+r*0.7},${c+r*0.7}`]; d = `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'diamond') { const s = r*0.7; const pts = [`${c},${c-s}`,`${c+s},${c}`,`${c},${c+s}`,`${c-s},${c}`]; d = `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'pentagon') { const pts=[]; for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.7*Math.cos(a)},${c+r*0.7*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'hexagon') { const pts=[]; for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.65*Math.cos(a)},${c+r*0.65*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'star') { const pts=[]; for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2-Math.PI/2; const rad=i%2===0?r*0.8:r*0.35; pts.push(`${c+rad*Math.cos(a)},${c+rad*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'arrow-up') { const pts=[`${c},${c-r}`,`${c-r*0.5},${c+r*0.2}`,`${c-r*0.25},${c+r*0.2}`,`${c-r*0.25},${c+r*0.85}`,`${c+r*0.25},${c+r*0.85}`,`${c+r*0.25},${c+r*0.2}`,`${c+r*0.5},${c+r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'arrow-down') { const pts=[`${c},${c+r}`,`${c-r*0.5},${c-r*0.2}`,`${c-r*0.25},${c-r*0.2}`,`${c-r*0.25},${c-r*0.85}`,`${c+r*0.25},${c-r*0.85}`,`${c+r*0.25},${c-r*0.2}`,`${c+r*0.5},${c-r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'arrow-left') { const pts=[`${c-r},${c}`,`${c+r*0.2},${c-r*0.5}`,`${c+r*0.2},${c-r*0.25}`,`${c+r*0.85},${c-r*0.25}`,`${c+r*0.85},${c+r*0.25}`,`${c+r*0.2},${c+r*0.25}`,`${c+r*0.2},${c+r*0.5}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'arrow-right') { const pts=[`${c+r},${c}`,`${c-r*0.2},${c-r*0.5}`,`${c-r*0.2},${c-r*0.25}`,`${c-r*0.85},${c-r*0.25}`,`${c-r*0.85},${c+r*0.25}`,`${c-r*0.2},${c+r*0.25}`,`${c-r*0.2},${c+r*0.5}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'divided-square') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`; }
+    else if (type === 'divided-circle') { d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`; }
+    else if (type === 'half-shaded-square') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><polygon points="${c-s},${c-s} ${c+s},${c-s} ${c+s},${c} ${c-s},${c}" fill="${opts.shadeColor||'#ccc'}" opacity="0.5"/>`; }
+    else if (type === 'half-shaded-circle') { d = `<circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><path d="M ${c-r},${c} A ${r},${r} 0 0,1 ${c+r},${c} L ${c},${c} Z" fill="${opts.shadeColor||'#ccc'}" opacity="0.5"/>`; }
+    else if (type === 'nested') { const outer = opts.outer || 'circle'; const inner = opts.inner || 'square'; const oS = svgFigure(outer, {size, stroke, fill: 'none', strokeWidth}); const iS = svgFigure(inner, {size: size*0.45, stroke, fill: 'none', strokeWidth}); const oC = oS.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, ''); const iC = iS.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, ''); const off = size*0.28; d = `${oC}<g transform="translate(${off}, ${off})">${iC}</g>`; }
+    else if (type === 'with-lines') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><line x1="${c-s}" y1="${c}" x2="${c+s}" y2="${c}" stroke="${stroke}" stroke-width="${strokeWidth}"/><line x1="${c}" y1="${c-s}" x2="${c}" y2="${c+s}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`; }
+    else if (type === 'with-diagonal') { const s = r*0.8; d = `<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/><line x1="${c-s}" y1="${c-s}" x2="${c+s}" y2="${c+s}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`; }
+    else if (type === 'dot-grid') { const s = r*0.8; const dots=[]; for(let i=0;i<3;i++)for(let j=0;j<3;j++){const x=c-s+(i+0.5)*s; const y=c-s+(j+0.5)*s; const filled=(i+j)%2===0; dots.push(`<circle cx="${x}" cy="${y}" r="${r*0.08}" fill="${filled?stroke:'none'}" stroke="${stroke}" stroke-width="${strokeWidth*0.5}"/>`);} d=`<rect x="${c-s}" y="${c-s}" width="${s*2}" height="${s*2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>${dots.join('')}`; }
+    // 'flag' and 'lshape' are intentionally asymmetric under rotation (unlike a plain
+    // circle/square) so a 90/180/270 degree turn is always visually unambiguous.
+    else if (type === 'flag') { const s = r*0.85; const pts = [`${c-s},${c-s}`,`${c+s},${c-s*0.35}`,`${c-s},${c+s*0.3}`,`${c-s},${c-s}`]; d = `<line x1="${c-s}" y1="${c-s}" x2="${c-s}" y2="${c+s}" stroke="${stroke}" stroke-width="${strokeWidth}"/><polygon points="${pts.join(' ')}" fill="${fill==='none'?opts.shadeColor||'#888':fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'lshape') { const s = r*0.75; const pts=[`${c-s},${c-s}`,`${c},${c-s}`,`${c},${c}`,`${c+s},${c}`,`${c+s},${c+s}`,`${c-s},${c+s}`]; d = `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+
+    // Generic overlays that work on ANY base shape above (not just the two
+    // hardcoded 'divided-square'/'divided-circle' types) so questions can draw
+    // from the full shape pool instead of always looking the same.
+    if (opts.divided) d += `<line x1="${c}" y1="${c-r}" x2="${c}" y2="${c+r}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
+
+    let transform = '';
+    if (rotation) transform += `rotate(${rotation}, ${c}, ${c}) `;
+    if (reflect) transform += `scale(-1, 1) translate(${-size}, 0) `;
+    if (scale !== 1) transform += `scale(${scale}) translate(${c*(1-scale)}, ${c*(1-scale)}) `;
+
+    const finalD = transform ? `<g transform="${transform}">${d}</g>` : d;
+    const defsBlock = defsMarkup ? `<defs>${defsMarkup}</defs>` : '';
+    return `<svg viewBox="0 0 ${size} ${size}" class="vector-figure" style="width:${size}px;height:${size}px;display:block;margin:0 auto;" aria-hidden="true">${defsBlock}${finalD}</svg>`;
+  }
+
+  function renderMatrix(figures, cols) {
+    cols = cols || 2;
+    const rows = Math.ceil(figures.length / cols);
+    let html = `<div class="figure-matrix" style="grid-template-columns: repeat(${cols}, 1fr);" role="img" aria-label="Figure matrix">`;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const idx = r*cols + c;
+        if (idx < figures.length) {
+          html += `<div class="cell">${figures[idx]}</div>`;
+        } else {
+          html += `<div class="cell" style="opacity:0.3;">?</div>`;
+        }
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // ================================================================
+  //  PAPER FOLDING — real fold → punch → unfold animation
+  //
+  //  Model: the sheet is folded in half toward the bottom, `folds` times
+  //  (each fold halves the visible height again). Punches land in the
+  //  final compact region. To find where each hole ends up when unfolded,
+  //  we reflect its y-position across each fold line, working from the
+  //  LAST fold back to the FIRST — this doubles the point set at each
+  //  step, producing exactly 2^folds mirrored positions per punch.
+  // ================================================================
+  function computeFoldGeometry(folds, H) {
+    const foldLines = [];
+    for (let k = 1; k <= folds; k++) foldLines.push(H * (1 - 1 / Math.pow(2, k)));
+    const compactTop = foldLines.length ? foldLines[foldLines.length - 1] : 0;
+    return { foldLines, compactTop };
+  }
+
+  function unfoldPositions(yPunch, foldLines) {
+    let ys = [yPunch];
+    for (let i = foldLines.length - 1; i >= 0; i--) {
+      const line = foldLines[i];
+      ys = ys.concat(ys.map(y => 2 * line - y));
+    }
+    return ys; // length === 2^folds
+  }
+
+  let pfCounter = 0;
+  function paperFoldingSVG(punches, folds) {
+    pfCounter++;
+    const uid = `pf${pfCounter}`;
+    const W = 320, H = 220, marginX = 40;
+    const { foldLines, compactTop } = computeFoldGeometry(folds, H);
+    const layers = Math.pow(2, folds);
+    const spacing = (W - marginX * 2) / (punches + 1);
+    const punchXs = [];
+    for (let i = 0; i < punches; i++) punchXs.push(marginX + (i + 1) * spacing);
+    // Punch y-position sits in the middle of the final compact region
+    const punchY = compactTop + (H - compactTop) / 2;
+
+    const allHoles = []; // {x, y, isPrimary}
+    punchXs.forEach(x => {
+      const ys = unfoldPositions(punchY, foldLines);
+      ys.forEach((y, i) => allHoles.push({ x, y, isPrimary: i === 0 }));
+    });
+
+    const foldLineSVG = foldLines.map((y, i) =>
+      `<line class="pf-foldline" x1="${marginX-10}" y1="${y}" x2="${W-marginX+10}" y2="${y}" stroke="#8a2e2e" stroke-width="1.5" stroke-dasharray="6,5"/>`
+    ).join('');
+
+    const holesSVG = allHoles.map((h, i) =>
+      `<circle class="pf-hole ${h.isPrimary ? 'pf-hole-primary' : 'pf-hole-mirror'}" data-idx="${i}" cx="${h.x}" cy="${h.y}" r="9" fill="#8a2e2e" opacity="${h.isPrimary ? 1 : 0}"/>`
+    ).join('');
+
+    const svg = `
+      <svg id="${uid}-svg" viewBox="0 0 ${W} ${H}" style="max-width:100%;border-radius:8px;background:#fffdf8;border:1.5px solid var(--panel-border);" role="img" aria-label="Paper folding diagram, ${folds} fold(s), ${punches} punch(es)">
+        <rect x="2" y="2" width="${W-4}" height="${H-4}" fill="none" stroke="#c9c3b2" stroke-width="1"/>
+        <g id="${uid}-sheet" style="transform-origin: ${W/2}px ${H}px; transform: scaleY(1); transition: transform 1.1s ease-in-out;">
+          <rect x="${marginX}" y="0" width="${W-marginX*2}" height="${H}" fill="#fdfcf6" stroke="#1a1a1a" stroke-width="1.5"/>
+          ${foldLineSVG}
+          ${holesSVG}
+        </g>
+        <text id="${uid}-label" x="${W/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="#5a5650" font-weight="700">Flat sheet — ${folds} fold${folds===1?'':'s'} to make</text>
+      </svg>`;
+
+    const controlsHTML = `
+      <div class="pf-controls" style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+        <button class="back-btn" id="${uid}-playfold" type="button">▶ Play: Fold &amp; Punch</button>
+      </div>
+      <div class="pf-unfold-slot" id="${uid}-unfoldslot" style="display:flex;gap:8px;justify-content:center;margin-top:8px;"></div>`;
+
+    return {
+      html: `<div class="paper-container">${svg}${controlsHTML}</div>`,
+      uid, W, H, foldLines, compactTop, punchY, punchXs, layers, punches, folds,
+      totalHoles: allHoles.length,
+    };
+  }
+
+  // Plays the fold-then-punch sequence for a given paper-folding question's DOM.
+  function playFoldAnimation(meta) {
+    const uid = meta.uid;
+    const sheet = document.getElementById(`${uid}-sheet`);
+    const label = document.getElementById(`${uid}-label`);
+    if (!sheet) return;
+    const finalScale = meta.folds > 0 ? (meta.H - meta.compactTop) / meta.H : 1;
+    sheet.style.transform = 'scaleY(1)';
+    label.textContent = `Flat sheet — ${meta.folds} fold${meta.folds===1?'':'s'} to make`;
+    document.querySelectorAll(`#${uid}-svg .pf-hole`).forEach(el => el.setAttribute('opacity', '0'));
+    setTimeout(() => {
+      sheet.style.transform = `scaleY(${finalScale})`;
+      label.textContent = `Folding... (${meta.folds} fold${meta.folds===1?'':'s'} → ${meta.layers} layers)`;
+    }, 250);
+    setTimeout(() => {
+      label.textContent = `Folded into ${meta.layers} layer${meta.layers===1?'':'s'}. Punching...`;
+      document.querySelectorAll(`#${uid}-svg .pf-hole-primary`).forEach(el => {
+        el.setAttribute('opacity', '1');
+      });
+    }, 1500);
+    setTimeout(() => {
+      label.textContent = `${meta.punches} punch${meta.punches===1?'':'es'} through ${meta.layers} layer${meta.layers===1?'':'s'}. Unfold to see the result!`;
+    }, 2000);
+  }
+
+  // Plays the unfold-reveal sequence (used after the question is answered).
+  function playUnfoldAnimation(meta) {
+    const uid = meta.uid;
+    const sheet = document.getElementById(`${uid}-sheet`);
+    const label = document.getElementById(`${uid}-label`);
+    if (!sheet) return;
+    sheet.style.transform = 'scaleY(1)';
+    label.textContent = 'Unfolding...';
+    const mirrors = Array.from(document.querySelectorAll(`#${uid}-svg .pf-hole-mirror`));
+    mirrors.forEach((el, i) => {
+      setTimeout(() => { el.setAttribute('opacity', '1'); }, 600 + i * 120);
+    });
+    setTimeout(() => {
+      label.textContent = `Unfolded: ${meta.totalHoles} hole${meta.totalHoles===1?'':'s'} total (${meta.punches} punch${meta.punches===1?'':'es'} × ${meta.layers} layers)`;
+    }, 600 + mirrors.length * 120 + 300);
+  }
+
+  // ================================================================
+  //  ABACUS
+  // ================================================================
+  function abacusSVG(seq, size) {
+    size = size || 260; const rods = seq.length; const rodW = size/(rods+1); const rodH = size*0.65; const maxBeads = Math.max(...seq, 1);
+    let svg = `<svg viewBox="0 0 ${size} ${size}" style="max-width:100%;border-radius:10px;background:#faf8f4;border:2px solid #d5d0c8;padding:6px;" role="img" aria-label="Abacus with ${rods} rods">`;
+    for (let idx=0; idx<rods; idx++) { const cx = rodW*(idx+1); svg += `<line x1="${cx}" y1="${size*0.12}" x2="${cx}" y2="${size*0.88}" stroke="#8a8080" stroke-width="2.5" stroke-linecap="round"/>`; }
+    seq.forEach((count, idx) => { const cx = rodW*(idx+1); const baseY = size*0.15; const spacing = rodH/(maxBeads+1); for (let b=0; b<count; b++) { const cy = baseY + b*spacing; svg += `<circle cx="${cx}" cy="${cy}" r="${rodW*0.16}" fill="#c0392b" stroke="#8a2a2a" stroke-width="1.2"/>`; } });
+    svg += '</svg>';
+    return svg;
+  }
+
+  // ================================================================
+  //  ICON SYSTEM (inline SVG paths)
+  // ================================================================
+  const ICON_REGISTRY = {
+    'bird': 'bird', 'fish': 'fish', 'tiger': 'tiger', 'bear': 'bear', 'mouse': 'mouse',
+    'rabbit': 'rabbit', 'fox': 'fox', 'elephant': 'elephant', 'whale': 'whale',
+    'dog': 'dog', 'cat': 'cat', 'snake': 'snake', 'lizard': 'lizard',
+    'turtle': 'turtle', 'crocodile': 'crocodile', 'butterfly': 'butterfly',
+    'worm': 'worm', 'bug': 'bug', 'pizza': 'pizza', 'apple': 'apple',
+    'carrot': 'carrot', 'cheese': 'cheese', 'beef': 'beef', 'bread': 'bread',
+    'droplet': 'droplet', 'flame': 'flame', 'car': 'car', 'bike': 'bike',
+    'train': 'train', 'plane': 'plane', 'helicopter': 'helicopter',
+    'boat': 'boat', 'rocket': 'rocket', 'key': 'key', 'lock': 'lock',
+    'battery': 'battery', 'toy': 'toy', 'file': 'file', 'book': 'book',
+    'music': 'music', 'home': 'home', 'road': 'road', 'water': 'water',
+    'cloud': 'cloud', 'mountain': 'mountain', 'sun': 'sun', 'moon': 'moon',
+    'snowflake': 'snowflake', 'ice': 'ice', 'hammer': 'hammer',
+    'knife': 'knife', 'saw': 'saw', 'wrench': 'wrench',
+    'screwdriver': 'screwdriver', 'paintbrush': 'paintbrush',
+    'scissors': 'scissors', 'ruler': 'ruler', 'pencil': 'pencil',
+    'thermometer': 'thermometer', 'scale': 'scale', 'clock': 'clock',
+    'bell': 'bell', 'feather': 'feather', 'telescope': 'telescope',
+    'microscope': 'microscope', 'binoculars': 'binoculars',
+    'umbrella': 'umbrella', 'glasses': 'glasses', 'hat': 'hat',
+    'shirt': 'shirt', 'jacket': 'jacket', 'utensils': 'utensils',
+    'piano': 'piano', 'guitar': 'guitar', 'drum': 'drum',
+    'trumpet': 'trumpet', 'globe': 'globe', 'circle': 'circle',
+    'hand': 'hand', 'rock': 'rock', 'lightbulb': 'lightbulb',
+    'volume': 'volume', 'search': 'search', 'heart': 'heart',
+    'user': 'user', 'settings': 'settings', 'flower': 'flower',
+    'tree': 'tree', 'shopping-basket': 'shopping-basket',
+    'beaker': 'beaker', 'coin': 'circle', 'potato': 'circle',
+    'log': 'circle', 'brain': 'brain', 'ear': 'ear', 'grid': 'grid',
+    'move': 'move', 'layers': 'layers', 'square': 'square',
+    'rotate-ccw': 'rotate-ccw', 'calculator': 'calculator',
+    'bar-chart': 'bar-chart', 'puzzle': 'puzzle',
+    'help-circle': 'help-circle', 'waves': 'waves',
+    'spoon': 'spoon', 'fork': 'fork', 'chopsticks': 'chopsticks', 'pants': 'pants',
+    'skateboard': 'skateboard', 'bat': 'bat', 'racket': 'racket', 'wheel': 'wheel', 'orange': 'orange',
+  };
+
+  function getIconPath(name, size) {
+    size = size || 32;
+    const iconName = ICON_REGISTRY[name] || 'help-circle';
+    const paths = {
+      'help-circle': '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+      'circle': '<circle cx="12" cy="12" r="10"/>',
+      'car': '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+      'tree': '<path d="M12 22V8"/><path d="M12 2L8 8h8z"/><path d="M8 16l4-4 4 4z"/>',
+      'pizza': '<path d="M12 2A10 10 0 0 0 2 12c0 2.8 1.2 5.4 3.1 7.2l16.2-7.2C19.2 7.2 16 2 12 2z"/><circle cx="8" cy="8" r="1"/><circle cx="16" cy="8" r="1"/><circle cx="10" cy="14" r="1"/>',
+      'fish': '<path d="M6 12h12"/><path d="M18 8c-2.2 0-4 1.8-4 4s1.8 4 4 4"/><path d="M10 8c-4.4 0-8 1.8-8 4s3.6 4 8 4"/><path d="M10 8v8"/>',
+      'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+      'home': '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+      'brain': '<path d="M12 4a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V14a2 2 0 0 0 4 0v-2.5c1.2-.7 2-2 2-3.5a4 4 0 0 0-4-4z"/><path d="M8 12c-1.5 0-3-1-3-3s1.5-3 3-3"/><path d="M16 12c1.5 0 3-1 3-3s-1.5-3-3-3"/>',
+      'ear': '<path d="M12 4a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V14a2 2 0 0 0 4 0v-2.5c1.2-.7 2-2 2-3.5a4 4 0 0 0-4-4z"/><path d="M8 12c-1.5 0-3-1-3-3s1.5-3 3-3"/><path d="M16 12c1.5 0 3-1 3-3s-1.5-3-3-3"/>',
+      'grid': '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
+      'move': '<polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>',
+      'layers': '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+      'square': '<rect x="3" y="3" width="18" height="18"/>',
+      'rotate-ccw': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.25 2.25L3 8"/><path d="M3 3v5h5"/>',
+      'calculator': '<rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/>',
+      'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+      'puzzle': '<path d="M4 10h4v4H4z"/><path d="M16 10h4v4h-4z"/><path d="M10 4h4v4h-4z"/><path d="M10 16h4v4h-4z"/><path d="M10 8h4v4h-4z"/><path d="M8 10h4v4H8z"/>',
+      'waves': '<path d="M2 12c3-3 5-3 8 0s5 3 8 0 5-3 8 0"/><path d="M2 18c3-3 5-3 8 0s5 3 8 0 5-3 8 0"/>',
+      'apple': '<path d="M12 20c-4.4 0-7.5-3.4-7.5-7.6 0-3 1.8-5.4 4.3-5.4 1 0 1.8.4 2.7.4s1.7-.4 2.7-.4c2 0 3.6 1.3 4.3 3.2-2.8.9-4 3-4 5.4 0 2.2 1.4 4 3 4.4-1 .3-1.9 0-2.5 0z"/><path d="M12.5 7c0-1.8 1-3 2.3-3.6"/>',
+      'battery': '<rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="10" x2="22" y2="14"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/>',
+      'beaker': '<path d="M9 3h6"/><path d="M10 3v6l-6 10a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-6-10V3"/><line x1="6.5" y1="15" x2="17.5" y2="15"/>',
+      'bear': '<circle cx="12" cy="14" r="7"/><circle cx="7" cy="6" r="2.2"/><circle cx="17" cy="6" r="2.2"/><circle cx="9.5" cy="13" r="1"/><circle cx="14.5" cy="13" r="1"/><path d="M10.5 16.5c.5.6 1.2.9 1.5.9s1-.3 1.5-.9"/>',
+      'beef': '<path d="M4 15c0-4 3-9 8-9s8 5 8 9-3 6-8 6-8-2-8-6z"/><path d="M8 8l-2-3"/><path d="M16 8l2-3"/><circle cx="9" cy="15" r="1"/><circle cx="15" cy="15" r="1"/>',
+      'bike': '<circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="M6 17l4-9h4l3 9"/><path d="M10 8h3"/><path d="M9.5 17h8.5"/>',
+      'bird': '<path d="M4 15c1-4 4-7 8-7 3 0 5 1.5 6 3 1.5 0 3 .5 3.5 2-1 0-2 0-3 .5.5 3-2 6-6 6-4 0-7-2-8.5-4.5z"/><circle cx="15.5" cy="10.5" r=".8"/><path d="M4 15c-1 .5-2 1-2.5 2"/>',
+      'boat': '<path d="M3 14h18l-2 5H5l-2-5z"/><path d="M6 14V6l6-2 6 2v8"/><line x1="12" y1="4" x2="12" y2="14"/>',
+      'book': '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 4.5v17"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/>',
+      'bug': '<rect x="8" y="8" width="8" height="10" rx="4"/><line x1="12" y1="3" x2="12" y2="8"/><line x1="5" y1="6" x2="8" y2="9"/><line x1="19" y1="6" x2="16" y2="9"/><line x1="5" y1="13" x2="8" y2="13"/><line x1="16" y1="13" x2="19" y2="13"/><line x1="6" y1="19" x2="9" y2="17"/><line x1="18" y1="19" x2="15" y2="17"/>',
+      'butterfly': '<path d="M12 5v14"/><path d="M12 8c-1-3-4-5-7-4-2 1-2 4 0 5 2 1 5 0 7-1z"/><path d="M12 8c1-3 4-5 7-4 2 1 2 4 0 5-2 1-5 0-7-1z"/><path d="M12 13c-1 3-4 5-7 4-2-1-2-4 0-5 2-1 5 0 7 1z"/><path d="M12 13c1 3 4 5 7 4 2-1 2-4 0-5-2-1-5 0-7 1z"/>',
+      'carrot': '<path d="M9 15c-3 3-5 5-6 6-1-1 1-3 4-6" fill="none"/><path d="M20 4c1 3-1 7-5 11-3 3-6 4-8 2s-1-5 2-8c4-4 8-6 11-5z"/><path d="M15 3l2 2"/><path d="M17 5l2 2"/><path d="M13 5l1.5 1.5"/>',
+      'cat': '<path d="M5 5l2 4"/><path d="M19 5l-2 4"/><circle cx="12" cy="13" r="7"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M10 16c.7.6 1.3.6 2 0" />',
+      'cloud': '<path d="M6.5 19a4.5 4.5 0 0 1-1-8.9 6 6 0 0 1 11.5-2A5 5 0 0 1 18 19z"/>',
+      'crocodile': '<path d="M2 13c3-2 6-2 8-1l1-2 1 2 2-1 1 2 2-1 1 2 3-1c1 1 1 3-1 4-3 1-6 1-9-1-3 2-6 2-9-1-1-1-1-2 0-3z"/><circle cx="6" cy="12" r=".6"/><circle cx="10" cy="12" r=".6"/>',
+      'dog': '<path d="M4 9c-1.5 0-2 2-1 3l2 1"/><path d="M20 9c1.5 0 2 2 1 3l-2 1"/><circle cx="12" cy="13" r="7"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M10 16.5c.7.6 1.3.6 2 0"/>',
+      'droplet': '<path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/>',
+      'drum': '<ellipse cx="12" cy="8" rx="8" ry="3.5"/><path d="M4 8v6c0 2 3.5 3.5 8 3.5s8-1.5 8-3.5V8"/><line x1="3" y1="4" x2="7" y2="8"/><line x1="21" y1="4" x2="17" y2="8"/>',
+      'elephant': '<path d="M3 15c0-5 4-9 9-9s9 3 9 6-2 4-4 4"/><path d="M15 16c1 0 2-1 2-3s-1-4-2-5"/><path d="M15 16c0 1.5-1 2.5-2 2.5"/><circle cx="7" cy="10" r=".8"/><path d="M3 15c0 1.5 1.5 2 3 2"/>',
+      'file': '<path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/>',
+      'flame': '<path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c2 2 2 5 0 8a7 7 0 0 1-12 0c-2-4 0-7 2-9 1 2 2 2 2 0 0-2-1-3.5 2-6z"/>',
+      'flower': '<circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="12" r="2.6"/><line x1="12" y1="14.5" x2="12" y2="21"/>',
+      'fox': '<path d="M4 4l4 4"/><path d="M20 4l-4 4"/><path d="M12 20l-6-6c-1-3 1-8 6-8s7 5 6 8z"/><circle cx="9.5" cy="11.5" r=".8"/><circle cx="14.5" cy="11.5" r=".8"/><path d="M12 13l-1.3 2h2.6z"/>',
+      'globe': '<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3c3 2.5 3 15.5 0 18"/><path d="M12 3c-3 2.5-3 15.5 0 18"/>',
+      'guitar': '<circle cx="8" cy="16" r="5"/><path d="M11 12l7-9"/><line x1="16" y1="5" x2="19" y2="8"/><line x1="14" y1="7" x2="16.5" y2="9.5"/>',
+      'hammer': '<path d="M15 6l3-3 3 3-3 3z"/><path d="M14.5 7.5L4 18l2 2 10.5-10.5z"/>',
+      'hand': '<path d="M9 12V4a1.5 1.5 0 0 1 3 0v6"/><path d="M12 10V3a1.5 1.5 0 0 1 3 0v7"/><path d="M15 10.5V5a1.5 1.5 0 0 1 3 0v9"/><path d="M6 13V9a1.5 1.5 0 0 1 3 0v6c0 4 2 6 6 6s5-2 5-5v-4"/>',
+      'hat': '<ellipse cx="12" cy="17" rx="9" ry="2"/><path d="M7 17l1.5-9a3.5 3.5 0 0 1 7 0L17 17"/>',
+      'helicopter': '<line x1="3" y1="4" x2="21" y2="4"/><line x1="12" y1="4" x2="12" y2="8"/><path d="M6 12h9a4 4 0 0 1 4 4v1H8a4 4 0 0 1-4-4z"/><line x1="18" y1="17" x2="21" y2="20"/><line x1="4" y1="17" x2="2" y2="19"/>',
+      'ice': '<polygon points="12,3 19,8 16,20 8,20 5,8"/><line x1="12" y1="3" x2="12" y2="20"/><line x1="5" y1="8" x2="19" y2="8"/>',
+      'jacket': '<path d="M9 3l3 2 3-2 4 3-2 4-2-1v11H8V9l-2 1-2-4z"/>',
+      'key': '<circle cx="7" cy="12" r="4"/><path d="M11 12h10"/><line x1="17" y1="12" x2="17" y2="16"/><line x1="21" y1="12" x2="21" y2="15"/>',
+      'knife': '<path d="M4 20L18 6a2.5 2.5 0 0 0-3.5-3.5L5 16"/><line x1="4" y1="20" x2="7" y2="17"/>',
+      'lizard': '<path d="M3 14c2-2 4-2 5-1l2-2 2 2 2-2 2 2c3-1 4 1 5 3-2 1-4 1-5-.5-1.5 1.5-3.5 1.5-4.5 0-1.5 1.5-3.5 1.5-4.5 0-1 1.5-3 1.5-5 .5z"/><circle cx="6" cy="13" r=".6"/>',
+      'lock': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+      'moon': '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+      'mountain': '<path d="M2 20l7-12 4 6 3-4 6 10z"/>',
+      'mouse': '<ellipse cx="12" cy="14" rx="6" ry="7"/><circle cx="9" cy="9" r="2.3"/><circle cx="15" cy="9" r="2.3"/><circle cx="10" cy="14" r=".8"/><circle cx="14" cy="14" r=".8"/>',
+      'music': '<path d="M9 18V5l11-2v13"/><circle cx="7" cy="18" r="2.5"/><circle cx="18" cy="16" r="2.5"/>',
+      'paintbrush': '<path d="M14 3c3 0 6 3 6 6-3 1-5 1-7-1-2-2-2-4 1-5z"/><path d="M13 8L4 17c-1 1-1 2 0 3s2 1 3 0l9-9"/>',
+      'piano': '<rect x="3" y="6" width="18" height="12" rx="1.5"/><line x1="7" y1="6" x2="7" y2="14"/><line x1="11" y1="6" x2="11" y2="14"/><line x1="15" y1="6" x2="15" y2="14"/><line x1="19" y1="6" x2="19" y2="14"/>',
+      'plane': '<path d="M2 12l8-2 4-8 2 1-2 7 6-1 2 2-7 3 1 6-2 1-3-6-6 4v-2z"/>',
+      'rabbit': '<path d="M8 9c-1-3-1-6 1-6s2 3 1.5 6"/><path d="M15 9c1-3 1-6-1-6s-2 3-1.5 6"/><circle cx="12" cy="14" r="6"/><circle cx="10" cy="13" r=".8"/><circle cx="14" cy="13" r=".8"/><path d="M10.5 16.5c.5.5 2.5.5 3 0"/>',
+      'road': '<path d="M8 21L11 3h2l3 18"/><line x1="12" y1="5" x2="12" y2="8"/><line x1="12" y1="11" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="19"/>',
+      'saw': '<path d="M2 16l16-9"/><path d="M18 7l3-1-.5 3z"/><path d="M4 15l1 2-2 .5z"/><path d="M8 13l1 2-2 .5z"/><path d="M12 11l1 2-2 .5z"/>',
+      'screwdriver': '<path d="M14 3l7 7-2 2-7-7z"/><path d="M13 6l-9 9c-1 2 1 4 3 3l9-9z"/>',
+      'settings': '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+      'shirt': '<path d="M8 3l4 2 4-2 4 4-3 3v11H7V10L4 7z"/>',
+      'shopping-basket': '<path d="M5 10h14l-1.5 9a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7z"/><path d="M8 10L6 5"/><path d="M16 10l2-5"/><line x1="9" y1="13" x2="9.5" y2="17"/><line x1="15" y1="13" x2="14.5" y2="17"/>',
+      'snake': '<path d="M4 19c3 2 5-1 4-3s-3-1-4-3 1-4 3-3 2 3 4 4 5-1 4-4-4-2-3-5"/><circle cx="17.5" cy="5" r=".7"/>',
+      'snowflake': '<line x1="12" y1="2" x2="12" y2="22"/><line x1="4" y1="7" x2="20" y2="17"/><line x1="4" y1="17" x2="20" y2="7"/><line x1="12" y1="2" x2="9" y2="5"/><line x1="12" y1="2" x2="15" y2="5"/>',
+      'sun': '<circle cx="12" cy="12" r="4.5"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"/>',
+      'tiger': '<circle cx="12" cy="13" r="7"/><path d="M6 7l1 3"/><path d="M18 7l-1 3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M10 16.5c.7.6 1.3.6 2 0"/><line x1="4" y1="12" x2="7" y2="12.5"/><line x1="20" y1="12" x2="17" y2="12.5"/>',
+      'toy': '<circle cx="12" cy="8" r="4"/><path d="M8 12h8l2 9H6z"/><circle cx="9" cy="17" r="1"/><circle cx="15" cy="17" r="1"/>',
+      'train': '<rect x="5" y="4" width="14" height="12" rx="2"/><line x1="5" y1="11" x2="19" y2="11"/><circle cx="8.5" cy="17.5" r="1.3"/><circle cx="15.5" cy="17.5" r="1.3"/><line x1="8" y1="20" x2="6" y2="22"/><line x1="16" y1="20" x2="18" y2="22"/>',
+      'trumpet': '<path d="M2 12h7"/><path d="M9 9v6"/><path d="M9 12h6"/><path d="M15 8c3.5 0 6 1.8 6 4s-2.5 4-6 4z"/><line x1="11" y1="9" x2="11" y2="10.5"/><line x1="13" y1="9" x2="13" y2="10.5"/><line x1="11" y1="13.5" x2="11" y2="15"/><line x1="13" y1="13.5" x2="13" y2="15"/>',
+      'turtle': '<ellipse cx="11" cy="13" rx="7" ry="5"/><path d="M9 8a3 3 0 0 1 6 0"/><path d="M4 13l-2 1"/><path d="M4 15l-2 2"/><path d="M18 12l2 0"/><path d="M18 15l2 1"/><path d="M9 18l-1 3"/><path d="M13 18l1 3"/>',
+      'user': '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+      'utensils': '<path d="M6 2v8a2 2 0 0 0 4 0V2"/><line x1="8" y1="2" x2="8" y2="22"/><path d="M17 2c-2 0-3 2-3 5s1 4 3 4v11"/>',
+      'whale': '<path d="M2 12c3-5 8-7 13-6 4 1 7 4 7 7-2 1-4 1-5-.5-1 2-3 3-6 3-5 0-8-1.5-9-3.5z"/><path d="M9 10c0-1 1-2 2-2"/><circle cx="8" cy="10.5" r=".6"/>',
+      'wrench': '<path d="M14.7 6.3a4 4 0 1 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2-2z"/>',
+      'worm': '<path d="M4 18c2 2 4 1 4-1s-3-2-3-4 2-3 4-2 2 3 4 2 2-3 4-2c2 1 2 3 1 4"/><circle cx="19.5" cy="14.5" r=".6"/>',
+      'cheese': '<path d="M2 18l9-13 11 13z"/><circle cx="12" cy="16" r="1"/><circle cx="16" cy="15" r=".8"/><circle cx="9" cy="14.5" r=".7"/>',
+      'bread': '<path d="M4 12a8 5 0 0 1 16 0v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><line x1="9" y1="14" x2="9" y2="18"/><line x1="15" y1="14" x2="15" y2="18"/>',
+      'rocket': '<path d="M12 2c3 2 4 6 4 10l-4 4-4-4c0-4 1-8 4-10z"/><path d="M8 14l-3 3 1 4 4-1"/><path d="M16 14l3 3-1 4-4-1"/><circle cx="12" cy="10" r="1.5"/>',
+      'water': '<path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/>',
+      'scissors': '<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><line x1="20" y1="4" x2="8" y2="16"/><line x1="8" y1="8" x2="20" y2="20"/>',
+      'ruler': '<rect x="2" y="7" width="20" height="6" rx="1" transform="rotate(0 12 10)"/><line x1="6" y1="7" x2="6" y2="10"/><line x1="10" y1="7" x2="10" y2="10"/><line x1="14" y1="7" x2="14" y2="10"/><line x1="18" y1="7" x2="18" y2="10"/>',
+      'pencil': '<path d="M4 20l1-5L16 4l4 4L9 19z"/><line x1="14" y1="6" x2="18" y2="10"/>',
+      'thermometer': '<path d="M12 3a2.5 2.5 0 0 0-2.5 2.5v9a4 4 0 1 0 5 0v-9A2.5 2.5 0 0 0 12 3z"/><line x1="12" y1="7" x2="12" y2="14"/>',
+      'scale': '<line x1="12" y1="3" x2="12" y2="21"/><line x1="5" y1="7" x2="19" y2="7"/><path d="M5 7l-3 6a3 3 0 0 0 6 0z"/><path d="M19 7l-3 6a3 3 0 0 0 6 0z"/>',
+      'clock': '<circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 16,14"/>',
+      'bell': '<path d="M6 10a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+      'feather': '<path d="M20 4c-8 0-14 6-14 14v2h2c8 0 14-6 14-14z"/><line x1="14" y1="10" x2="6" y2="18"/>',
+      'telescope': '<path d="M3 12l14-5 1 3-14 5z"/><line x1="10" y1="11" x2="14" y2="20"/><line x1="8" y1="12" x2="6" y2="16"/><circle cx="18" cy="8" r="2"/>',
+      'microscope': '<path d="M9 19h8"/><path d="M11 19v-4a3 3 0 0 1 3-3"/><circle cx="9" cy="8" r="3"/><line x1="7" y1="11" x2="5" y2="15"/><line x1="6" y1="4" x2="10" y2="6"/>',
+      'binoculars': '<rect x="3" y="9" width="6" height="9" rx="2"/><rect x="15" y="9" width="6" height="9" rx="2"/><path d="M9 12h6"/><path d="M6 9V6h3v3"/><path d="M15 9V6h3v3"/>',
+      'umbrella': '<path d="M2 12a10 6 0 0 1 20 0z"/><line x1="12" y1="12" x2="12" y2="20"/><path d="M12 20a2 2 0 0 1-2-2"/>',
+      'glasses': '<circle cx="6.5" cy="14" r="3.5"/><circle cx="17.5" cy="14" r="3.5"/><line x1="10" y1="14" x2="14" y2="14"/><path d="M3 13l-1-1 2-6h2"/><path d="M21 13l1-1-2-6h-2"/>',
+      'rock': '<path d="M4 17l2-7 4-3 5 1 4 4 1 5z"/>',
+      'lightbulb': '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.7.5 1 1 1 1.8v.3h5v-.3c0-.8.3-1.3 1-1.8A6 6 0 0 0 12 3z"/>',
+      'volume': '<polygon points="3,9 8,9 12,5 12,19 8,15 3,15"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+      'search': '<circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/>',
+      'spoon': '<ellipse cx="12" cy="6.5" rx="3.5" ry="4.5"/><line x1="12" y1="11" x2="12" y2="21"/>',
+      'fork': '<path d="M8 2v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V2"/><path d="M10 2v7"/><line x1="10" y1="11" x2="10" y2="21"/>',
+      'chopsticks': '<line x1="6" y1="3" x2="10" y2="21"/><line x1="14" y1="3" x2="18" y2="21"/>',
+      'pants': '<path d="M7 2h10l.8 8.5-2.3 11.5h-2l-1.5-11-1.5 11h-2L6.2 10.5z"/>',
+      'skateboard': '<rect x="3" y="10" width="18" height="3" rx="1.5"/><circle cx="7" cy="16" r="2.2"/><circle cx="17" cy="16" r="2.2"/>',
+      'bat': '<path d="M5 19l8-8"/><path d="M13 11c0-2.5 2-5.5 4.5-5.5S20 8 17.5 10.5 13 13.5 13 11z"/>',
+      'racket': '<ellipse cx="10" cy="8" rx="6" ry="7"/><line x1="10" y1="15" x2="10" y2="21"/><line x1="5.5" y1="6" x2="14.5" y2="10"/><line x1="5.5" y1="10" x2="14.5" y2="6"/>',
+      'wheel': '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><line x1="4" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="20" y2="12"/>',
+      'orange': '<circle cx="12" cy="13" r="8"/><path d="M12 5V3"/><path d="M12 3c1.2 0 2 .6 2.5 1.5"/>',
+    };
+    const path = paths[iconName] || paths['help-circle'];
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  }
+
+  // Verbal-content pictures (concrete nouns like "rabbit", "fox", "pizza") are
+  // rendered as real, colorful emoji glyphs rather than abstract monochrome line
+  // art -- they're instantly recognizable to a young child, render natively with
+  // zero network dependency (reliable on static GitHub Pages hosting), and are
+  // literally designed to depict real-world objects clearly. This is distinct
+  // from decorative emoji in instructional text, which was removed earlier: here
+  // the emoji IS the picture the question is asking about.
+  const EMOJI_MAP = {
+    'apple': '🍎',
+    'bat': '🏏',
+    'battery': '🔋',
+    'beaker': '🧪',
+    'bear': '🐻',
+    'beef': '🥩',
+    'bell': '🔔',
+    'bike': '🚲',
+    'binoculars': '🔭',
+    'bird': '🐦',
+    'boat': '⛵',
+    'book': '📖',
+    'bread': '🍞',
+    'bug': '🐛',
+    'butterfly': '🦋',
+    'car': '🚗',
+    'carrot': '🥕',
+    'cat': '🐱',
+    'chopsticks': '🥢',
+    'circle': '⚪',
+    'clock': '🕐',
+    'cloud': '☁️',
+    'coin': '🪙',
+    'crocodile': '🐊',
+    'dog': '🐶',
+    'droplet': '💧',
+    'drum': '🥁',
+    'elephant': '🐘',
+    'feather': '🪶',
+    'file': '📄',
+    'fish': '🐟',
+    'flame': '🔥',
+    'flower': '🌸',
+    'fork': '🍴',
+    'fox': '🦊',
+    'glasses': '👓',
+    'globe': '🌍',
+    'guitar': '🎸',
+    'hammer': '🔨',
+    'hand': '✋',
+    'hat': '🎩',
+    'heart': '❤️',
+    'helicopter': '🚁',
+    'home': '🏠',
+    'ice': '🧊',
+    'jacket': '🧥',
+    'key': '🔑',
+    'knife': '🔪',
+    'lightbulb': '💡',
+    'lizard': '🦎',
+    'lock': '🔒',
+    'microscope': '🔬',
+    'moon': '🌙',
+    'mountain': '⛰️',
+    'mouse': '🐭',
+    'music': '🎵',
+    'orange': '🍊',
+    'paintbrush': '🖌️',
+    'pants': '👖',
+    'pencil': '✏️',
+    'piano': '🎹',
+    'pizza': '🍕',
+    'plane': '✈️',
+    'rabbit': '🐰',
+    'racket': '🎾',
+    'road': '🛣️',
+    'rock': '🪨',
+    'ruler': '📏',
+    'saw': '🪚',
+    'scale': '⚖️',
+    'scissors': '✂️',
+    'screwdriver': '🪛',
+    'search': '🔎',
+    'settings': '⚙️',
+    'shirt': '👕',
+    'shopping-basket': '🧺',
+    'skateboard': '🛹',
+    'snake': '🐍',
+    'snowflake': '❄️',
+    'spoon': '🥄',
+    'sun': '☀️',
+    'telescope': '🔭',
+    'thermometer': '🌡️',
+    'tiger': '🐯',
+    'toy': '🧸',
+    'train': '🚂',
+    'tree': '🌳',
+    'trumpet': '🎺',
+    'turtle': '🐢',
+    'umbrella': '☂️',
+    'user': '🧑',
+    'volume': '🔊',
+    'waves': '🌊',
+    'whale': '🐋',
+    'wheel': '⚙️',
+    'worm': '🐛',
+    'wrench': '🔧',
+    'help-circle': '❓',
+    'bee': '🐝', 'ant': '🐜', 'honey': '🍯', 'cheese': '🧀',
+    'tulip': '🌷', 'branch': '🌿', 'hole': '🕳️', 'palette': '🎨'
+  };
+
+  function iconSVG(name, size) {
+    size = size || 32;
+    const glyph = EMOJI_MAP[name] || EMOJI_MAP['help-circle'];
+    // Prefer real Twemoji image assets over the browser's native emoji font:
+    // native rendering depends entirely on what font is installed on the
+    // visitor's device (some browsers/OSes fall back to a monochrome symbol
+    // font with no color emoji at all, which is unreadable for a young child).
+    // Twemoji gives every visitor the identical crisp, full-color picture.
+    if (TWEMOJI_READY) {
+      try {
+        const codepoint = twemoji.convert.toCodePoint(glyph);
+        const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${codepoint}.svg`;
+        // onerror fallback: if the CDN is ever unreachable, degrade gracefully
+        // to the native emoji glyph rather than showing a broken image icon.
+        return `<img src="${url}" width="${size}" height="${size}" alt="${name}" style="display:inline-block;vertical-align:middle;" loading="lazy" onerror="this.outerHTML='<span style=&quot;font-size:${size}px;line-height:1;&quot;>${glyph}</span>';">`;
+      } catch (e) { /* fall through to native glyph below */ }
+    }
+    return `<span class="pic-emoji" style="font-size:${size}px; line-height:1; display:inline-block;" role="img" aria-label="${name}">${glyph}</span>`;
+  }
+
+  // ================================================================
+  //  QUESTION GENERATORS (with content-based IDs)
+  // ================================================================
+
+  // ---- PICTURE ANALOGIES ----
+  const ANALOGY_PAIRS = [
+    {a:'Page',b:'Book',c:'Wheel',d:'Car', rule:'Part → Whole', icons:['file','book','settings','car']},
+    {a:'Petal',b:'Flower',c:'Branch',d:'Tree', rule:'Part → Whole', icons:['tulip','flower','branch','tree']},
+    {a:'Key',b:'Lock',c:'Battery',d:'Toy', rule:'Part → Whole', icons:['key','lock','battery','toy']},
+    {a:'Bird',b:'Nest',c:'Fish',d:'Ocean', rule:'Animal → Home', icons:['bird','home','fish','waves']},
+    {a:'Bee',b:'Hive',c:'Ant',d:'Hill', rule:'Animal → Home', icons:['bee','home','ant','mountain']},
+    {a:'Rabbit',b:'Burrow',c:'Fox',d:'Den', rule:'Animal → Home', icons:['rabbit','hole','fox','home']},
+    {a:'Tiger',b:'Meat',c:'Rabbit',d:'Carrot', rule:'Animal → Food', icons:['tiger','beef','rabbit','carrot']},
+    {a:'Bear',b:'Honey',c:'Mouse',d:'Cheese', rule:'Animal → Food', icons:['bear','honey','mouse','cheese']},
+    {a:'Car',b:'Road',c:'Boat',d:'Water', rule:'Object → Location', icons:['car','road','boat','waves']},
+    {a:'Train',b:'Tracks',c:'Plane',d:'Sky', rule:'Object → Location', icons:['train','road','plane','cloud']},
+    {a:'Artist',b:'Brush',c:'Carpenter',d:'Hammer', rule:'Worker → Tool', icons:['palette','paintbrush','saw','hammer']},
+    {a:'Hot',b:'Fire',c:'Cold',d:'Ice', rule:'Similar → Similar', icons:['sun','flame','snowflake','ice']},
+    {a:'Cup',b:'Water',c:'Basket',d:'Fruit', rule:'Container → Contents', icons:['beaker','droplet','shopping-basket','apple']},
+  ];
+  // Pool (13) is smaller than this subtest's exam length (15), so plain random
+  // picking guarantees a repeated pair every exam and can cluster them back to
+  // back. A shuffle bag spreads repeats out instead of clustering them.
+  const nextAnalogyIndex = createShuffleBag(ANALOGY_PAIRS.length);
+
+  function makePictureAnalogy() {
+    const item = ANALOGY_PAIRS[nextAnalogyIndex()];
+    const correct = item.d;
+    const wrongs = ANALOGY_PAIRS.filter(x => x.d !== item.d && x.c !== item.c).slice(0,3).map(x => x.d);
+    while (wrongs.length < 3) wrongs.push(`Option${wrongs.length+1}`);
+    const choices = shuffle([correct, ...wrongs]);
+    const topLeft = iconSVG(item.icons[0], 32);
+    const topRight = iconSVG(item.icons[1], 32);
+    const bottomLeft = iconSVG(item.icons[2], 32);
+    const choicesHTML = choices.map(c => {
+      const match = ANALOGY_PAIRS.find(x => x.d === c);
+      return pic(c, match ? match.icons[3] : 'help-circle');
+    });
+    const matrixHTML = renderMatrix([topLeft, topRight, bottomLeft, '?'], 2);
+    const q = {
+      type: 'picture-analogies',
+      text: `Look at the top pair. Find the connection, then apply it below:\n\n${matrixHTML}`,
+      choices: choicesHTML.slice(0,4),
+      correct: item.d,
+      explanation: `Rule: ${item.rule}`,
+      steps: ['Look at the top pair — what is the connection between them?', `The rule is: ${item.rule}.`, `Apply the same rule to the bottom item: the answer is ${item.d}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'pic-analogies');
+  }
+
+  // ---- PICTURE CLASSIFICATION ----
+  const CLASS_ITEMS = [
+    {cat:'eating utensils', items:['Spoon','Fork','Knife','Chopsticks'], icons:['spoon','fork','knife','chopsticks']},
+    {cat:'musical instruments', items:['Piano','Guitar','Drums','Trumpet'], icons:['piano','guitar','drum','trumpet']},
+    {cat:'things that fly', items:['Bird','Butterfly','Airplane','Helicopter'], icons:['bird','butterfly','plane','helicopter']},
+    {cat:'things with wheels', items:['Car','Bicycle','Train','Skateboard'], icons:['car','bike','train','skateboard']},
+    {cat:'mammals', items:['Elephant','Whale','Dog','Cat'], icons:['elephant','whale','dog','cat']},
+    {cat:'reptiles', items:['Snake','Lizard','Turtle','Crocodile'], icons:['snake','lizard','turtle','crocodile']},
+    {cat:'clothing', items:['Shirt','Pants','Jacket','Hat'], icons:['shirt','pants','jacket','hat']},
+    {cat:'tools', items:['Hammer','Screwdriver','Wrench','Saw'], icons:['hammer','screwdriver','wrench','saw']},
+    {cat:'sports equipment', items:['Ball','Bat','Glove','Racket'], icons:['circle','bat','hand','racket']},
+    {cat:'things that are round', items:['Ball','Globe','Wheel','Orange'], icons:['circle','globe','wheel','orange']},
+  ];
+  // Pool (10) is smaller than this subtest's exam length (12) — same
+  // repeat-clustering risk as Picture Analogies above, same fix.
+  const nextClassIndex = createShuffleBag(CLASS_ITEMS.length);
+
+  function makePictureClassification() {
+    const set = CLASS_ITEMS[nextClassIndex()];
+    const allItems = set.items.map((text,i) => ({text, icon: set.icons[i]||'help-circle'}));
+    const sh = shuffle([...allItems]);
+    const grp = sh.slice(0,3);
+    const correct = sh[3] || sh[0];
+    const wrongs = CLASS_ITEMS.filter(x => x.cat !== set.cat).slice(0,3);
+    const wrongItems = wrongs.map(w => {
+      const idx = rand(0, w.items.length - 1);
+      return { text: w.items[idx], icon: w.icons[idx] || 'help-circle' };
+    });
+    const choices = shuffle([correct, ...wrongItems]);
+    const grpIcons = grp.map(i => iconSVG(i.icon, 28));
+    const choicesHTML = choices.map(c => pic(c.text, c.icon));
+    const matrixHTML = renderMatrix(grpIcons, 3);
+    const q = {
+      type: 'picture-classification',
+      text: `All of these belong to the same group:\n\n${matrixHTML}\n\nWhich answer choice also belongs in this group?`,
+      choices: choicesHTML.slice(0,4),
+      correct: correct.text,
+      explanation: `${correct.text} is also a ${set.cat.replace(/s$/,'')}, part of the same group: ${set.cat}.`,
+      steps: [`Name the group out loud: all of these are "${set.cat}".`, `Check each answer choice — which one is also a ${set.cat.replace(/s$/,'')}?`, `${correct.text} belongs in the same group.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'pic-classification');
+  }
+
+  // ---- SENTENCE COMPLETION ----
+  const SENTENCE_ITEMS = [
+    { sentence: 'Max sees something floating in the water. Which one does Max see?', choices: ['Rock','Ball','Hammer','Coin'], icons: ['rock','circle','hammer','coin'], correct:'Ball', why:'A ball floats — rocks, hammers, and coins sink.' },
+    { sentence: 'Anya wants to find something that lives underground. Which one does Anya find?', choices: ['Eagle','Worm','Robin','Butterfly'], icons: ['bird','worm','bird','butterfly'], correct:'Worm', why:'Worms live underground.' },
+    { sentence: 'Sophie is looking for something that gives us light. Which does she pick?', choices: ['Rock','Moon','Lightbulb','Log'], icons: ['rock','moon','lightbulb','flame'], correct:'Lightbulb', why:'A lightbulb gives us light.' },
+    { sentence: 'Alex needs something to keep dry in the rain. Which one?', choices: ['Umbrella','Parasol','Cap','Sunglasses'], icons: ['umbrella','umbrella','hat','glasses'], correct:'Umbrella', why:'An umbrella keeps you dry in the rain.' },
+    { sentence: 'Maria wants to measure temperature. Which tool does she need?', choices: ['Ruler','Thermometer','Scale','Clock'], icons: ['ruler','thermometer','scale','clock'], correct:'Thermometer', why:'A thermometer measures temperature.' },
+    { sentence: 'Tom is looking for something that makes a loud noise. Which one?', choices: ['Whisper','Bell','Feather','Cotton'], icons: ['volume','bell','feather','circle'], correct:'Bell', why:'A bell makes a loud ringing noise.' },
+    { sentence: 'Lily wants to see something very tiny. Which tool does she need?', choices: ['Telescope','Microscope','Binoculars','Magnifying glass'], icons: ['telescope','microscope','binoculars','search'], correct:'Microscope', why:'A microscope is used to see tiny things.' },
+    { sentence: 'Emma needs something to cut paper. Which tool does she use?', choices: ['Scissors','Knife','Ruler','Pencil'], icons: ['scissors','knife','ruler','pencil'], correct:'Scissors', why:'Scissors are used to cut paper.' },
+    { sentence: 'Oliver is looking for something that grows in the ground. Which one?', choices: ['Potato','Bread','Cheese','Milk'], icons: ['circle','bread','beef','droplet'], correct:'Potato', why:'Potatoes grow in the ground.' },
+  ];
+  // Pool (9) is smaller than this subtest's exam length (12) — same fix as above.
+  const nextSentenceIndex = createShuffleBag(SENTENCE_ITEMS.length);
+
+  function makeSentenceCompletion() {
+    const item = SENTENCE_ITEMS[nextSentenceIndex()];
+    const choices = item.choices.map((text,i) => pic(text, item.icons[i]||'help-circle'));
+    const q = {
+      type: 'sentence-completion',
+      sentence: item.sentence,
+      choices: shuffle(choices),
+      correct: item.correct,
+      explanation: item.why,
+      steps: ['Listen to the whole sentence carefully, from start to finish.', 'Eliminate choices that do NOT fit.', `The answer is ${item.correct} — ${item.why}`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'sentence-comp');
+  }
+
+  // ---- FIGURE ANALOGIES (with plausible distractors) ----
+  const FIGURE_TYPES = ['circle','square','triangle','diamond','pentagon','hexagon','star'];
+
+  function makeFigureAnalogy() {
+    const types = ['rotate','reflect','shade','size','lines','diagonal','nested','halfshade','pattern','compound'];
+    const t = pick(types);
+    const baseShape = pick(FIGURE_TYPES);
+    const color = '#1a1a2e';
+    let tl, tr, bl, br, correct, rule, steps;
+    let wrongs = [];
+
+    if (t === 'rotate') {
+      const aFrom = pick(['arrow-up','arrow-down','arrow-left','arrow-right']);
+      const rotMap = {'arrow-up':'arrow-right','arrow-right':'arrow-down','arrow-down':'arrow-left','arrow-left':'arrow-up'};
+      const to = rotMap[aFrom];
+      tl = svgFigure(aFrom, {size:60, stroke:color});
+      tr = svgFigure(to, {size:60, stroke:color});
+      bl = svgFigure(aFrom, {size:60, stroke:color});
+      br = svgFigure(to, {size:60, stroke:color});
+      correct = br;
+      rule = 'Rotated 90° clockwise';
+      steps = ['The arrow rotates 90° clockwise from top-left to top-right.', 'Apply that same 90° clockwise turn to the bottom-left shape.'];
+      wrongs = [
+        svgFigure(aFrom, {size:60, stroke:color}),
+        svgFigure(rotMap[to], {size:60, stroke:color}),
+        svgFigure(pick(['triangle','square','diamond']), {size:60, stroke:color}),
+      ];
+    } else if (t === 'reflect') {
+      tl = svgFigure(baseShape, {size:60, stroke:color});
+      tr = svgFigure(baseShape, {size:60, stroke:color, reflect:true});
+      bl = svgFigure('arrow-up', {size:60, stroke:color});
+      br = svgFigure('arrow-up', {size:60, stroke:color, reflect:true});
+      correct = br;
+      rule = 'Reflection (mirror image)';
+      steps = ['The top-right shape is a mirror image (left-right flip) of the top-left shape.', 'Flip the bottom shape the same way to get the answer.'];
+      wrongs = [
+        svgFigure('arrow-up', {size:60, stroke:color}),
+        svgFigure('arrow-down', {size:60, stroke:color}),
+        svgFigure(baseShape, {size:60, stroke:color}),
+      ];
+    } else if (t === 'shade') {
+      tl = svgFigure(baseShape, {size:60, stroke:color, fill:'none'});
+      tr = svgFigure(baseShape, {size:60, stroke:color, fill:'#ccc'});
+      bl = svgFigure('square', {size:60, stroke:color, fill:'none'});
+      br = svgFigure('square', {size:60, stroke:color, fill:'#ccc'});
+      correct = br;
+      rule = 'Shape is filled with shading';
+      steps = ['The shape changes from empty (outline only) to filled with shading.', 'Shade the bottom shape the same way.'];
+      // FIX: wrongs previously included the exact same "square filled #ccc" as `correct`,
+      // which is a duplicate choice and crashed validateQuestion(). Swapped in a
+      // triangle (filled) instead so all four choices are guaranteed distinct.
+      wrongs = [
+        svgFigure('square', {size:60, stroke:color, fill:'none'}),
+        svgFigure('triangle', {size:60, stroke:color, fill:'#ccc'}),
+        svgFigure('circle', {size:60, stroke:color, fill:'none'}),
+      ];
+    } else if (t === 'size') {
+      tl = svgFigure(baseShape, {size:50, stroke:color});
+      tr = svgFigure(baseShape, {size:75, stroke:color});
+      bl = svgFigure('diamond', {size:50, stroke:color});
+      br = svgFigure('diamond', {size:75, stroke:color});
+      correct = br;
+      rule = 'Shape size increased';
+      steps = ['The shape gets larger from top-left to top-right.', 'Make the bottom shape larger by the same amount.'];
+      wrongs = [
+        svgFigure('diamond', {size:50, stroke:color}),
+        svgFigure('diamond', {size:50, stroke:color, rotation:45}),
+        svgFigure('square', {size:75, stroke:color}),
+      ];
+    } else if (t === 'lines') {
+      tl = svgFigure(baseShape, {size:60, stroke:color});
+      tr = svgFigure('with-lines', {size:60, stroke:color});
+      bl = svgFigure('square', {size:60, stroke:color});
+      br = svgFigure('with-lines', {size:60, stroke:color});
+      correct = br;
+      rule = 'Internal lines added';
+      steps = ['A horizontal and vertical line are added inside the shape.', 'Add the same internal lines to the bottom shape.'];
+      wrongs = [
+        svgFigure('square', {size:60, stroke:color}),
+        svgFigure('with-diagonal', {size:60, stroke:color}),
+        svgFigure('circle', {size:60, stroke:color}),
+      ];
+    } else if (t === 'diagonal') {
+      tl = svgFigure(baseShape, {size:60, stroke:color});
+      tr = svgFigure('with-diagonal', {size:60, stroke:color});
+      bl = svgFigure('square', {size:60, stroke:color});
+      br = svgFigure('with-diagonal', {size:60, stroke:color});
+      correct = br;
+      rule = 'Diagonal line added';
+      steps = ['A diagonal line is added inside the shape.', 'Add the same diagonal line to the bottom shape.'];
+      wrongs = [
+        svgFigure('square', {size:60, stroke:color}),
+        svgFigure('with-lines', {size:60, stroke:color}),
+        svgFigure('circle', {size:60, stroke:color}),
+      ];
+    } else if (t === 'nested') {
+      tl = svgFigure('nested', {size:60, stroke:color, outer:'circle', inner:'square'});
+      tr = svgFigure('nested', {size:60, stroke:color, outer:'square', inner:'circle'});
+      bl = svgFigure('nested', {size:60, stroke:color, outer:'diamond', inner:'star'});
+      br = svgFigure('nested', {size:60, stroke:color, outer:'star', inner:'diamond'});
+      correct = br;
+      rule = 'Inner and outer shapes swapped';
+      steps = ['The shape that was on the outside moves inside, and the inside shape moves outside.', 'Swap the inner and outer shapes the same way for the bottom pair.'];
+      // FIX: wrongs previously repeated the exact same "outer:star, inner:diamond"
+      // combo as `correct` — an exact duplicate that crashed validateQuestion().
+      // Swapped in a fresh, distinct outer/inner pairing instead.
+      wrongs = [
+        svgFigure('nested', {size:60, stroke:color, outer:'diamond', inner:'star'}),
+        svgFigure('nested', {size:60, stroke:color, outer:'circle', inner:'triangle'}),
+        svgFigure('diamond', {size:60, stroke:color}),
+      ];
+    } else if (t === 'halfshade') {
+      tl = svgFigure('half-shaded-square', {size:60, stroke:color, shadeColor:'#ccc'});
+      tr = svgFigure('half-shaded-circle', {size:60, stroke:color, shadeColor:'#ccc'});
+      bl = svgFigure('square', {size:60, stroke:color});
+      br = svgFigure('half-shaded-square', {size:60, stroke:color, shadeColor:'#ccc'});
+      correct = br;
+      rule = 'Half of the shape is shaded';
+      steps = ['Exactly half of the shape is shaded.', 'Shade half of the bottom shape the same way.'];
+      wrongs = [
+        svgFigure('square', {size:60, stroke:color}),
+        svgFigure('half-shaded-circle', {size:60, stroke:color, shadeColor:'#ccc'}),
+        svgFigure('circle', {size:60, stroke:color}),
+      ];
+    } else if (t === 'pattern') {
+      // Texture fill: empty outline gains a dot/stripe/checker pattern — the real
+      // test uses this constantly, not just plain solid shading.
+      const texture = pick(['dots','stripes','checker']);
+      tl = svgFigure(baseShape, {size:60, stroke:color, fill:'none'});
+      tr = svgFigure(baseShape, {size:60, stroke:color, fill:texture});
+      bl = svgFigure('pentagon', {size:60, stroke:color, fill:'none'});
+      br = svgFigure('pentagon', {size:60, stroke:color, fill:texture});
+      correct = br;
+      rule = `The shape gains a ${texture} pattern`;
+      steps = [`The shape changes from empty (outline only) to a ${texture} pattern.`, `Give the bottom shape that same ${texture} pattern.`];
+      wrongs = [
+        svgFigure('pentagon', {size:60, stroke:color, fill:'none'}),
+        svgFigure('pentagon', {size:60, stroke:color, fill:pick(['dots','stripes','checker'].filter(x=>x!==texture))}),
+        svgFigure('hexagon', {size:60, stroke:color, fill:texture}),
+      ];
+    } else {
+      // Compound: two attributes change at once (rotation + texture), matching
+      // the real test's harder items where more than one thing changes together.
+      const texture = pick(['dots','stripes','checker']);
+      const turn = pick([90,180,270]);
+      tl = svgFigure('flag', {size:60, stroke:color, rotation:0, fill:'none'});
+      tr = svgFigure('flag', {size:60, stroke:color, rotation:turn, fill:texture});
+      bl = svgFigure('lshape', {size:60, stroke:color, rotation:0, fill:'none'});
+      br = svgFigure('lshape', {size:60, stroke:color, rotation:turn, fill:texture});
+      correct = br;
+      rule = `The shape rotates ${turn}° AND gains a ${texture} pattern, both at once`;
+      steps = [`Two things change together: the shape rotates ${turn}°, and it gains a ${texture} pattern.`, `Apply BOTH changes to the bottom shape.`];
+      wrongs = [
+        svgFigure('lshape', {size:60, stroke:color, rotation:turn, fill:'none'}),
+        svgFigure('lshape', {size:60, stroke:color, rotation:0, fill:texture}),
+        svgFigure('lshape', {size:60, stroke:color, rotation:(turn+90)%360, fill:texture}),
+      ];
+    }
+
+    // Defense in depth: never let a wrong option collide with the correct answer
+    // or with another wrong option, no matter which branch above produced it.
+    wrongs = wrongs.filter(w => w !== correct);
+    wrongs = uniq(wrongs);
+    while (wrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:60, stroke:color, dashed:true, rotation: rand(0,3)*30});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix([tl, tr, bl, '?'], 2);
+    const q = {
+      type: 'figure-analogies',
+      text: `Find the rule connecting the top row, then apply it to the bottom row:\n\n${matrixHTML}`,
+      choices: choices,
+      correct: correct,
+      explanation: `Rule: ${rule}`,
+      steps: steps,
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-analogies');
+  }
+
+  // Renders several copies of a shape as ONE composite figure, either loosely
+  // clustered together or stacked in a column of individual boxes — used by
+  // the count/arrangement question format below.
+  function clusterSVG(shapeType, count, mode, opts) {
+    opts = opts || {};
+    const stroke = opts.stroke || '#1a1a1a';
+    const fill = opts.fill || 'none';
+    const mini = 24;
+    const strip = (svg) => svg.replace(/<svg[^>]*>/, '').replace(/<\/svg>/, '');
+    if (mode === 'cluster') {
+      const cols = 2;
+      const rows = Math.ceil(count / cols);
+      const W = cols * mini + 10, H = rows * mini + 10;
+      let inner = '';
+      for (let i = 0; i < count; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        const x = 5 + col * mini, y = 5 + row * mini;
+        inner += `<g transform="translate(${x},${y})">${strip(svgFigure(shapeType, {size: mini - 4, stroke, fill}))}</g>`;
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block;margin:0 auto;" aria-hidden="true">${inner}</svg>`;
+    }
+    const W = mini + 14, H = count * (mini + 6) + 6;
+    let inner = '';
+    for (let i = 0; i < count; i++) {
+      const y = 3 + i * (mini + 6);
+      inner += `<rect x="2" y="${y}" width="${W-4}" height="${mini+2}" fill="none" stroke="${stroke}" stroke-width="1" opacity="0.35"/>`;
+      inner += `<g transform="translate(7,${y+1})">${strip(svgFigure(shapeType, {size: mini - 2, stroke, fill}))}</g>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block;margin:0 auto;" aria-hidden="true">${inner}</svg>`;
+  }
+
+  // ---- FIGURE SERIES (3-panel progressive rule, predict the 4th) ----
+  // A different layout from the 2x2 analogy: three boxes are shown applying the
+  // SAME step of change again and again; the child predicts what panel 4 looks
+  // like by continuing the pattern.
+  function makeFigureSeriesProgressive() {
+    const stroke = '#1a1a1a';
+    const progressionTypes = ['shrink', 'rotate', 'pattern-cycle', 'sides-increase'];
+    const pt = pick(progressionTypes);
+    let panels = [], rule, steps;
+
+    if (pt === 'shrink') {
+      const shape = pick(FIGURE_TYPES);
+      const scales = [1, 0.78, 0.58, 0.4];
+      panels = scales.map(s => svgFigure(shape, {size:60, stroke, scale:s}));
+      rule = 'The shape gets smaller by the same amount in each panel.';
+      steps = ['Compare panel 1 to panel 2 — the shape shrinks by a set amount.', 'That same shrink happens again from panel 2 to panel 3, and again to panel 4.'];
+    } else if (pt === 'rotate') {
+      const step = pick([45, 90, 135]);
+      panels = [0,1,2,3].map(i => svgFigure('flag', {size:60, stroke, rotation:(i*step)%360, fill:'#888'}));
+      rule = `The shape rotates ${step}° further in each panel.`;
+      steps = [`Compare panel 1 to panel 2 — the shape turns ${step}°.`, `That same turn happens again each panel: panel 4 continues the rotation.`];
+    } else if (pt === 'pattern-cycle') {
+      const shape = pick(FIGURE_TYPES);
+      const fills = ['none','dots','stripes','checker'];
+      panels = fills.map(f => svgFigure(shape, {size:60, stroke, fill:f}));
+      rule = 'The pattern gets denser each panel: empty, then dots, then stripes, then checker.';
+      steps = ['Watch the fill pattern change from panel to panel: empty → dots → stripes.', 'The pattern keeps getting busier — panel 4 continues that progression to checker.'];
+    } else {
+      const seq = ['triangle','square','pentagon','hexagon'];
+      panels = seq.map(s => svgFigure(s, {size:60, stroke}));
+      rule = 'The shape gains one more side in each panel.';
+      steps = ['Count the sides: 3, then 4, then 5.', 'Each panel has one more side than the last — panel 4 continues to 6 sides.'];
+    }
+
+    const correct = panels[3];
+    let wrongs = [panels[1], panels[2]];
+    if (pt === 'shrink') {
+      const shape = panels[0]; // reuse same shape family via a slightly-off scale
+      wrongs.push(svgFigure(pick(FIGURE_TYPES), {size:60, stroke, scale:0.4}));
+    } else if (pt === 'rotate') {
+      wrongs.push(svgFigure('flag', {size:60, stroke, rotation:0, fill:'#888'}));
+    } else if (pt === 'pattern-cycle') {
+      wrongs.push(svgFigure(pick(FIGURE_TYPES), {size:60, stroke, fill:'checker'}));
+    } else {
+      wrongs.push(svgFigure('star', {size:60, stroke}));
+    }
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:60, stroke, dashed:true, rotation: rand(0,3)*30});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const rowHTML = renderMatrix(panels.slice(0,3), 3);
+    const q = {
+      type: 'figure-analogies',
+      text: `Look at how the pattern changes across these three panels, then pick what panel 4 would look like:\n\n${rowHTML}`,
+      choices, correct,
+      explanation: rule,
+      steps,
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-analogies');
+  }
+
+  // ---- SHAPE COUNT / ARRANGEMENT SERIES ----
+  // Tests count + shape-identity together: a loose cluster of N shapes is
+  // rearranged into a column of N boxes, one shape per box. The child must
+  // preserve BOTH the shape and the count when applying the same rule below.
+  function makeShapeCountSeries() {
+    const stroke = '#1a1a1a';
+    const shapeA = pick(FIGURE_TYPES);
+    let shapeB = pick(FIGURE_TYPES);
+    while (shapeB === shapeA) shapeB = pick(FIGURE_TYPES);
+    const countTop = rand(2,4);
+    const countBottom = rand(2,4);
+    const tl = clusterSVG(shapeA, countTop, 'cluster', {stroke});
+    const tr = clusterSVG(shapeA, countTop, 'column', {stroke});
+    const bl = clusterSVG(shapeB, countBottom, 'cluster', {stroke});
+    const correct = clusterSVG(shapeB, countBottom, 'column', {stroke});
+
+    let wrongCount = countBottom + (pick([1,-1]));
+    if (wrongCount < 2) wrongCount = 4;
+    if (wrongCount > 4) wrongCount = 2;
+    let wrongs = [
+      clusterSVG(shapeB, wrongCount, 'column', {stroke}),   // wrong count
+      clusterSVG(shapeA, countBottom, 'column', {stroke}),  // wrong shape (kept top's shape)
+      clusterSVG(shapeB, countBottom, 'cluster', {stroke}), // forgot to rearrange into a column
+    ];
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = clusterSVG(pick(FIGURE_TYPES), rand(2,4), pick(['column','cluster']), {stroke});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix([tl, tr, bl, '?'], 2);
+    const q = {
+      type: 'figure-analogies',
+      text: `Find the rule connecting the top row, then apply it to the bottom row:\n\n${matrixHTML}`,
+      choices, correct,
+      explanation: 'Each shape from the cluster gets its own box, stacked in a column — same shape, same count, just rearranged.',
+      steps: ['Count how many shapes are in the cluster, and notice which shape it is.', 'Each shape gets placed into its own box, stacked vertically.', 'Apply that to the bottom cluster: keep the same shape and the same count, arranged in a column.'],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-analogies');
+  }
+
+  // Mixes all three Figure Analogies formats together so a quiz/exam draws from
+  // the classic 2x2 analogy, the 3-panel progressive series, AND the
+  // count/arrangement format rather than only ever showing one shape.
+  function genFigureAnalogyPool() {
+    const r = Math.random();
+    if (r < 0.5) return makeFigureAnalogy();
+    if (r < 0.78) return makeFigureSeriesProgressive();
+    return makeShapeCountSeries();
+  }
+
+  // ---- FIGURE CLASSIFICATION ----
+  // Session-scoped "shuffle bag": guarantees every rule type is used once before
+  // any rule repeats, instead of pure random picking (which -- even from 11
+  // options -- still visibly clusters/repeats within a 12-question exam).
+  let figClassBag = null, figClassBagSize = 0;
+  function nextRuleIndex(poolSize) {
+    if (!figClassBag || figClassBagSize !== poolSize) { figClassBag = createShuffleBag(poolSize); figClassBagSize = poolSize; }
+    return figClassBag();
+  }
+
+  function makeFigureClassification() {
+    const rules = [
+      () => { const s=pick(FIGURE_TYPES); return { desc:`All are ${s}s`, group:[s,s,s].map(x=>svgFigure(x,{size:55,stroke:'#1a1a2e'})), correct:svgFigure(s,{size:55,stroke:'#1a1a2e'}), wrongs:FIGURE_TYPES.filter(x=>x!==s).slice(0,3).map(x=>svgFigure(x,{size:55,stroke:'#1a1a2e'})), steps:[`They are all ${s}s.`, `Find the answer choice that is also a ${s}.`] }; },
+      () => { return { desc:'All have 4 sides', group:['square','diamond','square'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), correct:svgFigure('diamond',{size:55,stroke:'#1a1a2e'}), wrongs:['triangle','circle','pentagon'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['Count the sides on each shape — they all have 4 sides.', 'Find the answer choice that also has 4 sides.'] }; },
+      () => { return { desc:'All are divided in half', group:shuffle(FIGURE_TYPES).slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',divided:true})), correct:svgFigure(pick(FIGURE_TYPES),{size:55,stroke:'#1a1a2e',divided:true}), wrongs:shuffle(FIGURE_TYPES).slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a line dividing the shape exactly in half.', 'Find the answer choice that is also divided in half.'] }; },
+      () => { return { desc:'All have nested shapes', group:[
+        svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'circle',inner:'square'}),
+        svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'square',inner:'circle'}),
+        svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'diamond',inner:'star'})
+      ], correct:svgFigure('nested',{size:55,stroke:'#1a1a2e',outer:'star',inner:'diamond'}), wrongs:FIGURE_TYPES.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a smaller shape nested inside a larger one.', 'Find the answer choice that also has a shape nested inside it.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are shaded', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'#ccc'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'#ccc'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They are all filled in with shading.', 'Find the answer choice that is also shaded.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a dot pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'dots'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'dots'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['They all have a dotted pattern filled in.', 'Find the answer choice that also has a dotted pattern.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a striped pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'stripes'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'stripes'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'checker'})), steps:['They all have a striped pattern filled in.', 'Find the answer choice that also has stripes.'] }; },
+      () => { const shapes=shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All have a checkered pattern', group:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'checker'})), correct:svgFigure(shapes[3],{size:55,stroke:'#1a1a2e',fill:'checker'}), wrongs:shapes.slice(0,3).map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',fill:'dots'})), steps:['They all have a checkered pattern filled in.', 'Find the answer choice that also has a checkered pattern.'] }; },
+      () => { return { desc:'All are triangles (3 sides)', group:['triangle','triangle','triangle'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e',rotation:pick([0,60,120,180,240,300])})), correct:svgFigure('triangle',{size:55,stroke:'#1a1a2e',rotation:pick([0,90,180,270])}), wrongs:['square','pentagon','hexagon'].map(s=>svgFigure(s,{size:55,stroke:'#1a1a2e'})), steps:['Count the sides — they all have 3 sides (triangles).', 'Find the answer choice that also has 3 sides.'] }; },
+      () => { const big = shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are large', group:big.slice(0,3).map(s=>svgFigure(s,{size:65,stroke:'#1a1a2e'})), correct:svgFigure(big[3],{size:65,stroke:'#1a1a2e'}), wrongs:big.slice(0,3).map(s=>svgFigure(s,{size:35,stroke:'#1a1a2e'})), steps:['They are all drawn large.', 'Find the answer choice that is also large, not small.'] }; },
+      () => { const small = shuffle(FIGURE_TYPES).slice(0,4); return { desc:'All are small', group:small.slice(0,3).map(s=>svgFigure(s,{size:32,stroke:'#1a1a2e'})), correct:svgFigure(small[3],{size:32,stroke:'#1a1a2e'}), wrongs:small.slice(0,3).map(s=>svgFigure(s,{size:60,stroke:'#1a1a2e'})), steps:['They are all drawn small.', 'Find the answer choice that is also small, not large.'] }; },
+    ];
+    const rule = rules[nextRuleIndex(rules.length)]();
+    // Defense in depth: guard against any future rule producing a wrong option
+    // identical to the correct answer.
+    let safeWrongs = uniq(rule.wrongs.filter(w => w !== rule.correct));
+    while (safeWrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:55, stroke:'#1a1a2e', dashed:true});
+      if (w !== rule.correct && !safeWrongs.includes(w)) safeWrongs.push(w);
+    }
+    const choices = shuffle([rule.correct, ...safeWrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix(rule.group, 3);
+    const q = {
+      type: 'figure-classification',
+      text: `All three of these shapes share a rule:\n\n${matrixHTML}\n\nWhich answer choice follows the same rule?`,
+      choices: choices,
+      correct: rule.correct,
+      explanation: `${rule.desc}.`,
+      steps: rule.steps,
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'fig-classification');
+  }
+
+  // ---- PAPER FOLDING ----
+  function makePaperFolding() {
+    const punches = rand(1,3);
+    const folds = rand(1,2);
+    const layers = Math.pow(2, folds);
+    const total = punches * layers;
+    const correct = `${total} holes`;
+    const wrongs = [`${total-1} holes`, `${punches} holes`, `${total+1} holes`, `${total+2} holes`];
+    const choices = ensureFour([correct, ...wrongs], '0');
+    const meta = paperFoldingSVG(punches, folds);
+    const q = {
+      type: 'paper-folding',
+      qText: `Paper folded ${folds} time${folds>1?'s':''}. ${punches} hole${punches>1?'s':''} punched through all layers. Unfold — how many holes?`,
+      folds: folds,
+      punches: punches,
+      svgHTML: meta.html,
+      foldMeta: meta,
+      choices: choices,
+      correct: correct,
+      explanation: `${folds} fold${folds>1?'s':''} = ${layers} layers. ${punches} × ${layers} = ${total}.`,
+      steps: [`Count the layers: ${folds} fold${folds>1?'s':''} = ${layers} layers.`, `Each punch goes through ALL ${layers} layers.`, `${punches} punch(es) × ${layers} layers = ${total} holes.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'paper-folding');
+  }
+
+  // ---- NUMBER ANALOGIES ----
+  function makeNumberAnalogy() {
+    const ops = [
+      ()=>{ const d=rand(2,5); const a1=rand(4,10); const a2=a1+d; const b1=rand(4,10); const b2=b1+d; return {rule:`+${d}`, a1,a2,b1,b2, desc:`add ${d}`}; },
+      ()=>{ const d=rand(2,5); const a2=rand(4,10); const a1=a2+d; const b2=rand(4,10); const b1=b2+d; return {rule:`-${d}`, a1,a2,b1,b2, desc:`subtract ${d}`}; },
+      ()=>{ const d=[2,3,4,5][rand(0,3)]; const a1=rand(2,6); const a2=a1*d; const b1=rand(2,6); const b2=b1*d; return {rule:`×${d}`, a1,a2,b1,b2, desc:`multiply by ${d}`}; },
+      ()=>{ const d=[2,3,4,5][rand(0,3)]; const a2=rand(2,5); const a1=a2*d; const b2=rand(2,5); const b1=b2*d; return {rule:`÷${d}`, a1,a2,b1,b2, desc:`divide by ${d}`}; },
+    ];
+    const op = pick(ops)();
+    const {rule, a1,a2,b1,b2, desc} = op;
+    const choices = ensureFour([String(b2), String(b2+1), String(b2-1), String(b2+2)], '0');
+    const q = {
+      type: 'number-analogies',
+      text: `Top row: ${a1} → ${a2}  (rule: ${desc})\nBottom row: ${b1} → ?`,
+      choices: choices,
+      correct: String(b2),
+      explanation: `Top: ${a1} → ${a2}. Apply to bottom: ${b1} → ${b2} (${rule})`,
+      steps: [`Find the rule in the top row: ${a1} → ${a2} (${desc}).`, `Apply that same rule to the bottom row: ${b1} → ${b2}.`, `The answer is ${b2}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'num-analogies');
+  }
+
+  // ---- NUMBER SERIES ----
+  function makeNumberSeries() {
+    const patterns = [
+      ()=>{ const s=rand(1,8); return {seq:[s,s+1,s+2,s+3,s+4],next:s+5,desc:'+1 each time'}; },
+      ()=>{ const s=rand(1,8); return {seq:[s,s+2,s+4,s+6,s+8],next:s+10,desc:'+2 each time'}; },
+      ()=>{ const s=rand(12,20); return {seq:[s,s-1,s-2,s-3,s-4],next:s-5,desc:'-1 each time'}; },
+      ()=>{ const s=rand(12,20); return {seq:[s,s-2,s-4,s-6,s-8],next:s-10,desc:'-2 each time'}; },
+      ()=>{ const a=rand(3,7), b=rand(8,14); return {seq:[a,b,a,b,a],next:b,desc:'alternates between two numbers'}; },
+      ()=>{ const s=rand(1,6); return {seq:[s,s*2,s*3,s*4,s*5],next:s*6,desc:'multiply by increasing integers'}; },
+      ()=>{ const s=rand(8,15); return {seq:[s,s+1,s+3,s+4,s+6],next:s+7,desc:'+1,+2,+1,+2...'}; },
+    ];
+    const pat = pick(patterns)();
+    const {seq,next,desc}=pat;
+    const choices = ensureFour([String(next), String(next+1), String(next-1), String(next+2)], '0');
+    const q = {
+      type: 'number-series',
+      text: `${seq.join(' · ')} · ___\n\nWhat number comes next in this pattern?`,
+      choices: choices,
+      correct: String(next),
+      explanation: `Pattern: ${desc}. Next: ${next}`,
+      steps: [`Look at the hop between each pair of numbers: ${seq.slice(0,-1).map((v,i)=>`${seq[i+1]-v>0?'+':''}${seq[i+1]-v}`).join(', ')}`, `The pattern is: ${desc}.`, `The next number is ${next}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'num-series');
+  }
+
+  // ---- NUMBER PUZZLES ----
+  function makeNumberPuzzle() {
+    const types = [
+      // total = a + b + ?  (triple addition)
+      ()=>{ const a=rand(3,9), b=rand(2,7), miss=rand(2,8); const total=a+b+miss; return {text:`${total} = ${a} + ${b} + ?`, correct:miss, wrong:[miss+1, miss-1, miss+2], steps:[`Add the numbers you can see: ${a}+${b}=${a+b}.`, `Subtract from the total to find the missing number: ${total}−${a+b}=${miss}.`]}; },
+      // total = a + ?  (single addition)
+      ()=>{ const a=rand(5,12), miss=rand(3,9); const total=a+miss; return {text:`${total} = ${a} + ?`, correct:miss, wrong:[miss+1, miss-1, miss+2], steps:[`Subtract from the total to find the missing number: ${total}−${a}=${miss}.`]}; },
+      // total = a + b - ?  (add then subtract)
+      ()=>{ const a=rand(4,10), b=rand(2,6), miss=rand(2,7); const total=a+b-miss; return {text:`${total} = ${a} + ${b} - ?`, correct:miss, wrong:[miss+1, miss-1, miss+2], steps:[`Add the numbers you can see: ${a}+${b}=${a+b}.`, `Subtract the total from that sum to find the missing number: ${a+b}−${total}=${miss}.`]}; },
+      // total = a - ?  (single subtraction)
+      ()=>{ const a=rand(6,15), miss=rand(1,a-2); const total=a-miss; return {text:`${total} = ${a} - ?`, correct:miss, wrong:[miss+1, miss-1, miss+2], steps:[`Subtract the total from the number you see: ${a}−${total}=${miss}.`]}; },
+      // total = a - b - ?  (double subtraction)
+      ()=>{ const a=rand(9,19), b=rand(1,a-4), rem=a-b, miss=rand(1,Math.min(rem-1,9)); const total=rem-miss; return {text:`${total} = ${a} - ${b} - ?`, correct:miss, wrong:[miss-1, miss+1, miss+2], steps:[`Subtract the first number you see: ${a}−${b}=${rem}.`, `Subtract the total from that to find the missing number: ${rem}−${total}=${miss}.`]}; },
+      // total = a - b + ?  (subtract then add)
+      ()=>{ const a=rand(8,19), b=rand(1,a-1), diff=a-b, miss=rand(1,9); const total=diff+miss; return {text:`${total} = ${a} - ${b} + ?`, correct:miss, wrong:[miss-1, miss+1, miss+2], steps:[`Subtract the numbers you can see: ${a}−${b}=${diff}.`, `Subtract that from the total to find the missing number: ${total}−${diff}=${miss}.`]}; },
+    ];
+    const t = pick(types)();
+    const choices = ensureFour([String(t.correct), ...t.wrong.map(String)], '0');
+    const q = {
+      type: 'number-puzzles',
+      text: t.text,
+      choices: choices,
+      correct: String(t.correct),
+      explanation: `${t.steps.join(' ')} The answer is ${t.correct}.`,
+      steps: t.steps.concat([`The answer is ${t.correct}.`]),
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'num-puzzles');
+  }
+
+  // ---- ABACUS SERIES ----
+  function makeAbacusSeries() {
+    const patterns = [
+      { seq: [4,4,0,0,2], next: 2, desc: '4,4,0,0,2,2... (pairs)' },
+      { seq: [1,2,3,4,5], next: 6, desc: '+1 each time' },
+      { seq: [5,4,3,2,1], next: 0, desc: '-1 each time' },
+      { seq: [2,4,6,8,10], next: 12, desc: '+2 each time' },
+      { seq: [10,8,6,4,2], next: 0, desc: '-2 each time' },
+      { seq: [3,6,5,8,7], next: 10, desc: '+3,-1,+3,-1' },
+      { seq: [0,1,0,2,0], next: 3, desc: '0,1,0,2,0,3...' },
+    ];
+    const p = pick(patterns);
+    const choices = ensureFour([String(p.next), String(p.next+1), String(p.next-1), String(p.next+2)], '0');
+    const q = {
+      type: 'number-series',
+      text: `Count the beads on each rod:\n\n${abacusSVG(p.seq, 260)}\n\nWhat comes next in the pattern?`,
+      choices: choices,
+      correct: String(p.next),
+      explanation: `Pattern: ${p.desc}. Next: ${p.next}`,
+      steps: [`Count the beads on each rod, left to right.`, `The pattern is: ${p.desc}.`, `The next number is ${p.next}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'abacus-series');
+  }
+
+  // ---- MINI SUDOKU (4x4, easy — exactly one blank cell) ----
+  // Generates a random valid 4x4 sudoku solution by applying symmetry-preserving
+  // transformations (digit relabeling, swaps within/between row & column bands,
+  // transpose) to one base grid, so each puzzle looks different. Only ONE cell
+  // is left blank, which keeps this genuinely easy for a 2nd grader: the missing
+  // number is always the one value 1-4 not yet present in that cell's row.
+  function generateSudokuGrid() {
+    let grid = [[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]];
+    const perm = shuffle([1,2,3,4]);
+    grid = grid.map(row => row.map(v => perm[v-1]));
+    if (Math.random()<0.5) { const t=grid[0]; grid[0]=grid[1]; grid[1]=t; }
+    if (Math.random()<0.5) { const t=grid[2]; grid[2]=grid[3]; grid[3]=t; }
+    if (Math.random()<0.5) { const t=[grid[0],grid[1]]; grid[0]=grid[2]; grid[1]=grid[3]; grid[2]=t[0]; grid[3]=t[1]; }
+    const swapCols = (c1,c2) => grid.forEach(row => { const t=row[c1]; row[c1]=row[c2]; row[c2]=t; });
+    if (Math.random()<0.5) swapCols(0,1);
+    if (Math.random()<0.5) swapCols(2,3);
+    if (Math.random()<0.5) grid.forEach(row => { const t0=row[0], t1=row[1]; row[0]=row[2]; row[1]=row[3]; row[2]=t0; row[3]=t1; });
+    if (Math.random()<0.5) {
+      const t = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      for (let r=0;r<4;r++) for (let c=0;c<4;c++) t[c][r]=grid[r][c];
+      grid = t;
+    }
+    return grid;
+  }
+
+  function renderSudokuGrid(grid, blankR, blankC) {
+    let html = '<div class="sudoku-grid">';
+    for (let r=0;r<4;r++) {
+      html += '<div class="sudoku-row">';
+      for (let c=0;c<4;c++) {
+        const isBlank = r===blankR && c===blankC;
+        const cls = ['sudoku-cell'];
+        if (isBlank) cls.push('sudoku-blank');
+        if (c===1) cls.push('sudoku-thick-right');
+        if (r===1) cls.push('sudoku-thick-bottom');
+        html += `<div class="${cls.join(' ')}">${isBlank ? '?' : grid[r][c]}</div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function makeSudoku() {
+    const grid = generateSudokuGrid();
+    const blankR = rand(0,3), blankC = rand(0,3);
+    const correct = grid[blankR][blankC];
+    const rowKnown = grid[blankR].filter((v,c) => c !== blankC);
+    const choices = shuffle([1,2,3,4].map(String));
+    const gridHTML = renderSudokuGrid(grid, blankR, blankC);
+    const q = {
+      type: 'sudoku',
+      text: `Every row, column, and 2\u00d72 box must have the numbers 1, 2, 3, and 4 — each exactly once. What goes in the "?"\n\n${gridHTML}`,
+      choices: choices,
+      correct: String(correct),
+      explanation: `The highlighted row already has ${rowKnown.join(', ')}. The missing number is ${correct}.`,
+      steps: [`Look at the row with the "?" — which numbers are already in it?`, `That row has ${rowKnown.join(', ')}, so 1, 2, 3, and 4 aren't all there yet.`, `The missing number is ${correct}.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'sudoku');
+  }
+
+  // ---- DIVIDED SHAPES ----
+  function makeDividedShapes() {
+    const stroke = '#1a1a1a';
+    // Randomize which 3 shapes demonstrate "divided in half" each time --
+    // previously these were hardcoded (always square/circle/square), so every
+    // single question looked identical.
+    const exampleShapes = shuffle(FIGURE_TYPES).slice(0, 3);
+    const matrixExamples = exampleShapes.map(s => svgFigure(s, {size:50, stroke, divided:true}));
+    const correctShape = pick(FIGURE_TYPES);
+    const correct = svgFigure(correctShape, {size:60, stroke, divided:true});
+    let wrongs = shuffle(FIGURE_TYPES.filter(s => s !== correctShape)).slice(0,3)
+      .map(s => svgFigure(s, {size:60, stroke})); // same shapes, but NOT divided -- that's the trap
+    wrongs = uniq(wrongs.filter(w => w !== correct));
+    while (wrongs.length < 3) {
+      const w = svgFigure(pick(FIGURE_TYPES), {size:60, stroke, dashed:true});
+      if (w !== correct && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([correct, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix(matrixExamples, 3);
+    const q = {
+      type: 'figure-classification',
+      text: `Which shape is divided in half, like these?\n\n${matrixHTML}`,
+      choices: choices,
+      correct: correct,
+      explanation: `All of these shapes are divided in half with a line down the middle.`,
+      steps: ['Look at each shape — they all have a line splitting them exactly in half.', 'The correct answer also has a line dividing it in half.'],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'divided-shapes');
+  }
+
+  // ---- NESTED SHAPES ----
+  function makeNestedShapes() {
+    const outer = ['circle','square','diamond','pentagon','star'];
+    const inner = ['circle','square','diamond','star','triangle'];
+    const o = pick(outer);
+    const i = pick(inner);
+    const correctSvg = svgFigure('nested',{size:60,stroke:'#1a1a2e',outer:o,inner:i});
+    let wrongs = [];
+    let attempts = 0;
+    while (wrongs.length < 3 && attempts < 50) {
+      attempts++;
+      const wOuter = pick(outer);
+      const wInner = pick(inner);
+      const wrong = svgFigure('nested',{size:60,stroke:'#1a1a2e',outer:wOuter,inner:wInner});
+      if (wrong !== correctSvg && !wrongs.includes(wrong)) wrongs.push(wrong);
+    }
+    while (wrongs.length < 3) { const wOuter=pick(outer); const wInner=pick(inner); const wrong=svgFigure('nested',{size:60,stroke:'#1a1a2e',outer:wOuter,inner:wInner}); if(!wrongs.includes(wrong)) wrongs.push(wrong); }
+    const choices = shuffle([correctSvg, ...wrongs]);
+    // Randomize which 3 outer/inner combos demonstrate the "nested" rule each
+    // time -- previously these were hardcoded to the same 3 combos always, so
+    // every question's example matrix looked identical.
+    let exampleCombos = [];
+    let exAttempts = 0;
+    while (exampleCombos.length < 3 && exAttempts < 50) {
+      exAttempts++;
+      const combo = { outer: pick(outer), inner: pick(inner) };
+      const key = `${combo.outer}-${combo.inner}`;
+      if (!exampleCombos.some(c => `${c.outer}-${c.inner}` === key)) exampleCombos.push(combo);
+    }
+    const matrixExamples = exampleCombos.map(c => svgFigure('nested', {size:50, stroke:'#1a1a2e', outer:c.outer, inner:c.inner}));
+    const matrixHTML = renderMatrix(matrixExamples, 3);
+    const q = {
+      type: 'figure-classification',
+      text: `Which shape has a smaller shape inside it, like these?\n\n${matrixHTML}`,
+      choices: choices,
+      correct: correctSvg,
+      explanation: `All of these shapes have a smaller shape nested inside them.`,
+      steps: ['Look at each shape — they all have a smaller shape nested inside a larger one.', 'The correct answer also has a shape inside another shape.'],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'nested-shapes');
+  }
+
+  // ---- ROTATING SHAPES ----
+  // Uses shapes that are visually asymmetric (flag, L-shape, arrows) so any
+  // rotation amount is unambiguous, and varies the rotation amount itself
+  // (90/180/270) so the pattern isn't the same "arrow turns right" every time.
+  function makeRotatingShapes() {
+    const shapeChoices = ['flag','lshape','arrow-up'];
+    const shapeType = pick(shapeChoices);
+    const baseAngle = pick([0,45,90,135]);
+    const turn = pick([90,180,270]);
+    const stroke = '#1a1a1a';
+    const norm = (angle) => ((angle % 360) + 360) % 360;
+    const mk = (angle) => svgFigure(shapeType, {size:58, stroke, rotation: norm(angle), fill: shapeType==='flag' ? '#999' : 'none'});
+
+    const tl = mk(baseAngle);
+    const tr = mk(baseAngle + turn);
+    const bottomBase = pick([0,45,90,135,180]);
+    const bl = mk(bottomBase);
+    const br = mk(bottomBase + turn);
+
+    let wrongs = [
+      mk(bottomBase),                       // no rotation applied — common mistake
+      mk(bottomBase + (turn===180?90:180)), // wrong turn amount
+      mk(bottomBase - turn),                // rotated the wrong direction
+    ];
+    wrongs = uniq(wrongs.filter(w => w !== br));
+    while (wrongs.length < 3) {
+      const w = mk(bottomBase + pick([30,60,150,210,240,300]));
+      if (w !== br && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const choices = shuffle([br, ...wrongs.slice(0,3)]);
+    const matrixHTML = renderMatrix([tl, tr, bl, '?'], 2);
+    const q = {
+      type: 'figure-analogies',
+      text: `Find the rule, then apply it:\n\n${matrixHTML}`,
+      choices: choices,
+      correct: br,
+      explanation: `The shape turns ${turn}°. Apply that same turn to the bottom-left shape.`,
+      steps: [`Compare the top-left and top-right shapes — the shape turned ${turn}°.`, `Apply that same ${turn}° turn to the bottom-left shape to get the answer.`],
+    };
+    q.id = generateQuestionId(q);
+    return validateQuestion(q, 'rotating-shapes');
+  }
+
+  // ================================================================
+  //  SUBTEST DEFINITIONS
+  // ================================================================
+  const SUBTESTS = [
+    { id:'pic-analogies', name:'Picture Analogies', battery:'Verbal 🗣️', icon:'brain', desc:'Part:Whole, Animal:Home, Object:Location & more', quizN:5, examN:15, gen:makePictureAnalogy, tipTitle:'Come up with a RULE first!', tip:'Before looking at choices, say the rule: "Tire is PART OF car, so leaf is PART OF ___"', example:'"Tire → Car" means tire is PART OF car. "Leaf → ?" → Leaf is PART OF a Tree 🌲', testTips:['Come up with the rule BEFORE looking at choices','The logic is reversible'] },
+    { id:'sentence-comp', name:'Sentence Completion', battery:'Verbal 🗣️', icon:'ear', desc:'Listen to a question read aloud, pick the picture answer', quizN:5, examN:12, gen:makeSentenceCompletion, tipTitle:'Listen to the WHOLE sentence!', tip:'The question is read aloud once — listen to the end before choosing.', example:'"Max sees something floating" → Rock sinks, hammer sinks, coin sinks — Ball floats! ✅', testTips:['Listen from START to FINISH','Eliminate obvious wrong answers'] },
+    { id:'pic-classification', name:'Picture Classification', battery:'Verbal 🗣️', icon:'grid', desc:'Three pictures share a rule — find the fourth', quizN:5, examN:12, gen:makePictureClassification, tipTitle:'Name the FAMILY first!', tip:'What do they have in common? Say it: "They are all ___!"', example:'"Fork · Spoon · Knife" → Eating Utensils → Chopsticks 🥢 belong!', testTips:['Name the "family" before looking at choices','If one rule fits all, find a MORE SPECIFIC rule'] },
+    { id:'fig-analogies', name:'Figure Analogies', battery:'Nonverbal 🔷', icon:'move', desc:'Rotation, patterns, size, compound changes, progressions & count', quizN:5, examN:15, gen:genFigureAnalogyPool, tipTitle:'Look for what changed!', tip:'Did the shape rotate? Get a pattern? Get bigger? Sometimes TWO things change at once.', example:'Arrow up → Arrow right = 90° clockwise rotation', testTips:['Look for rotation, texture, shading, size, and count changes','Multiple transformations can happen at once — check for compound changes'] },
+    { id:'fig-classification', name:'Figure Classification', battery:'Nonverbal 🔷', icon:'layers', desc:'Sides, shading, division, nesting & more', quizN:5, examN:12, gen:makeFigureClassification, tipTitle:'Ask detective questions!', tip:'How many SIDES? FILLED or EMPTY? Nested? Divided?', example:'"▲ △ ▼" — all triangles (3 sides). Find the next triangle!', testTips:['Ask: how many sides? filled or empty? nested? divided?'] },
+    { id:'paper-folding', name:'Paper Folding', battery:'Nonverbal 🔷', icon:'file', desc:'Paper folded & holes punched — animated SVG!', quizN:5, examN:10, gen:makePaperFolding, tipTitle:'Count the layers!', tip:'1 fold = 2 layers. 2 folds = 4 layers. Each punch goes through ALL layers!', example:'1 fold (2 layers) × 1 punch = 2 holes when unfolded', testTips:['Try with real paper!','Each fold DOUBLES the layers'] },
+    { id:'divided-shapes', name:'Divided Shapes', battery:'Nonverbal 🔷', icon:'square', desc:'Identify shapes divided by lines or patterns', quizN:5, examN:10, gen:makeDividedShapes, tipTitle:'Look for the division!', tip:'Are they cut in half? Is the line vertical or diagonal?', example:'A square divided in half vertically → look for the line!', testTips:['Look for a line dividing the shape','The division can be vertical, horizontal, or diagonal'] },
+    { id:'nested-shapes', name:'Nested Shapes', battery:'Nonverbal 🔷', icon:'circle', desc:'Identify shapes with smaller shapes inside them', quizN:5, examN:10, gen:makeNestedShapes, tipTitle:'Look INSIDE!', tip:'Does the shape have a smaller shape inside it?', example:'A circle with a square inside → look for the inner shape!', testTips:['Look for a shape inside another shape','The inner shape can be different from the outer shape'] },
+    { id:'rotating-shapes', name:'Rotating Shapes', battery:'Nonverbal 🔷', icon:'rotate-ccw', desc:'Identify how shapes rotate or change direction', quizN:5, examN:10, gen:makeRotatingShapes, tipTitle:'Follow the direction!', tip:'Look at which way the shape is pointing — did it turn?', example:'Arrow up → Arrow right (rotated 90° clockwise)', testTips:['Look at the DIRECTION the shape points','The shape type stays the same, only the direction changes'] },
+    { id:'num-analogies', name:'Number Analogies', battery:'Quantitative 🔢', icon:'calculator', desc:'Add, subtract, multiply, divide — even two-step rules!', quizN:5, examN:15, gen:makeNumberAnalogy, tipTitle:'Find the math rule!', tip:'Possible: +, −, ×2, ÷2, ×3, + then ×, × then +.', example:'12→6 (halved). So 8→4 ✅', testTips:['If +/− doesn\'t work, try ×, ÷, or two-step rules!'] },
+    { id:'num-series', name:'Number Series', battery:'Quantitative 🔢', icon:'bar-chart', desc:'12 pattern types — find the missing number', quizN:5, examN:15, gen:makeNumberSeries, tipTitle:'Watch the HOPS between numbers!', tip:'Write the jump between each pair: +1, −2, +3... Look for a repeating pattern!', example:'10, 9, 7, 6, 4 → hops: −1, −2, −1, −2 → next −1 = 3 ✅', testTips:['Write the "hops" first','The hops themselves form a pattern'] },
+    { id:'num-puzzles', name:'Number Puzzles', battery:'Quantitative 🔢', icon:'puzzle', desc:'Fill in the missing number — 6 puzzle types', quizN:5, examN:12, gen:makeNumberPuzzle, tipTitle:'Work both sides — find what\'s missing!', tip:'Work out the side WITHOUT the "?" first (adding and/or subtracting). Then figure out what\'s needed to match the total.', example:'23 = 9 + 7 + ? → 9+7=16, 23−16=7 ✅  ·  4 = 9 − ? → 9−4=5 ✅', testTips:['Both sides must be EQUAL','Work out the known side first, then compare to the total','Watch for + and − mixed in the same puzzle'] },
+    { id:'abacus-series', name:'Abacus Series', battery:'Quantitative 🔢', icon:'grid', desc:'Count the beads and find the pattern!', quizN:5, examN:10, gen:makeAbacusSeries, tipTitle:'Count the BEADS!', tip:'Look at each rod and count how many beads. Then look for the pattern.', example:'1,2,3,4,5 → next is 6', testTips:['Count carefully!','Look at the pattern of numbers on each rod'] },
+    { id:'sudoku', name:'Mini Sudoku', battery:'Logic Games 🧩', icon:'grid', desc:'A 4×4 number puzzle — every row, column, and box needs 1, 2, 3, and 4', quizN:5, examN:10, gen:makeSudoku, tipTitle:"Check what's already there!", tip:"Look at the row with the '?' — see which of 1, 2, 3, 4 hasn't shown up yet.", example:'If a row already has 1, 3, 4 — the missing number must be 2!', testTips:['Check the row with the question mark first','Every number 1-4 appears exactly once in each row, column, and 2×2 box','No number ever repeats in the same row'] },
+  ];
+  document.getElementById('totalSubtests').innerText = SUBTESTS.length;
+
+  // ================================================================
+  //  MISTAKE TRACKING (with serialization)
+  // ================================================================
+  function serializeQuestion(q) {
+    return {
+      id: q.id,
+      type: q.type,
+      text: q.text,
+      sentence: q.sentence,
+      qText: q.qText,
+      svgHTML: q.svgHTML,
+      choices: q.choices,
+      correct: q.correct,
+      explanation: q.explanation,
+      steps: q.steps,
+      folds: q.folds,
+      punches: q.punches,
+      foldMeta: q.foldMeta,
+    };
+  }
+
+  function recordMistake(subtestId, question, selected, correct) {
+    state.mistakes.push({
+      subtestId,
+      question: JSON.stringify(serializeQuestion(question)),
+      selected: typeof selected === 'object' ? selected.text : selected,
+      correct: typeof correct === 'object' ? correct.text : correct,
+      timestamp: Date.now()
+    });
+    if (state.mistakes.length > 100) state.mistakes = state.mistakes.slice(-100);
+    saveState();
+  }
+
+  function getMistakesForSubtest(subtestId) {
+    return state.mistakes.filter(m => m.subtestId === subtestId);
+  }
+
+  function resolveMistake(questionId, subtestId) {
+    state.mistakes = state.mistakes.filter(m => {
+      if (m.subtestId !== subtestId) return true;
+      try {
+        const q = JSON.parse(m.question);
+        return q.id !== questionId;
+      } catch (e) { return true; }
+    });
+    saveState();
+  }
+
+  // ================================================================
+  //  RENDER ENGINE
+  // ================================================================
+  let currentST = null, session = null, speechUtterance = null;
+  // Sentence Completion is a listening-comprehension section on the real test —
+  // no text is ever shown, since it's designed for kids who may not read
+  // fluently yet. Default to audio-only; "Show Text" is an opt-in accommodation,
+  // remembered across sessions like the theme preference.
+  let showSentenceText = false;
+
+  function speakSentence(text) {
+    if (!('speechSynthesis' in window)) return;
+    if (speechUtterance) { window.speechSynthesis.cancel(); speechUtterance = null; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85;
+    speechUtterance = u;
+    window.speechSynthesis.speak(u);
+  }
+
+  function renderHome() {
+    document.getElementById('detailView').classList.add('hidden');
+    document.getElementById('homeView').classList.remove('hidden');
+    updateMasteryCount();
+    renderMission();
+    const batteries = ['Verbal 🗣️', 'Nonverbal 🔷', 'Quantitative 🔢', 'Logic Games 🧩'];
+    const list = document.getElementById('subtestList');
+    list.innerHTML = batteries.map(bat => {
+      const subs = SUBTESTS.filter(s => s.battery === bat);
+      return `<div class="battery-section"><div class="battery-label">${bat}</div><div class="subtest-grid">${subs.map(renderCard).join('')}</div></div>`;
+    }).join('');
+    list.querySelectorAll('.subtest-card').forEach(card => {
+      const open = () => openSubtest(card.dataset.id);
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+    announce('CogAT Detective Academy — choose a game!');
+  }
+
+  // Parent-facing guide: the logistics/scoring/test-day context a parent needs
+  // that has nothing to do with any single subtest, so it doesn't belong on a
+  // Study screen. Content mirrors the intro of a typical COGAT prep workbook.
+  function renderParentsGuide() {
+    document.getElementById('homeView').classList.add('hidden');
+    document.getElementById('detailView').classList.remove('hidden');
+    document.getElementById('detailView').innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>👪 For Parents</h2><button class="back-btn" id="backBtn">← Back</button></div>
+
+        <div class="parent-section">
+          <h3>📋 About the COGAT® Level 8</h3>
+          <p>The COGAT® (Cognitive Abilities Test) Level 8 is typically given in 2nd grade. It assesses cognitive skills through 3 "batteries," each made up of 3 question types — 9 types in total, 154 questions overall. It usually takes about two hours and is split across multiple sessions; kids are not expected to finish all 154 questions in one sitting.</p>
+          <div class="battery-breakdown">
+            <div><strong>Verbal 🗣️</strong><br>Picture Analogies · Picture Classification · Sentence Completion</div>
+            <div><strong>Quantitative 🔢</strong><br>Number Analogies · Number Puzzles · Number Series</div>
+            <div><strong>Non-Verbal 🔷</strong><br>Figure Analogies · Figure Classification · Paper Folding</div>
+          </div>
+        </div>
+
+        <div class="parent-section">
+          <h3>📊 How Scoring Works</h3>
+          <p>A child's <strong>raw score</strong> is the number of questions answered correctly — points are not deducted for wrong answers, so guessing is always better than leaving a question blank.</p>
+          <p>That raw score is then compared to other test-takers of the same age (and, for the COGAT®, the same grade) to calculate a <strong>stanine</strong> (a 1–9 scale) and a <strong>percentile rank</strong>.</p>
+          <table class="stanine-table">
+            <tr><th>Percentile Rank</th><th>What it means</th></tr>
+            <tr><td>50th</td><td>Scored as well as or better than half of test-takers</td></tr>
+            <tr><td>90th</td><td>As well as or better than 90% of test-takers</td></tr>
+            <tr><td>98th</td><td>As well as or better than 98% of test-takers</td></tr>
+          </table>
+          <p style="margin-top:10px;">Gifted programs generally require a percentile rank of <strong>at least 98%</strong>, though exact cutoffs vary — check with your specific school or program.</p>
+          <div class="parent-disclaimer">⚠️ A percentile rank can't be calculated from practice material like this app — that requires a large, controlled sample of test-takers. Use this app to build familiarity, confidence, and skill, not to predict an actual score.</div>
+        </div>
+
+        <div class="parent-section">
+          <h3>🌙 Test Day Tips</h3>
+          <ul>
+            <li>Make sure your child gets a full night's sleep — performance drops noticeably when kids are tired.</li>
+            <li>Feed them a protein-rich breakfast; avoid foods or drinks high in sugar right before testing.</li>
+            <li>Have them use the restroom before the test starts.</li>
+            <li>Directions and questions are usually read aloud only once — remind your child to listen carefully from start to finish.</li>
+            <li>If they're unsure, encourage a guess rather than leaving a question blank — there's no penalty for a wrong answer.</li>
+            <li>Remind them to look at <strong>every</strong> answer choice before deciding, eliminating the ones that are clearly wrong first.</li>
+          </ul>
+        </div>
+
+        <div class="parent-section">
+          <h3>🏫 How the Test Is Given</h3>
+          <p>Procedures vary by school. The COGAT® may be given one-on-one or in a group, and it's often just one factor among several used for gifted admission — sometimes paired with an IQ test, a broader "portfolio," or an achievement test like the Iowa Assessments™. Check with your testing site for its specific procedures.</p>
+        </div>
+      </div>`;
+    document.getElementById('backBtn').onclick = renderHome;
+    announce('Opened For Parents guide');
+  }
+
+  function renderCard(st) {
+    const masteryData = state.mastery[st.id];
+    const mastered = masteryData && masteryData.earned;
+    const acc = getAccuracy(st.id);
+    const badge = getBadge(st.id);
+    let status = 'status-ready';
+    let statusText = '🎮 PLAY';
+    if (mastered) {
+      status = 'status-mastered';
+      const pct = masteryData.total > 0 ? Math.round((masteryData.score / masteryData.total) * 100) : 0;
+      statusText = `✅ ${pct}%`;
+    } else if (acc >= 70) {
+      status = 'status-learning';
+      statusText = `📈 ${acc}%`;
+    }
+    const badgeEmoji = badge === 'gold' ? '⭐' : badge === 'silver' ? '🌟' : badge === 'bronze' ? '✨' : '';
+    return `<button class="subtest-card" data-id="${st.id}" aria-label="Play ${st.name}">
+      <div class="sc-top"><div class="sc-icon">${badgeEmoji}</div><div class="sc-status ${status}">${statusText}</div></div>
+      <div class="sc-name">${st.name}</div>
+      <div class="sc-desc">${st.desc}</div>
+      <div class="sc-bar"><div class="sc-bar-fill" style="width:${mastered?100:acc}%"></div></div>
+    </button>`;
+  }
+
+  function getAccuracy(id) {
+    const a = state.stats.attempts[id] || 0;
+    const c = state.stats.correct[id] || 0;
+    return a > 0 ? Math.round(c / a * 100) : 0;
+  }
+
+  function getBadge(stId) {
+    const b = state.badges.find(b => b.id === stId);
+    return b ? b.level : null;
+  }
+
+  function updateBadges() {
+    const newBadges = [];
+    SUBTESTS.forEach(st => {
+      const acc = getAccuracy(st.id);
+      if (acc >= 90 && state.stats.attempts[st.id] >= 5) newBadges.push({ id: st.id, level: 'gold' });
+      else if (acc >= 70 && state.stats.attempts[st.id] >= 3) newBadges.push({ id: st.id, level: 'silver' });
+      else if (acc >= 50 && state.stats.attempts[st.id] >= 2) newBadges.push({ id: st.id, level: 'bronze' });
+    });
+    state.badges = newBadges;
+    saveState();
+  }
+
+  function renderMission() {
+    const tasks = document.getElementById('missionTasks');
+    if (!tasks) return;
+    const missionIds = state.dailyMission?.subtestIds || [];
+    const completed = state.dailyMission?.completed || {};
+    tasks.innerHTML = missionIds.map(id => {
+      const st = SUBTESTS.find(s => s.id === id);
+      if (!st) return '';
+      const done = completed[id] || false;
+      return `<span class="dm-task ${done?'done':''}">${st.icon} ${st.name} ${done?'✅':''}</span>`;
+    }).join('');
+  }
+
+  function openSubtest(id) {
+    currentST = SUBTESTS.find(s => s.id === id);
+    if (!currentST) return;
+    document.getElementById('homeView').classList.add('hidden');
+    document.getElementById('detailView').classList.remove('hidden');
+    renderStudy();
+    announce(`Opened ${currentST.name}`);
+  }
+
+  function renderStudy() {
+    const st = currentST;
+    const acc = getAccuracy(st.id);
+    const badge = getBadge(st.id);
+    const badgeEmoji = badge === 'gold' ? '⭐' : badge === 'silver' ? '🌟' : badge === 'bronze' ? '✨' : '';
+    const mistakeCount = getMistakesForSubtest(st.id).length;
+    document.getElementById('detailView').innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>${st.icon} ${st.name} · Study Guide ${badgeEmoji}</h2><button class="back-btn" id="backBtn">← Back</button></div>
+        <div class="study-content">
+          ${badge ? `<div class="badges-row"><span class="badge-item ${badge}">🏅 ${badge.toUpperCase()} BADGE</span></div>` : ''}
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+            <div class="stat-card"><div class="stat-num">${state.stats.attempts[st.id]||0}</div><div class="stat-label">Attempts</div></div>
+            <div class="stat-card"><div class="stat-num">${state.stats.correct[st.id]||0}</div><div class="stat-label">Correct</div></div>
+            <div class="stat-card"><div class="stat-num">${mistakeCount}</div><div class="stat-label">Mistakes</div></div>
+          </div>
+          <div class="kid-tip">🎯 <strong>${st.tipTitle}</strong><br>${st.tip}</div>
+          <div class="example-box">✨ <strong>Example:</strong> ${st.example}</div>
+          <div class="test-tips-section"><div style="margin-top:12px;"><strong>🕵️ Detective Tips:</strong></div><div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">${st.testTips.map((t,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;font-weight:700;font-size:0.85rem;"><span style="background:var(--pink);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;">${i+1}</span>${t}</div>`).join('')}</div></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary" id="quizBtn">🎮 Quiz (${st.quizN})</button>
+          <button class="btn-primary btn-green" id="examBtn">🏆 Exam (${st.examN})</button>
+          <button class="btn-primary btn-purple" id="testModeBtn">⏱️ Test Mode (${st.examN})</button>
+          ${mistakeCount > 0 ? `<button class="btn-primary btn-gold" id="reviewBtn">🔄 Review ${mistakeCount} Mistakes</button>` : ''}
+        </div>
+      </div>`;
+    document.getElementById('backBtn').onclick = renderHome;
+    document.getElementById('quizBtn').onclick = () => startSession('quiz');
+    document.getElementById('examBtn').onclick = () => startSession('exam');
+    document.getElementById('testModeBtn').onclick = renderTestIntro;
+    const reviewBtn = document.getElementById('reviewBtn');
+    if (reviewBtn) reviewBtn.onclick = () => startSession('review');
+    focusEl('#backBtn');
+  }
+
+  // Briefing screen shown once before Test Mode starts, mirroring how a real
+  // proctor reads directions a single time before testing begins: no retries,
+  // no mid-test hints, and answers aren't revealed until every question is done.
+  function renderTestIntro() {
+    const st = currentST;
+    document.getElementById('detailView').innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>⏱️ Test Mode · ${st.name}</h2><button class="back-btn" id="backBtn">← Back</button></div>
+        <div class="test-intro-box">
+          <h3>📋 Before you start...</h3>
+          <ul>
+            <li>You'll answer ${st.examN} questions, one at a time</li>
+            <li>You won't be told if an answer is right or wrong until the very end</li>
+            <li>Each question has about 60 seconds — the timer bar shows how much time is left</li>
+            <li>If time runs out, it moves on automatically</li>
+            <li>Do your best and don't skip — a guess is better than no answer!</li>
+          </ul>
+          <div class="test-disclaimer">This mimics real test conditions. As with the book, a percentile score can't be calculated from practice questions — this is for building focus and stamina.</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary btn-purple" id="startTestBtn">🚀 Start Test</button>
+        </div>
+      </div>`;
+    document.getElementById('backBtn').onclick = renderStudy;
+    document.getElementById('startTestBtn').onclick = () => startSession('test');
+    focusEl('#startTestBtn');
+  }
+
+  // ================================================================
+  //  SESSION ENGINE
+  // ================================================================
+  function startSession(mode) {
+    let questions = [];
+    const seen = new Set();
+
+    if (mode === 'review') {
+      const mistakes = getMistakesForSubtest(currentST.id);
+      if (mistakes.length === 0) {
+        announce('No mistakes to review!');
+        return;
+      }
+      mistakes.forEach(m => {
+        try {
+          const q = JSON.parse(m.question);
+          if (!seen.has(q.id)) {
+            seen.add(q.id);
+            questions.push(q);
+          }
+        } catch (e) {}
+      });
+      if (questions.length === 0) {
+        announce('Your saved mistakes could not be restored. Starting a new practice session.');
+        // Fall back to generated questions
+        const n = Math.min(5, mistakes.length + 2);
+        for (let i = 0; i < n; i++) {
+          const q = safeGenerate();
+          if (q && !seen.has(q.id)) {
+            seen.add(q.id);
+            questions.push(q);
+          }
+        }
+      }
+    } else {
+      const n = mode === 'quiz' ? currentST.quizN : currentST.examN;
+      let attempts = 0;
+      while (questions.length < n && attempts < 80) {
+        attempts++;
+        const q = safeGenerate();
+        if (q && !seen.has(q.id)) {
+          seen.add(q.id);
+          questions.push(q);
+        }
+      }
+      // Extremely defensive fallback: if for any reason we still don't have
+      // enough valid questions (e.g. every generator attempt failed), stop
+      // trying rather than looping forever or crashing on an undefined q.
+      if (questions.length === 0) {
+        announce('Could not build this activity right now — please try again.');
+        renderStudy();
+        return;
+      }
+    }
+
+    session = { mode, questions, idx: 0, score: 0, answers: [], locked: false, subtestId: currentST.id, timerId: null };
+    renderQuestion();
+    announce(`Starting ${mode} with ${questions.length} questions`);
+  }
+
+  // Wraps a subtest's question generator in a try/catch so that a bug in any
+  // single generator (now or in the future) shows up as "skip this one and
+  // try again" instead of a hard crash that locks up the whole app for a kid
+  // mid-quiz.
+  function safeGenerate() {
+    try {
+      return currentST.gen();
+    } catch (e) {
+      console.warn(`Question generation failed for ${currentST.id}:`, e);
+      return null;
+    }
+  }
+
+  function renderQuestion() {
+    const { mode, questions, idx, score } = session;
+    const q = questions[idx];
+    const total = questions.length;
+    let content = '';
+    if (q.type === 'sentence-completion') {
+      content = `<div class="listen-cue"><div class="listen-icon">👂</div><div>
+        <div class="listen-label">Listen carefully — this question is read aloud:</div>
+        <div class="listen-text ${showSentenceText ? '' : 'hidden'}" id="sentenceText">"${q.sentence}"</div>
+        <div class="listen-hint ${showSentenceText ? 'hidden' : ''}" id="sentenceHint">🙈 Text is hidden so listening is what's being practiced — tap "Show Text" below if needed.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+          <button class="speak-btn" id="speakBtn">🔊 Read Aloud</button>
+          <button class="speak-btn" id="toggleTextBtn">${showSentenceText ? '🙈 Hide Text' : '👁️ Show Text'}</button>
+        </div>
+      </div></div><div class="q-text">Pick the picture that answers the question:</div>`;
+    } else if (q.type === 'paper-folding') {
+      content = `<div class="q-text">${q.qText}</div>${q.svgHTML || ''}`;
+    } else if (q.type === 'figure-analogies' || q.type === 'figure-classification' || q.type === 'sudoku') {
+      content = `<div class="q-text" style="text-align:center;font-size:0.95rem;line-height:2;">${q.text}</div>`;
+    } else {
+      content = `<div class="q-text">${q.text}</div>`;
+    }
+    const isTest = mode === 'test';
+    const modeLabel = mode === 'quiz' ? '🎮 Quiz' : mode === 'exam' ? '🏆 Exam' : mode === 'test' ? '⏱️ Test' : '🔄 Review';
+    document.getElementById('detailView').innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>${modeLabel} · ${currentST.name}</h2><button class="back-btn" id="exitBtn">✕ Exit</button></div>
+        <div class="q-meta"><span>Q${idx+1}/${total}</span>${isTest ? '' : `<span>⭐ ${score}/${idx}</span>`}</div>
+        <div class="q-progress"><div class="q-progress-fill" style="width:${Math.round((idx/total)*100)}%"></div></div>
+        ${isTest ? `<div class="test-timer-row"><span class="test-timer-label">⏱️ <span id="timerText">60</span>s</span><div class="test-timer-track"><div class="test-timer-fill" id="timerFill" style="width:100%"></div></div></div>` : ''}
+        ${content}
+        <div class="choices-grid" id="choicesGrid"></div>
+        <div id="feedbackArea"></div>
+        <button class="btn-primary hidden" id="nextBtn">${idx+1 < total ? 'Next →' : 'Results 🏆'}</button>
+      </div>`;
+    document.getElementById('exitBtn').onclick = () => { clearQuestionTimer(); renderHome(); };
+    if (q.type === 'sentence-completion') {
+      const sb = document.getElementById('speakBtn');
+      if (sb) sb.onclick = () => speakSentence(q.sentence);
+      const toggleBtn = document.getElementById('toggleTextBtn');
+      if (toggleBtn) toggleBtn.onclick = () => {
+        showSentenceText = !showSentenceText;
+        try { localStorage.setItem('cogat_showSentenceText', showSentenceText ? '1' : '0'); } catch(e) {}
+        document.getElementById('sentenceText').classList.toggle('hidden', !showSentenceText);
+        document.getElementById('sentenceHint').classList.toggle('hidden', showSentenceText);
+        toggleBtn.textContent = showSentenceText ? '🙈 Hide Text' : '👁️ Show Text';
+      };
+      // Audio-first: read the question aloud automatically, same as a real test
+      // administrator, rather than requiring a click before anything is heard.
+      setTimeout(() => speakSentence(q.sentence), 300);
+    }
+    if (q.type === 'paper-folding' && q.foldMeta) {
+      const playBtn = document.getElementById(`${q.foldMeta.uid}-playfold`);
+      if (playBtn) playBtn.onclick = () => playFoldAnimation(q.foldMeta);
+      // Auto-play once so the child sees the fold happen without having to find the button.
+      setTimeout(() => playFoldAnimation(q.foldMeta), 300);
+    }
+    const grid = document.getElementById('choicesGrid');
+    q.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      if (typeof ch === 'string' && ch.startsWith('<svg')) {
+        btn.innerHTML = ch;
+        btn.dataset.value = ch;
+      } else if (typeof ch === 'object' && ch.icon) {
+        btn.innerHTML = `<span class="pic-icon" aria-hidden="true">${iconSVG(ch.icon, 32)}</span><span class="choice-label">${ch.text}</span>`;
+        btn.dataset.value = ch.text;
+      } else {
+        btn.textContent = ch;
+        btn.dataset.value = ch;
+      }
+      btn.onclick = () => handleAnswer(ch, btn);
+      grid.appendChild(btn);
+    });
+    document.getElementById('nextBtn').onclick = advanceSession;
+    focusEl('#choicesGrid .choice-btn');
+    if (isTest) startQuestionTimer();
+  }
+
+  // Soft per-question timer for Test Mode, matching the source book's practice
+  // pacing guidance ("allow one minute per question, approximately"). Timing
+  // out counts as an unanswered (incorrect) question, same as a real test.
+  function startQuestionTimer() {
+    clearQuestionTimer();
+    let timeLeft = 60;
+    const totalTime = 60;
+    const update = () => {
+      const fill = document.getElementById('timerFill');
+      const text = document.getElementById('timerText');
+      if (!fill || !text) { clearQuestionTimer(); return; }
+      text.textContent = timeLeft;
+      fill.style.width = `${Math.round((timeLeft / totalTime) * 100)}%`;
+      fill.classList.toggle('warn', timeLeft <= 20 && timeLeft > 10);
+      fill.classList.toggle('danger', timeLeft <= 10);
+    };
+    update();
+    session.timerId = setInterval(() => {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearQuestionTimer();
+        if (!session.locked) handleAnswer(undefined, null);
+        return;
+      }
+      update();
+    }, 1000);
+  }
+
+  function clearQuestionTimer() {
+    if (session && session.timerId) {
+      clearInterval(session.timerId);
+      session.timerId = null;
+    }
+  }
+
+  function handleAnswer(selected, btn) {
+    if (session.locked) return;
+    session.locked = true;
+    clearQuestionTimer();
+    const isTest = session.mode === 'test';
+    const q = session.questions[session.idx];
+    let selectedValue = selected;
+    if (typeof selected === 'object' && selected.text) selectedValue = selected.text;
+    if (typeof selected === 'object' && selected.icon) selectedValue = selected.text;
+    let correctValue = q.correct;
+    if (typeof q.correct === 'object' && q.correct.text) correctValue = q.correct.text;
+    if (typeof selected === 'string' && selected.startsWith('<svg')) { selectedValue = selected; correctValue = q.correct; }
+    const correct = selectedValue === correctValue;
+
+    state.stats.attempts[session.subtestId] = (state.stats.attempts[session.subtestId] || 0) + 1;
+    if (correct) {
+      state.stats.correct[session.subtestId] = (state.stats.correct[session.subtestId] || 0) + 1;
+      session.score++;
+      // If in review mode and correct, resolve the mistake
+      if (session.mode === 'review') {
+        resolveMistake(q.id, session.subtestId);
+      }
+    } else {
+      state.stats.wrong[session.subtestId] = (state.stats.wrong[session.subtestId] || 0) + 1;
+      recordMistake(session.subtestId, q, selected, correctValue);
+    }
+    // Mark daily mission completion if applicable
+    const mission = state.dailyMission;
+    if (mission && mission.subtestIds.includes(session.subtestId)) {
+      mission.completed = mission.completed || {};
+      mission.completed[session.subtestId] = true;
+      saveState();
+      renderMission();
+    }
+    updateBadges();
+    saveState();
+
+    session.answers.push({ correct, selected: selectedValue, correctAnswer: correctValue, question: q });
+
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = true;
+      if (isTest) {
+        // Real test conditions: no right/wrong reveal until the whole set is done.
+        if (b === btn) b.classList.add('answer-picked');
+        return;
+      }
+      let bValue = b.dataset.value || b.textContent;
+      if (b.innerHTML.includes('<svg') && b.innerHTML.trim().startsWith('<svg')) { bValue = b.innerHTML; }
+      if (bValue === correctValue) b.classList.add('correct');
+      else if (b === btn && !correct) b.classList.add('wrong');
+    });
+
+    if (isTest) {
+      const fb = document.getElementById('feedbackArea');
+      fb.innerHTML = `<div class="feedback">${btn ? 'Answer locked in.' : "Time's up — moving on."}</div>`;
+      document.getElementById('nextBtn').classList.remove('hidden');
+      setTimeout(() => { document.getElementById('nextBtn')?.focus(); }, 50);
+      announce(btn ? 'Answer recorded' : "Time's up, moving to the next question");
+      return;
+    }
+
+    const fb = document.getElementById('feedbackArea');
+    const emoji = correct ? '✅' : '❌';
+    fb.innerHTML = `<div class="feedback ${correct ? 'correct-fb' : 'wrong-fb'}">${emoji} ${correct ? 'Correct!' : 'Not quite.'} ${q.explanation}${!correct ? `<br><button class="tutor-btn" id="tutorBtn">🦉 Show step-by-step</button>` : ''}</div>`;
+    if (!correct) {
+      document.getElementById('tutorBtn')?.addEventListener('click', () => {
+        if (!fb.querySelector('.tutor-panel')) {
+          fb.insertAdjacentHTML('beforeend', `<div class="tutor-panel"><strong>Step-by-step:</strong><br><br>${q.steps.map(s => `• ${s}`).join('<br><br>')}</div>`);
+          document.getElementById('tutorBtn').style.display = 'none';
+          if (q.type === 'paper-folding' && q.foldMeta) playUnfoldAnimation(q.foldMeta);
+        }
+      });
+    }
+    // For paper-folding, always offer an explicit unfold-reveal button once the
+    // question has been answered (correct or not) so the child can watch how the
+    // hole count was actually derived.
+    if (q.type === 'paper-folding' && q.foldMeta) {
+      const slot = document.getElementById(`${q.foldMeta.uid}-unfoldslot`);
+      if (slot) slot.innerHTML = `<button class="back-btn" id="pfUnfoldBtn" type="button">🔍 Unfold to See the Answer</button>`;
+      document.getElementById('pfUnfoldBtn')?.addEventListener('click', () => playUnfoldAnimation(q.foldMeta));
+    }
+    document.getElementById('nextBtn').classList.remove('hidden');
+    setTimeout(() => { document.getElementById('nextBtn')?.focus(); }, 50);
+    announce(correct ? `Correct!` : `Incorrect. ${q.explanation}`);
+  }
+
+  function advanceSession() {
+    session.locked = false;
+    session.idx++;
+    if (session.idx < session.questions.length) renderQuestion();
+    else finishSession();
+  }
+
+  function finishSession() {
+    clearQuestionTimer();
+    const { mode, score, questions } = session;
+    if (mode === 'test') { renderTestResults(); return; }
+    const total = questions.length;
+    const pct = Math.round((score / total) * 100);
+    const pass = pct >= 80;
+    const gifted = pct >= 95;
+
+    if (mode === 'exam' && pass) {
+      state.mastery[currentST.id] = {
+        earned: true,
+        score: score,
+        total: total,
+        earnedAt: Date.now()
+      };
+      saveState();
+      updateMasteryCount();
+      launchConfetti();
+      showMasteryFlash();
+    }
+
+    const trophy = pass ? '🏆' : '📚';
+    const title = pass ? (mode === 'exam' ? `MASTERED! ${score}/${total}` : `Quiz Passed! ${score}/${total}`) : `Score: ${score}/${total}`;
+    const msg = pass ? (mode === 'exam' ? `Outstanding! You mastered ${currentST.name}! 🎉` : `Great! Now try the Mastery Exam!`) : `Need 80% to pass.`;
+
+    document.getElementById('detailView').innerHTML = `
+      <div class="results-card ${pass ? 'pass' : 'fail'}">
+        <div class="r-trophy">${trophy}</div>
+        <div class="r-title">${title}</div>
+        ${gifted && pass ? `<div class="gifted-badge">⭐ GIFTED READY (95%+)!</div>` : ''}
+        <div class="r-msg">${msg}<br><br><strong>${score}/${total} (${pct}%)</strong></div>
+        <div class="r-actions">
+          ${pass && mode === 'quiz' ? `<button class="btn-primary btn-green" id="examBtn">🏆 Try Exam</button>` : ''}
+          ${!pass ? `<button class="btn-primary" id="retryBtn">🔄 Try Again</button>` : ''}
+          <button class="btn-primary" id="studyBtn">📖 Study</button>
+          ${getMistakesForSubtest(currentST.id).length > 0 ? `<button class="btn-primary btn-gold" id="reviewBtn">🔄 Review Mistakes</button>` : ''}
+          <button class="back-btn" id="homeBtn">🏠 Home</button>
+        </div>
+      </div>`;
+    document.getElementById('homeBtn').onclick = renderHome;
+    document.getElementById('studyBtn').onclick = renderStudy;
+    document.getElementById('retryBtn').onclick = () => startSession(mode);
+    const examBtn = document.getElementById('examBtn');
+    if (examBtn) examBtn.onclick = () => startSession('exam');
+    const reviewBtn = document.getElementById('reviewBtn');
+    if (reviewBtn) reviewBtn.onclick = () => startSession('review');
+    announce(pass ? `${mode === 'exam' ? 'Mastered' : 'Quiz passed'}: ${score}/${total}` : `Score: ${score}/${total}`);
+  }
+
+  // Test Mode results: unlike Quiz/Exam, nothing was revealed question-by-question,
+  // so this is the first place the child/parent sees which answers were right or
+  // wrong — mirroring how the book expects the answer key to be gone over only
+  // after the full Practice Question Set is finished.
+  function renderTestResults() {
+    const { score, answers } = session;
+    const total = answers.length;
+    const pct = Math.round((score / total) * 100);
+    const trophy = pct >= 80 ? '🏆' : '📚';
+
+    const reviewHTML = answers.map((a, i) => {
+      const q = a.question || {};
+      const qLabel = q.text || q.sentence || q.qText || `Question ${i + 1}`;
+      return `<div class="review-item ${a.correct ? 'rev-correct' : 'rev-wrong'}">
+        <div class="rev-head">${a.correct ? '✅' : '❌'} Q${i + 1}</div>
+        <div class="rev-body">${qLabel}</div>
+        ${!a.correct ? `<div class="rev-body">Your answer: ${a.selected ?? '(no answer — time ran out)'} · Correct answer: ${a.correctAnswer}<br>${q.explanation || ''}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('detailView').innerHTML = `
+      <div class="results-card ${pct >= 80 ? 'pass' : 'fail'}">
+        <div class="r-trophy">${trophy}</div>
+        <div class="r-title">Test Complete: ${score}/${total}</div>
+        <div class="r-msg">${pct}% correct<br><div class="test-disclaimer">As the book notes, a percentile score can't be calculated from practice questions — use this to see which question types need more practice.</div></div>
+        <div class="r-actions">
+          <button class="btn-primary btn-purple" id="retryTestBtn">🔄 Take Test Again</button>
+          <button class="btn-primary" id="studyBtn">📖 Study</button>
+          <button class="back-btn" id="homeBtn">🏠 Home</button>
+        </div>
+        <div class="review-list">${reviewHTML}</div>
+      </div>`;
+    document.getElementById('homeBtn').onclick = renderHome;
+    document.getElementById('studyBtn').onclick = renderStudy;
+    document.getElementById('retryTestBtn').onclick = () => startSession('test');
+    announce(`Test complete: ${score} out of ${total} correct`);
+  }
+
+  function showMasteryFlash() {
+    const div = document.createElement('div');
+    div.className = 'mastery-overlay';
+    div.setAttribute('role', 'dialog');
+    div.setAttribute('aria-modal', 'true');
+    div.setAttribute('aria-labelledby', 'masteryTitle');
+    div.innerHTML = `<div class="mastery-box"><div style="font-size:3.5rem">🏆</div><h2 id="masteryTitle">MASTERED!</h2><p>${currentST.name} complete!</p><button class="btn-primary" id="flashClose">Continue 🚀</button></div>`;
+    document.body.appendChild(div);
+    const timer = setTimeout(() => div.remove(), 5000);
+    const close = () => { clearTimeout(timer); div.remove(); };
+    document.getElementById('flashClose').onclick = close;
+    div.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    setTimeout(() => document.getElementById('flashClose')?.focus(), 60);
+  }
+
+  function launchConfetti() {
+    const colors = ['#c0392b','#d4a017','#5b3a8a','#2d7d46','#2980b9','#d35400'];
+    for (let i = 0; i < 50; i++) setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.cssText = `left:${Math.random()*100}vw;background:${colors[rand(0,colors.length-1)]};width:${5+Math.random()*7}px;height:${5+Math.random()*7}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;`;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3500);
+    }, i*15);
+  }
+
+  // ================================================================
+  //  INIT
+  // ================================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    try { dark = localStorage.getItem('cogat_theme') === 'dark'; } catch(e) {}
+    try { showSentenceText = localStorage.getItem('cogat_showSentenceText') === '1'; } catch(e) {}
+    applyTheme();
+    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+    document.getElementById('parentsBtn').addEventListener('click', renderParentsGuide);
+    loadState();
+    renderHome();
+  });
+
+  let dark = false;
+  function applyTheme() {
+    document.body.classList.toggle('dark', dark);
+    const btn = document.getElementById('themeBtn');
+    if (btn) {
+      btn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+      btn.setAttribute('aria-pressed', dark);
+    }
+  }
+  function toggleTheme() {
+    dark = !dark;
+    applyTheme();
+    try { localStorage.setItem('cogat_theme', dark ? 'dark' : 'light'); } catch(e) {}
+  }
