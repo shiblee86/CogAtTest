@@ -180,6 +180,10 @@
     else if (type === 'pentagon') { const pts=[]; for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.7*Math.cos(a)},${c+r*0.7*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'hexagon') { const pts=[]; for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2; pts.push(`${c+r*0.65*Math.cos(a)},${c+r*0.65*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'star') { const pts=[]; for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2-Math.PI/2; const rad=i%2===0?r*0.8:r*0.35; pts.push(`${c+rad*Math.cos(a)},${c+rad*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'octagon') { const pts=[]; for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2-Math.PI/2+Math.PI/8; pts.push(`${c+r*0.75*Math.cos(a)},${c+r*0.75*Math.sin(a)}`);} d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'trapezoid') { const top=r*0.45, bot=r*0.85, h=r*0.65; const pts=[`${c-top},${c-h}`,`${c+top},${c-h}`,`${c+bot},${c+h}`,`${c-bot},${c+h}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'oval') { const rx=r*0.9, ry=r*0.55; d=`<ellipse cx="${c}" cy="${c}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
+    else if (type === 'heart') { const s=r*0.9; d=`<path d="M ${c},${c+s*0.85} C ${c-s*1.3},${c-s*0.15} ${c-s*0.55},${c-s*1.05} ${c},${c-s*0.35} C ${c+s*0.55},${c-s*1.05} ${c+s*1.3},${c-s*0.15} ${c},${c+s*0.85} Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'arrow-up') { const pts=[`${c},${c-r}`,`${c-r*0.5},${c+r*0.2}`,`${c-r*0.25},${c+r*0.2}`,`${c-r*0.25},${c+r*0.85}`,`${c+r*0.25},${c+r*0.85}`,`${c+r*0.25},${c+r*0.2}`,`${c+r*0.5},${c+r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'arrow-down') { const pts=[`${c},${c+r}`,`${c-r*0.5},${c-r*0.2}`,`${c-r*0.25},${c-r*0.2}`,`${c-r*0.25},${c-r*0.85}`,`${c+r*0.25},${c-r*0.85}`,`${c+r*0.25},${c-r*0.2}`,`${c+r*0.5},${c-r*0.2}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
     else if (type === 'arrow-left') { const pts=[`${c-r},${c}`,`${c+r*0.2},${c-r*0.5}`,`${c+r*0.2},${c-r*0.25}`,`${c+r*0.85},${c-r*0.25}`,`${c+r*0.85},${c+r*0.25}`,`${c+r*0.2},${c+r*0.25}`,`${c+r*0.2},${c+r*0.5}`]; d=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}/>`; }
@@ -778,7 +782,7 @@
   }
 
   // ---- FIGURE ANALOGIES (with plausible distractors) ----
-  const FIGURE_TYPES = ['circle','square','triangle','diamond','pentagon','hexagon','star'];
+  const FIGURE_TYPES = ['circle','square','triangle','diamond','pentagon','hexagon','octagon','trapezoid','oval','star','heart'];
 
   function makeFigureAnalogy() {
     const types = ['rotate','reflect','shade','size','lines','diagonal','nested','halfshade','pattern','compound'];
@@ -1626,6 +1630,8 @@
     announce('Opened For Parents guide');
   }
 
+  const PHOTO_CARDS = new Set(['divided-shapes', 'pic-analogies', 'sentence-comp', 'pic-classification', 'fig-analogies', 'fig-classification', 'num-analogies', 'num-series', 'num-puzzles', 'abacus-series', 'sudoku', 'paper-folding', 'rotating-shapes', 'nested-shapes']);
+
   function renderCard(st) {
     const masteryData = state.mastery[st.id];
     const mastered = masteryData && masteryData.earned;
@@ -1642,7 +1648,7 @@
       statusText = `📈 ${acc}%`;
     }
     const badgeEmoji = badge === 'gold' ? '⭐' : badge === 'silver' ? '🌟' : badge === 'bronze' ? '✨' : '';
-    return `<button class="subtest-card" data-id="${st.id}" aria-label="Play ${st.name}">
+    return `<button class="subtest-card${PHOTO_CARDS.has(st.id) ? ' has-photo' : ''}" data-id="${st.id}" aria-label="Play ${st.name}">
       <div class="sc-top"><div class="sc-icon">${badgeEmoji}</div><div class="sc-status ${status}">${statusText}</div></div>
       <div class="sc-name">${st.name}</div>
       <div class="sc-desc">${st.desc}</div>

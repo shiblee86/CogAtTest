@@ -14,6 +14,7 @@
     }
     body.dark { --bg: #16160f; --text: #e8e4dd; --panel: #1f1e18; --panel-border: #38352a; --card-bg: #1f1e18; --header-start: #0a0a08; --header-end: #1a1912; --choice-bg: #262419; --choice-border: #3d3a2c; --correct-bg: #1a2e1e; --correct-text: #8bc98b; --wrong-bg: #2e1e1a; --wrong-text: #e8998a; --tip-bg: #262114; --muted: #a09a88; --ink: #e8e4dd; }
     body { font-family: 'Nunito', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; transition: background 0.25s, color 0.25s; }
+    #bgMotif { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.16; background-image: linear-gradient(rgba(8,23,22,0.55), rgba(8,23,22,0.75)), url('assets/samurai-mascot.png'); background-repeat: no-repeat; background-position: center center; background-size: cover; }
     .app { max-width: 1100px; margin: 0 auto; }
     .header { background: linear-gradient(135deg, var(--header-start), var(--header-end)); border-radius: 24px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; box-shadow: var(--shadow-hover); }
     .header-logo { display: flex; align-items: center; gap: 12px; }
@@ -53,6 +54,26 @@
     .subtest-card { background: var(--card-bg); border-radius: 18px; padding: 16px; border: 2px solid var(--panel-border); cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; font-family: inherit; font-size: inherit; text-align: left; width: 100%; }
     .subtest-card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: var(--shadow-hover); }
     .subtest-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    .subtest-card.has-photo { background-size: cover; background-position: center 15%; }
+    .subtest-card.has-photo .sc-name { color: #fdfcf6; }
+    .subtest-card.has-photo .sc-desc { color: #d8d3c6; }
+    .subtest-card[data-id="divided-shapes"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.1) 0%, rgba(8,23,22,0.55) 55%, rgba(8,23,22,0.92) 100%), url('assets/grid-divided-shapes.png'); }
+    .subtest-card[data-id="pic-analogies"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-pic-analogies.png'); }
+    .subtest-card[data-id="sentence-comp"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-sentence-comp.png'); }
+    .subtest-card[data-id="pic-classification"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-pic-classification.png'); }
+    .subtest-card[data-id="fig-analogies"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-fig-analogies.png'); }
+    .subtest-card[data-id="fig-classification"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-fig-classification.png'); }
+    .subtest-card[data-id="num-analogies"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-num-analogies.png'); }
+    .subtest-card[data-id="num-series"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-num-series.png'); }
+    .subtest-card[data-id="num-puzzles"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-num-puzzles.png'); }
+    .subtest-card[data-id="abacus-series"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-abacus.png'); }
+    .subtest-card[data-id="sudoku"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-sudoku.png'); }
+    .subtest-card[data-id="paper-folding"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-paper-folding.png'); }
+    .subtest-card[data-id="nested-shapes"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-nested-shapes.png'); }
+    .subtest-card[data-id="rotating-shapes"].has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-rotating-shapes.png'); }
+    #crosswordCard.has-photo { background-image: linear-gradient(180deg, rgba(8,23,22,0.15) 0%, rgba(8,23,22,0.6) 60%, rgba(8,23,22,0.93) 100%), url('assets/grid-crossword.png'); background-size: cover; background-position: center 15%; }
+    #crosswordCard.has-photo .sc-name { color: #fdfcf6; }
+    #crosswordCard.has-photo .sc-desc { color: #d8d3c6; }
     .sc-top { display: flex; align-items: flex-start; justify-content: space-between; }
     .sc-icon { font-size: 1.6rem; display: flex; align-items: center; gap: 6px; }
     .sc-icon svg { width: 28px; height: 28px; stroke: var(--text); }
