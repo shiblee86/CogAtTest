@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Safia's CogAT Detective Academy · Precision Edition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="bgMotif" aria-hidden="true"></div>
+<div class="app">
+  <header class="header">
+    <div class="header-logo"><span class="badge-icon">🔎</span><div><h1>CogAT Detective Academy</h1><p>Precision Edition · Level 8</p></div></div>
+    <div class="header-right">
+      <div class="trophy-count"><div class="tc-item"><span class="num" id="masteredCount">0</span><span class="lbl">Mastered</span></div><div class="tc-item"><span class="num" id="totalSubtests">13</span><span class="lbl">Total</span></div></div>
+      <button class="theme-btn" id="parentsBtn">👪 For Parents</button>
+      <button class="theme-btn" id="themeBtn" aria-pressed="false">🌙 Dark</button>
+    </div>
+  </header>
+  <div id="liveRegion" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="homeView">
+    <div class="daily-mission" id="dailyMission">
+      <div><span class="dm-title">📋 Today's Mission</span></div>
+      <div class="dm-tasks" id="missionTasks"></div>
+    </div>
+    <div class="tips-bar"><span class="tip-icon">💡</span><p><strong>Look at all the answer choices</strong> · <strong>find the rule first</strong> · <strong>eliminate wrong answers</strong> — and every quiz is generated fresh, so no two attempts are ever the same.</p></div>
+    <div id="subtestList"></div>
+  </div>
+  <div id="detailView" class="hidden"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<script src="app.js"></script>
+</body>
+</html>

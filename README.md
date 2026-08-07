@@ -47,6 +47,8 @@ styles.css      All styling and theme variables
 assets/         Card illustration images + page background
 tests/          pytest test suite (unit / integration / regression) — see
                 tests/README.md
+android/        Native Android wrapper (WebView shell around this same web
+                app) — see android/README.md
 ```
 
 See [`DESIGN.md`](DESIGN.md) for the full architecture writeup (state
@@ -64,6 +66,22 @@ The suite drives the real app in headless Chrome (there's no Node
 toolchain in this repo) and is split into `unit`, `integration`, and
 `regression` markers — see [`tests/README.md`](tests/README.md) for
 details and filtering examples.
+
+## Android app
+
+A native Android wrapper (WebView shell around this same web app, no
+reimplemented logic) lives in [`android/`](android/):
+
+```bash
+cd android
+./sync-assets.sh      # copy the current web app into the Android asset bundle
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+See [`android/README.md`](android/README.md) for build requirements, how
+the asset sync works, and known trade-offs (notably APK size, currently
+~97MB due to the card-artwork PNGs).
 
 ## For parents
 

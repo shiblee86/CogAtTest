@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Magnifying-glass glyph matching the in-app header badge (magnifying-glass
+     emoji, gold accent color), drawn as a vector so no offline image
+     generation step is needed. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A9781F"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M46,42 m-16,0 a16,16 0 1,1 32,0 a16,16 0 1,1 -32,0" />
+    <path
+        android:strokeColor="#A9781F"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M58,54 L72,68" />
+</vector>

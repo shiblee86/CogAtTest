@@ -13,7 +13,11 @@ pip install -r requirements-test.txt
 ```
 
 Requires a `google-chrome` / `chromium` binary on PATH, and Python 3's
-`http.server` (stdlib) to serve the app.
+`http.server` (stdlib) to serve the app. The `android` suite additionally
+needs a JDK + Android SDK (see `android/README.md`) -- if that's not on the
+machine, those tests report as *skipped*, not failed (same pattern as a
+missing Chrome binary), so `pytest` with no filter still passes cleanly
+either way.
 
 ## Running
 
@@ -22,6 +26,7 @@ pytest                    # everything
 pytest -m unit             # only unit tests (fast, no UI interaction)
 pytest -m integration      # only end-to-end UI flows
 pytest -m regression       # only "must not break again" tests
+pytest -m android           # only the Android-wrapper build/manifest/asset checks
 pytest -k shape             # anything shape-related, any suite
 pytest -x -q                # stop on first failure, quiet
 ```
@@ -41,6 +46,16 @@ pytest -x -q                # stop on first failure, quiet
   a stress test across *every* subtest's generator and the pre-existing
   (non-FIGURE_TYPES) svgFigure() shape branches, to catch collateral damage
   from a change that was only supposed to touch figures/cards.
+- `tests/android/` -- build/manifest/packaging checks for the `android/`
+  WebView wrapper: `./gradlew assembleDebug` actually succeeds, the built
+  APK's manifest (package name, launcher activity, permissions, min SDK) via
+  `aapt dump badging`, the bundled web assets are byte-identical to the repo
+  root (catches "edited app.js, forgot to run `android/sync-assets.sh`"),
+  and the built APK's asset tree contains everything MainActivity expects at
+  `file:///android_asset/`. **Does not launch the app** -- there's no
+  emulator/device in scope here, so this verifies the app is built and
+  packaged correctly, not that it runs correctly on a device. See
+  `android/README.md` for what a real device pass should additionally check.
 
 ## How it works
 

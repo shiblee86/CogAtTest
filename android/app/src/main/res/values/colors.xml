@@ -1,0 +1,4 @@
+<resources>
+    <!-- Matches the header gradient's start color (header start) in styles.css -->
+    <color name="ic_launcher_background">#1A1A1A</color>
+</resources>

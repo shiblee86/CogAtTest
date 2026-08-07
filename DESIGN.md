@@ -302,11 +302,23 @@ shapes, the figure generators specifically) hundreds of times per run,
 because `validateQuestion()`'s duplicate-choice check is exactly the kind
 of failure a bad shape pool would only trigger occasionally in production.
 
-## 13. Known trade-offs / non-goals
+## 13. Android
 
-- **No offline/PWA support** beyond what the browser does automatically —
-  no service worker, no manifest. A GitHub Pages static host is the only
-  deployment target considered.
+`android/` wraps this same app in a native shell: one Activity, one
+WebView, loading the bundled `index.html`/`app.js`/`styles.css`/`assets/`
+from `file:///android_asset/` — no logic was reimplemented natively. It's a
+separate copy of the web assets (synced via `android/sync-assets.sh`, not
+read from the repo root at build time), so it can drift out of date if
+changed and not re-synced. See `android/README.md` for build/install steps
+and its own known trade-offs (notably APK size, driven by the card-artwork
+PNGs).
+
+## 14. Known trade-offs / non-goals
+
+- **No offline/PWA support on the web** beyond what the browser does
+  automatically — no service worker, no manifest. GitHub Pages is the
+  primary web deployment target considered (the Android wrapper above is a
+  separate, deliberately thin distribution path, not a PWA).
 - **No accounts, no cross-device sync.** Progress is tied to one browser's
   `localStorage`; clearing site data or switching devices loses it.
   Acceptable for a single-child household tool, not for a multi-user product.
