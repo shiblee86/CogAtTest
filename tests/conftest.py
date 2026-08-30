@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import socket
 import subprocess
@@ -23,11 +24,20 @@ def _free_port():
 
 
 def _chrome_binary():
+    # CI installs Chrome via an action (e.g. browser-actions/setup-chrome)
+    # that does NOT put a conventionally-named binary on PATH -- it only
+    # exposes a chrome-path step output. Exporting that into CHROME_PATH
+    # (or CHROME_BIN, the other common convention) lets this work in CI
+    # without hardcoding any particular action's install location here.
+    for var in ("CHROME_PATH", "CHROME_BIN"):
+        path = os.environ.get(var)
+        if path and Path(path).is_file():
+            return path
     for name in CHROME_CANDIDATES:
         path = shutil.which(name)
         if path:
             return path
-    pytest.skip("No headless-capable Chrome/Chromium binary found on PATH")
+    pytest.skip("No headless-capable Chrome/Chromium binary found (checked CHROME_PATH/CHROME_BIN and PATH)")
 
 
 @pytest.fixture(scope="session")

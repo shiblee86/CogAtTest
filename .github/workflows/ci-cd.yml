@@ -1,0 +1,166 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  # ------------------------------------------------------------------
+  # BUILD -- compiles the one thing in this repo that actually needs
+  # compiling: the Android WebView wrapper. The web app itself is static
+  # (no bundler/transpiler), so its "build" is just a syntax sanity check.
+  # ------------------------------------------------------------------
+  build:
+    name: Build (Android APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sanity-check app.js syntax
+        run: node --check app.js
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Sync web app into the Android asset bundle
+        run: ./android/sync-assets.sh
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --console=plain
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cogat-detective-academy-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  # ------------------------------------------------------------------
+  # TEST -- the full pytest suite (unit/integration/regression drive the
+  # web app in headless Chrome via CDP; android verifies the Gradle
+  # project builds + its manifest/asset packaging). Runs independently of
+  # the build job (it does its own Gradle build via the android fixtures),
+  # so build and test run in parallel rather than serialized.
+  # ------------------------------------------------------------------
+  test:
+    name: Test (unit, integration, regression, android)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: pip install -r requirements-test.txt
+
+      - name: Set up Chrome
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+
+      - name: Export CHROME_PATH for the test suite
+        run: echo "CHROME_PATH=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Sync web app into the Android asset bundle
+        run: ./android/sync-assets.sh
+
+      - name: Run full test suite
+        run: pytest -v --junitxml=test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: test-results.xml
+          retention-days: 30
+
+  # ------------------------------------------------------------------
+  # DEPLOY -- publishes just the static web app (index.html/app.js/
+  # styles.css/assets/) to GitHub Pages via Actions-based deployment.
+  # Only on a push to main, and only once build+test have both passed --
+  # a broken commit on main no longer auto-publishes.
+  # ------------------------------------------------------------------
+  deploy:
+    name: Deploy (GitHub Pages)
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage the web app only (exclude tests/android/apk/etc.)
+        run: |
+          mkdir -p _site
+          cp index.html app.js styles.css _site/
+          cp -r assets _site/assets
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
