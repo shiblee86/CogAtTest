@@ -30,7 +30,7 @@ jobs:
         run: node --check app.js
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -66,12 +66,17 @@ jobs:
   # ------------------------------------------------------------------
   # TEST -- the full pytest suite (unit/integration/regression drive the
   # web app in headless Chrome via CDP; android verifies the Gradle
-  # project builds + its manifest/asset packaging). Runs independently of
-  # the build job (it does its own Gradle build via the android fixtures),
-  # so build and test run in parallel rather than serialized.
+  # project builds + its manifest/asset packaging). Waits on `build` --
+  # not because it consumes build's APK (it does its own Gradle build via
+  # the android fixtures), but so the two jobs don't both cold-start a
+  # full AGP dependency download from Maven Central at the same moment
+  # (that double burst is what triggered 429s on the first real run), and
+  # so this job's Gradle cache-restore can actually hit the cache build
+  # just saved instead of racing it.
   # ------------------------------------------------------------------
   test:
     name: Test (unit, integration, regression, android)
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +99,7 @@ jobs:
         run: echo "CHROME_PATH=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
